@@ -1,0 +1,24 @@
+# Dependencies and build output
+node_modules/
+.next/
+out/
+coverage/
+
+# Local environment and Vercel metadata
+.env
+.env.local
+.env.*.local
+!.env.example
+.vercel/
+
+# Logs, caches, and editor/OS files
+*.log
+.eslintcache
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Local test artifacts
+playwright-report/
+test-results/

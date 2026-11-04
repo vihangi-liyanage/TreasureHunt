@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+  --gold: #f8c85c;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; font-family: Inter, ui-sans-serif, system-ui, sans-serif; background: #071a1a; }
+.font-display { font-family: Georgia, "Times New Roman", serif; font-weight: 700; letter-spacing: -0.045em; }
+
+.hero-grid {
+  background:
+    linear-gradient(rgba(7, 26, 26, 0.78), rgba(7, 26, 26, 0.96)),
+    radial-gradient(circle at 15% 15%, rgba(34, 197, 94, 0.22), transparent 32%),
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.025) 0 1px, transparent 1px 88px),
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.02) 0 1px, transparent 1px 88px);
+}
+.glow { position: absolute; border-radius: 999px; filter: blur(90px); opacity: 0.28; pointer-events: none; }
+.glow-gold { width: 28rem; height: 28rem; right: -10rem; top: 5rem; background: #f59e0b; }
+.glow-emerald { width: 24rem; height: 24rem; left: -8rem; bottom: -8rem; background: #10b981; }
+.map-card { background: linear-gradient(150deg, rgba(44, 47, 32, 0.86), rgba(9, 28, 28, 0.94)); backdrop-filter: blur(18px); }
+.world-row { display: flex; align-items: center; gap: 1rem; border: 1px solid rgba(255,255,255,.08); border-radius: 1rem; background: rgba(255,255,255,.045); padding: .9rem; }
+.world-number { display: grid; width: 2.75rem; height: 2.75rem; flex: none; place-items: center; border-radius: .8rem; color: #071a1a; font-weight: 900; }
+.world-1 { background: #6ee7a2; }
+.world-2 { background: #fbbf77; }
+.world-3 { background: #a5b4fc; }
+.status-chip { display: flex; align-items: center; gap: .55rem; color: rgba(231, 245, 239, .68); font-size: .76rem; }
+.status-chip span { color: #6ee7a2; }
+.button-primary, .button-secondary { display: inline-flex; min-height: 2.9rem; align-items: center; border-radius: .85rem; padding: 0 1.1rem; font-size: .86rem; font-weight: 700; }
+.button-primary { background: var(--gold); color: #1d261b; box-shadow: 0 12px 35px rgba(248, 200, 92, .16); }
+.button-secondary { border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.045); color: rgba(255,255,255,.78); }
+
+::selection { background: rgba(248, 200, 92, .85); color: #071a1a; }
