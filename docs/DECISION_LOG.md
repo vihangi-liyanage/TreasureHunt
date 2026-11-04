@@ -61,3 +61,15 @@
 **Decision:** Store only ordered completed-world IDs in versioned browser storage. Derive locked, unlocked, current, and completed states from the shared world configuration.
 
 **Reason:** Guests need durable progress without authentication, while deriving states prevents out-of-order world unlocking and keeps Supabase concerns out of the UI until Phase 2B.
+
+## D011 Isolate browser progression synchronization
+
+**Decision:** Keep pure progression and storage serialization in `lib/progress/guest-progress.js`, and move the browser `storage` subscription into a focused World Map hook.
+
+**Reason:** The map should render journey state without owning persistence-event lifecycle details. The hook supplies a small `{ states, journeyProgress }` interface and cleans up its listener independently.
+
+## D012 Restrict Fish question images to the verified contract
+
+**Decision:** Accept remote Fish questions only as HTTPS PNGs under the observed `www.sanfoh.com/uob/fish/data/` path, while retaining the observed raw PNG base64 form.
+
+**Reason:** A URL prefix alone accepted malformed or untrusted values. The stricter adapter protects downstream UI from arbitrary image origins and can be updated only after a provider change is re-verified.

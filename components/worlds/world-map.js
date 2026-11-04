@@ -1,11 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Check, Compass, LockKeyhole, Settings, Trophy } from "lucide-react";
 import { GameOverlay } from "@/components/overlays/game-overlay";
 import { SettingsPanel } from "@/components/settings/settings-panel";
-import { deriveWorldStates, getJourneyProgress, GUEST_PROGRESS_KEY, readGuestProgress } from "@/lib/progress/guest-progress";
+import { useGuestWorldProgress } from "./use-guest-world-progress";
 
 function NodeStatus({ world }) {
   if (world.completed) return <span className="node-status is-completed"><Check size={14} />Completed</span>;
@@ -15,29 +15,10 @@ function NodeStatus({ world }) {
 }
 
 export function WorldMap({ worlds }) {
-  const [completedWorldIds, setCompletedWorldIds] = useState([]);
-  const [selectedId, setSelectedId] = useState(worlds[0].id);
+  const [selectedId, setSelectedId] = useState(null);
   const [overlay, setOverlay] = useState(null);
   const closeOverlay = useCallback(() => setOverlay(null), []);
-
-  useEffect(() => {
-    const syncProgress = () => {
-      const completed = readGuestProgress().completedWorldIds;
-      const current = deriveWorldStates(worlds, completed).find((world) => world.current);
-      setCompletedWorldIds(completed);
-      if (current) setSelectedId(current.id);
-    };
-    const initialFrame = window.requestAnimationFrame(syncProgress);
-    const syncStorage = (event) => { if (event.key === GUEST_PROGRESS_KEY) syncProgress(); };
-    window.addEventListener("storage", syncStorage);
-    return () => {
-      window.cancelAnimationFrame(initialFrame);
-      window.removeEventListener("storage", syncStorage);
-    };
-  }, [worlds]);
-
-  const states = useMemo(() => deriveWorldStates(worlds, completedWorldIds), [worlds, completedWorldIds]);
-  const journeyProgress = useMemo(() => getJourneyProgress(worlds, completedWorldIds), [worlds, completedWorldIds]);
+  const { states, journeyProgress } = useGuestWorldProgress(worlds);
   const selectedWorld = states.find((world) => world.id === selectedId && !world.locked) || states.find((world) => world.current) || states[0];
 
   return (

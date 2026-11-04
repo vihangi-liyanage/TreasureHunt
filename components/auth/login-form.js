@@ -13,7 +13,7 @@ export function LoginForm() {
   const [errors, setErrors] = useState({});
   const [notice, setNotice] = useState("");
   function update(field, value) { setValues((current) => ({ ...current, [field]: value })); setErrors((current) => ({ ...current, [field]: undefined })); setNotice(""); }
-  function submit(event) { event.preventDefault(); const nextErrors = validateLogin(values); setErrors(nextErrors); if (!Object.keys(nextErrors).length) setNotice("Authentication is not connected yet. No login request was sent; Supabase arrives in Phase 2."); }
+  function submit(event) { event.preventDefault(); const nextErrors = validateLogin(values); setErrors(nextErrors); if (!Object.keys(nextErrors).length) setNotice("Authentication is not connected yet. No login request was sent; Supabase arrives in Phase 2B."); }
   function explainGoogle() { setNotice("Google authentication will connect in Phase 2B. No sign-in request was sent."); }
   return (
     <form noValidate onSubmit={submit} className="space-y-4">

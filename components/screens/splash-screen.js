@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 const MINIMUM_SPLASH_MS = 1_700;
-const MAXIMUM_ASSET_WAIT_MS = 4_500;
+const MAXIMUM_ASSET_WAIT_MS = 3_000;
 const TRANSITION_MS = 420;
 const REQUIRED_ART = ["/art/treasurehunt-hero.png", "/art/worlds-atlas.png"];
 
@@ -47,6 +47,7 @@ export function SplashScreen() {
         <div className="loading-track" role="progressbar" aria-label="Loading TreasureHunt">
           <div className="loading-fill" />
         </div>
+        <p className="loading-caption">Loading your adventure...</p>
       </div>
     </main>
   );
