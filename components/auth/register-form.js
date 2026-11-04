@@ -23,8 +23,8 @@ export function RegisterForm() {
         <FormField id="confirmPassword" label="Confirm password" error={errors.confirmPassword}><PasswordInput id="confirmPassword" name="confirmPassword" autoComplete="new-password" placeholder="Repeat password" value={values.confirmPassword} onChange={(event) => update("confirmPassword", event.target.value)} describedBy="confirmPassword-help" invalid={Boolean(errors.confirmPassword)} /></FormField>
       </div>
       {notice ? <div className="flex gap-3 rounded-xl border border-amber-200/20 bg-amber-200/8 p-3 text-sm leading-5 text-amber-50" role="status"><ShieldCheck className="mt-0.5 shrink-0 text-amber-300" size={18} />{notice}</div> : null}
-      <GameButton className="w-full" type="submit"><UserPlus size={18} /> Validate registration</GameButton>
-      <p className="text-center text-sm text-stone-300/65">Already registered? <Link className="font-bold text-amber-300 underline-offset-4 hover:underline" href="/login">Return to login</Link></p>
+      <GameButton className="w-full" type="submit"><UserPlus size={18} /> Create Account</GameButton>
+      <p className="text-center text-sm text-stone-300/65">Already registered? <Link className="font-bold text-amber-300 underline-offset-4 hover:underline" href="/login">Player Login</Link></p>
     </form>
   );
 }

@@ -42,8 +42,22 @@
 
 **Reason:** Reviewers need a clear navigation path now, but a temporary route must not become a production authentication bypass.
 
+**Status:** Superseded by D009 in Phase 2A. Guest access is now an intentional product mode rather than a development preview.
+
 ## D008 Use two original generated key-art assets
 
 **Decision:** Use one cinematic hero scene and one three-world panorama, with CSS gradients, crops, and motion providing reusable variations.
 
 **Reason:** This creates a cohesive premium visual language without copying the supplied references, multiplying large assets, or adding an animation dependency.
+
+## D009 Make Welcome the main game menu
+
+**Decision:** Remove the dashboard-style Main Menu route. Welcome now exposes exactly Play as Guest, Player Login, Settings, and About the Game; informational content uses overlays.
+
+**Reason:** A single fullscreen menu better matches a game flow, removes redundant navigation, and keeps the hunter artwork central.
+
+## D010 Keep guest progression local and sequential
+
+**Decision:** Store only ordered completed-world IDs in versioned browser storage. Derive locked, unlocked, current, and completed states from the shared world configuration.
+
+**Reason:** Guests need durable progress without authentication, while deriving states prevents out-of-order world unlocking and keeps Supabase concerns out of the UI until Phase 2B.

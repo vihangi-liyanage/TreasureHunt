@@ -21,7 +21,6 @@ export function SettingsPanel() {
           <button type="button" role="switch" aria-checked={enabled[id]} aria-label={`${label}: ${enabled[id] ? "on" : "off"}`} onClick={() => setEnabled((current) => ({ ...current, [id]: !current[id] }))} className={`relative h-7 w-12 shrink-0 rounded-full border transition ${enabled[id] ? "border-emerald-300/40 bg-emerald-500" : "border-white/15 bg-black/35"}`}><span className={`absolute top-1 size-[18px] rounded-full bg-white shadow transition ${enabled[id] ? "left-[25px]" : "left-1"}`} /></button>
         </div>
       ))}
-      <p className="pt-2 text-xs leading-5 text-stone-300/45">Preview settings reset when this page reloads. Persistent preferences arrive with Phase 2.</p>
     </div>
   );
 }

@@ -21,7 +21,7 @@ TreasureHunt is a cinematic single-player 2D web platformer. A charming original
 
 ## Required experience
 
-Screens: splash/loading, welcome, login, register, main menu, world map, gameplay HUD, pause, checkpoint, Fish Challenge, Game Over, Mission Complete, leaderboard, profile, settings, and About/How to Play.
+Screens: splash/loading, Welcome main menu, login, register, world map, gameplay HUD, pause, checkpoint, Fish Challenge, Game Over, Mission Complete, leaderboard, profile, and game-style Settings and About overlays.
 
 Keyboard baseline: A/D or arrows to move, Space to jump, F to shoot while powered, and Escape to pause. Responsive menu screens are required; gameplay is desktop-first until touch controls are explicitly scoped.
 
@@ -36,7 +36,7 @@ Phase 1 establishes the cinematic interface with original generated concept artw
 | Asset | Source and intended use |
 | --- | --- |
 | `public/art/treasurehunt-hero.png` | Generated for this project with OpenAI's built-in image-generation tool on 4 November 2026. Prompt: an original teal-hatted explorer overlooking a glowing jungle temple, composed with left-side UI space. The supplied images were mood references only; recognizable characters and franchise elements were explicitly excluded. Used for splash, welcome, forms, and menu backgrounds. |
-| `public/art/worlds-atlas.png` | Generated for this project with OpenAI's built-in image-generation tool on 4 November 2026. Prompt: an original three-zone panorama of Emerald Jungle, Sunset Ruins, and Crystal Cavern with no characters, text, logos, or copied locations. Used as cropped world-selection card art. |
+| `public/art/worlds-atlas.png` | Generated for this project with OpenAI's built-in image-generation tool on 4 November 2026. Prompt: an original three-zone panorama of Emerald Jungle, Sunset Ruins, and Crystal Cavern with no characters, text, logos, or copied locations. Used for the fullscreen journey map and circular destination crops. |
 
 ## Acceptance boundaries
 

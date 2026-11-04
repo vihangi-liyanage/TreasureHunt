@@ -42,8 +42,8 @@ The meaning and permitted ranges of `fish` and `chest` are not specified on the 
 
 `@supabase/ssr` will read and refresh HttpOnly cookie sessions through the Next.js server boundary. Route Handlers derive identity from the session rather than request bodies. RLS provides a second authorisation layer. Completed score submissions require a server-issued run ID, valid progression, bounds checks, single completion, and rate limits; fully authoritative anti-cheat is outside a client-side platformer’s scope and will be documented honestly.
 
-## Phase 1 interface boundary
+## Phase 2A interface boundary
 
-App Router pages compose reusable presentation components from `components/ui`, `components/auth`, `components/menu`, and `components/worlds`. Pure form rules live in `lib/validation` so validation is testable without coupling it to Supabase. Login and registration stop after local validation and state clearly that no request or account mutation occurred.
+App Router pages compose reusable presentation components from `components/ui`, `components/auth`, `components/overlays`, and `components/worlds`. Pure form rules live in `lib/validation` so validation is testable without coupling it to Supabase. Login and registration stop after local validation and state clearly that no request or account mutation occurred.
 
-The temporary menu and world-selection review flow is development-only. `requireDevelopmentPreview()` returns a Next.js 404 whenever `NODE_ENV` is not `development`; the production welcome screen routes players to login instead. Phase 2 will replace this preview boundary with authenticated server-side access checks rather than reusing it as an auth bypass.
+Welcome is the single main menu. Settings and About use accessible in-place dialogs instead of separate information pages. Guest play opens the World Map directly and reads sequential completion state through `lib/progress/guest-progress.js`; Phase 3 gameplay will call its completion function. Authenticated persistence remains behind the future Phase 2B session boundary.

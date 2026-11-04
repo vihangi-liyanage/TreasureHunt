@@ -1,43 +1,31 @@
-import { BookOpen, LogIn, Play, Settings, Sparkles, UserPlus } from "lucide-react";
+"use client";
+
+import Link from "next/link";
+import { useCallback, useState } from "react";
+import { BookOpen, LogIn, Play, Settings } from "lucide-react";
 import { AdventureShell } from "@/components/ui/adventure-shell";
-import { GameButton } from "@/components/ui/game-button";
-import { GameLogo } from "@/components/ui/game-logo";
-import { PreviewBadge } from "@/components/ui/preview-badge";
+import { GameOverlay } from "@/components/overlays/game-overlay";
+import { AboutOverlay } from "@/components/overlays/about-overlay";
+import { SettingsPanel } from "@/components/settings/settings-panel";
 
 export default function WelcomePage() {
-  const previewEnabled = process.env.NODE_ENV === "development";
+  const [overlay, setOverlay] = useState(null);
+  const closeOverlay = useCallback(() => setOverlay(null), []);
+
   return (
-    <AdventureShell>
-      <div className="relative z-10 mx-auto flex min-h-svh max-w-7xl flex-col px-6 py-6 sm:px-10 lg:px-14">
-        <nav className="flex items-center justify-between">
-          <GameLogo href={null} />
-          <div className="hidden gap-2 sm:flex">
-            <GameButton href="/settings" variant="ghost" className="!min-h-11 !px-4"><Settings size={17} /> Settings</GameButton>
-            <GameButton href="/how-to-play" variant="ghost" className="!min-h-11 !px-4"><BookOpen size={17} /> How to play</GameButton>
-          </div>
-        </nav>
-        <div className="flex flex-1 items-end py-10 sm:items-center lg:py-16">
-          <div className="max-w-2xl">
-            <div className="mb-6 flex flex-wrap items-center gap-3">
-              <span className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-[.25em] text-amber-300"><Sparkles size={15} /> A legendary path awaits</span>
-              {previewEnabled ? <PreviewBadge /> : null}
-            </div>
-            <h1 className="font-display text-6xl leading-[.87] text-amber-50 drop-shadow-2xl sm:text-8xl lg:text-[7.5rem]">Find what<br /><span className="text-amber-300">history hid.</span></h1>
-            <div className="gold-rule my-7" />
-            <p className="max-w-xl text-base leading-7 text-stone-100/76 sm:text-lg">Cross three forgotten worlds, outwit ancient guardians, and uncover the treasure glowing beyond the last cavern.</p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              {previewEnabled ? <GameButton href="/menu"><Play size={19} fill="currentColor" /> Preview adventure UI</GameButton> : <GameButton href="/login"><Play size={19} fill="currentColor" /> Play game</GameButton>}
-              <GameButton href="/login" variant="secondary"><LogIn size={18} /> Login</GameButton>
-              <GameButton href="/register" variant="ghost"><UserPlus size={18} /> Register</GameButton>
-            </div>
-            <div className="mt-4 flex gap-2 sm:hidden">
-              <GameButton href="/settings" variant="ghost" className="!min-h-11 flex-1 !px-3"><Settings size={16} /> Settings</GameButton>
-              <GameButton href="/how-to-play" variant="ghost" className="!min-h-11 flex-1 !px-3"><BookOpen size={16} /> Guide</GameButton>
-            </div>
-          </div>
+    <AdventureShell className="welcome-screen">
+      <section className="welcome-menu" aria-labelledby="game-title">
+        <h1 className="game-title menu-title" id="game-title">Treasure<span>Hunt</span></h1>
+        <div className="primary-menu" aria-label="Main game menu">
+          <Link className="menu-option menu-option-primary menu-enter-1" href="/worlds?mode=guest"><Play size={20} fill="currentColor" />Play as Guest</Link>
+          <Link className="menu-option menu-enter-2" href="/login"><LogIn size={20} />Player Login</Link>
+          <button className="menu-option menu-enter-3" type="button" onClick={() => setOverlay("settings")}><Settings size={20} />Settings</button>
+          <button className="menu-option menu-enter-4" type="button" onClick={() => setOverlay("about")}><BookOpen size={20} />About the Game</button>
         </div>
-        <footer className="relative z-10 flex items-center justify-between border-t border-white/10 py-4 text-xs text-white/45"><span>Emerald Jungle · Sunset Ruins · Crystal Cavern</span><span className="hidden sm:block">3 lives · One treasure</span></footer>
-      </div>
+      </section>
+
+      <GameOverlay title="Settings" open={overlay === "settings"} onClose={closeOverlay}><SettingsPanel /></GameOverlay>
+      <GameOverlay title="About the Game" open={overlay === "about"} onClose={closeOverlay} size="wide"><AboutOverlay /></GameOverlay>
     </AdventureShell>
   );
 }

@@ -14,13 +14,15 @@ export function LoginForm() {
   const [notice, setNotice] = useState("");
   function update(field, value) { setValues((current) => ({ ...current, [field]: value })); setErrors((current) => ({ ...current, [field]: undefined })); setNotice(""); }
   function submit(event) { event.preventDefault(); const nextErrors = validateLogin(values); setErrors(nextErrors); if (!Object.keys(nextErrors).length) setNotice("Authentication is not connected yet. No login request was sent; Supabase arrives in Phase 2."); }
+  function explainGoogle() { setNotice("Google authentication will connect in Phase 2B. No sign-in request was sent."); }
   return (
     <form noValidate onSubmit={submit} className="space-y-4">
       <FormField id="email" label="Email address" error={errors.email}><input className="form-field" id="email" name="email" type="email" autoComplete="email" placeholder="explorer@example.com" value={values.email} onChange={(event) => update("email", event.target.value)} aria-describedby="email-help" aria-invalid={Boolean(errors.email)} /></FormField>
       <FormField id="password" label="Password" error={errors.password}><PasswordInput id="password" name="password" autoComplete="current-password" placeholder="At least 8 characters" value={values.password} onChange={(event) => update("password", event.target.value)} describedBy="password-help" invalid={Boolean(errors.password)} /></FormField>
       {notice ? <div className="flex gap-3 rounded-xl border border-amber-200/20 bg-amber-200/8 p-3 text-sm leading-5 text-amber-50" role="status"><ShieldCheck className="mt-0.5 shrink-0 text-amber-300" size={18} />{notice}</div> : null}
-      <GameButton className="w-full" type="submit"><LogIn size={18} /> Validate login</GameButton>
-      <p className="text-center text-sm text-stone-300/65">New to the expedition? <Link className="font-bold text-amber-300 underline-offset-4 hover:underline" href="/register">Create an account</Link></p>
+      <GameButton className="w-full" type="submit"><LogIn size={18} /> Login</GameButton>
+      <button className="google-button" type="button" onClick={explainGoogle}><span className="google-mark" aria-hidden="true">G</span>Continue with Google</button>
+      <Link className="create-account-link" href="/register">Create Account</Link>
     </form>
   );
 }

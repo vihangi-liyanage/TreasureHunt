@@ -1,26 +1,52 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { GameLogo } from "@/components/ui/game-logo";
+
+const MINIMUM_SPLASH_MS = 1_700;
+const MAXIMUM_ASSET_WAIT_MS = 4_500;
+const TRANSITION_MS = 420;
+const REQUIRED_ART = ["/art/treasurehunt-hero.png", "/art/worlds-atlas.png"];
+
+function waitForImage(source) {
+  return new Promise((resolve) => {
+    const image = new Image();
+    image.onload = resolve;
+    image.onerror = resolve;
+    image.src = source;
+  });
+}
 
 export function SplashScreen() {
   const router = useRouter();
+  const [leaving, setLeaving] = useState(false);
+
   useEffect(() => {
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const timer = window.setTimeout(() => router.replace("/welcome"), reducedMotion ? 220 : 1150);
-    return () => window.clearTimeout(timer);
+    let active = true;
+    let transitionTimer;
+    const minimumDelay = new Promise((resolve) => window.setTimeout(resolve, MINIMUM_SPLASH_MS));
+    const assetLoad = Promise.all(REQUIRED_ART.map(waitForImage));
+    const assetDeadline = new Promise((resolve) => window.setTimeout(resolve, MAXIMUM_ASSET_WAIT_MS));
+
+    Promise.all([minimumDelay, Promise.race([assetLoad, assetDeadline])]).then(() => {
+      if (!active) return;
+      setLeaving(true);
+      transitionTimer = window.setTimeout(() => router.replace("/welcome"), TRANSITION_MS);
+    });
+
+    return () => {
+      active = false;
+      window.clearTimeout(transitionTimer);
+    };
   }, [router]);
 
   return (
-    <main className="adventure-shell grid min-h-svh place-items-center px-6 text-center">
-      <div className="absolute inset-0 bg-[#04110e]/58" aria-hidden="true" />
-      <div className="splash-reveal relative z-10 flex w-full max-w-md flex-col items-center">
-        <GameLogo href={null} />
-        <h1 className="font-display mt-8 text-5xl leading-none text-amber-50 sm:text-7xl">Awaken the adventure</h1>
-        <p className="mt-4 text-sm uppercase tracking-[.28em] text-emerald-100/70">Charting a path to the lost treasure</p>
-        <div className="mt-10 h-1.5 w-56 overflow-hidden rounded-full bg-white/10" aria-label="Loading adventure"><div className="loading-shimmer h-full w-full rounded-full bg-gradient-to-r from-emerald-400 via-amber-300 to-amber-100" /></div>
-        <span className="mt-3 text-xs text-stone-300/60">Loading expedition…</span>
+    <main className={`splash-screen ${leaving ? "is-leaving" : ""}`}>
+      <div className="splash-content">
+        <h1 className="game-title">Treasure<span>Hunt</span></h1>
+        <div className="loading-track" role="progressbar" aria-label="Loading TreasureHunt">
+          <div className="loading-fill" />
+        </div>
       </div>
     </main>
   );
