@@ -29,7 +29,14 @@ Keyboard baseline: A/D or arrows to move, Space to jump, F to shoot while powere
 
 The visual direction is an original, colourful cartoon adventure with expressive silhouettes and cohesive UI/gameplay styling. The explorer will have a hat, practical adventure clothing, backpack, and boots without copying a recognizable character. Enemies will be playful, readable, and threatening without reproducing the supplied mushroom design.
 
-Phase 0 uses styled UI placeholders only. Later asset work is a separate track: hunter animations, enemy animations, coins, fish power-up, projectiles, three parallax world backgrounds, tiles/platforms, hazards, checkpoints, treasure chest, effects, music, and sound effects. Every added asset must be original, commissioned, generated with documented terms, or accompanied by its source and license. The two supplied reference images are not distributable game assets.
+Phase 1 establishes the cinematic interface with original generated concept artwork. Later asset work remains a separate track: hunter animations, enemy animations, coins, fish power-up, projectiles, parallax world layers, tiles/platforms, hazards, checkpoints, treasure chest, effects, music, and sound effects. Every added asset must be original, commissioned, generated with documented terms, or accompanied by its source and license. The two supplied reference images are not distributable game assets.
+
+### Phase 1 asset register
+
+| Asset | Source and intended use |
+| --- | --- |
+| `public/art/treasurehunt-hero.png` | Generated for this project with OpenAI's built-in image-generation tool on 4 November 2026. Prompt: an original teal-hatted explorer overlooking a glowing jungle temple, composed with left-side UI space. The supplied images were mood references only; recognizable characters and franchise elements were explicitly excluded. Used for splash, welcome, forms, and menu backgrounds. |
+| `public/art/worlds-atlas.png` | Generated for this project with OpenAI's built-in image-generation tool on 4 November 2026. Prompt: an original three-zone panorama of Emerald Jungle, Sunset Ruins, and Crystal Cavern with no characters, text, logos, or copied locations. Used as cropped world-selection card art. |
 
 ## Acceptance boundaries
 

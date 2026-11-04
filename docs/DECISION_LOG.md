@@ -35,3 +35,15 @@
 **Decision:** Use clean original placeholders during core implementation and manage final art/audio as a separate licensed asset track.
 
 **Reason:** Phase 0 should establish reliable gameplay architecture; the reference images cannot be copied or shipped.
+
+## D007 Isolate the UI preview from production access
+
+**Decision:** Expose the Phase 1 menu and world-selection review flow only in the Next.js development environment. In production those routes resolve to 404 until Phase 2 adds real session checks.
+
+**Reason:** Reviewers need a clear navigation path now, but a temporary route must not become a production authentication bypass.
+
+## D008 Use two original generated key-art assets
+
+**Decision:** Use one cinematic hero scene and one three-world panorama, with CSS gradients, crops, and motion providing reusable variations.
+
+**Reason:** This creates a cohesive premium visual language without copying the supplied references, multiplying large assets, or adding an animation dependency.
