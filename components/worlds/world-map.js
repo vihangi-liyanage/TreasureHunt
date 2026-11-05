@@ -79,7 +79,7 @@ export function WorldMap({ worlds, mode = "guest", completedWorldIds = [], profi
         <div><h2 className="font-display">{selectedWorld.name}</h2><p>{selectedWorld.description}</p></div>
         <div className="world-detail-action">
           <strong>{selectedWorld.difficulty}</strong>
-          {selectedWorld.number === 1 ? <button className="play-world-button" type="button" onClick={playWorld}>Play</button> : <span>Coming next</span>}
+          {selectedWorld.number <= 2 ? <button className="play-world-button" type="button" onClick={playWorld}>Play</button> : <span>Coming next</span>}
         </div>
       </aside>
 

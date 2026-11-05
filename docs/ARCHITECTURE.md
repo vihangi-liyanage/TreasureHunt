@@ -22,7 +22,7 @@ Phaser input, overlaps, collisions, timers, and scene lifecycle callbacks create
 
 Phase 3A implements this boundary in `game/core/game-bridge.js` and `game/core/events.js`. React sends only input, pause, resume, and restart commands. Phaser returns ready, state snapshot, completion, and game-over events. `GameScreen` never receives a scene, sprite, or physics object. `WorldScene` owns Arcade Physics and delegates input to `PlayerController`, patrol behaviour to `EnemySystem`, and deterministic score/lives/timer transitions to `RunState`. Scene shutdown destroys those systems and their bridge subscriptions before Phaser is destroyed.
 
-`game/config/emerald-jungle.js` is level data consumed by the reusable `WorldScene`; it contains dimensions, platforms, coins, enemies, hazards, spawn, and checkpoint positions rather than scene-specific control flow. New worlds can provide the same shape without copying movement, collision, HUD, or persistence logic.
+`game/config/emerald-jungle.js` and `game/config/sunset-ruins.js` are level data consumed by the reusable `WorldScene`; they contain art metadata, dimensions, platforms, coins, enemies, hazards, spawn, and checkpoint positions rather than scene-specific control flow. `game/config/levels.js` is the small lookup contract. World 2 therefore adds no scene, controller, combat service, HUD or persistence copy.
 
 ## Phase 3B gameplay composition
 
@@ -37,6 +37,14 @@ Progression and a temporary run have different owners. `guest-progress.js` holds
 The event ordering for a fish is overlap callback -> `CombatState.activate` -> `fish:collected` and `power:started` -> serialisable `state:changed` snapshot. F/touch input crosses as `input:changed`; `PlayerController` exposes a shoot action; `ProjectileSystem` emits `projectile:fired`; Arcade overlap disables the projectile/enemy before `enemy:defeated` and the updated snapshot. Expiry is edge-triggered once by `CombatState.consumeExpiry`. Completion first transitions `RunState`, pauses physics, publishes final state, then emits `world:completed`; React persists progression once. Terminal `RunState` guards reject duplicate mutations.
 
 Scene shutdown owns bridge unsubscribe callbacks, Escape removal, resize removal and collider destruction. Phaser owns physics-group disposal; custom cleanup deliberately does not clear groups after Arcade Physics shutdown. The scene active clock clamps large throttled-frame deltas and stops while paused, preventing browser catch-up bursts from consuming the timer or power window.
+
+## Phase 4 reuse and progression
+
+`WorldScene` loads generic `world-panorama`, `world-terrain` and `world-objects` keys from the selected level's `art` metadata. Render modules still own atlas loading and animation; configuration supplies filenames, frame geometry and measured presentation values. `getTerrainVisualLayout` maps each painted surface to the configuration-owned Arcade collision top. `EnemySystem` accepts one presentation record because the scarab atlas has different transparent padding; it does not know which world selected it.
+
+The route page permits only implemented Worlds 1–2. For authenticated users it compares the requested world number with server-loaded `completed_worlds` before rendering. For guests, `GameScreen` checks the in-memory derived state before Phaser boot, so refresh or direct entry cannot restore or bypass the active-adventure sequence. Completion still emits once from Phaser; React sends `{ world, coins }` to `/api/progress`, which derives the player from verified cookie claims. No player ID crosses from gameplay.
+
+Event ordering is unchanged across both worlds: overlap or collision updates deterministic state, emits a narrow domain event and snapshot, then React performs optional persistence. Restart uses the same level object and constructs new run state, enemies and collectibles. Scene shutdown owns command, keyboard, collider, system and resize cleanup. A separate `SunsetRuinsScene` or inheritance hierarchy would duplicate lifecycle behavior and let fixes diverge; the explicit configuration contract is smaller and easier to explain.
 
 Remote flows are asynchronous events at the application boundary. A checkpoint or Game Over screen requests a challenge from a Route Handler; the server obtains and validates an upstream response, stores the solution server-side with expiry/single-use metadata, and returns only the challenge image and local challenge ID. Answer validation and any bonus/revive mutation happen atomically on the server.
 
@@ -80,6 +88,6 @@ The World Map delegates in-memory progress subscription and cleanup to `componen
 
 ## Implementation status
 
-- **Implemented:** focused App Router screens, real Supabase auth Route Handlers, SSR cookie refresh, PKCE callback, logout/profile controls, pure validation, separate guest/auth progress, RLS migration, trusted progression/run endpoints, Fish response normalization, and React/browser cleanup. Phase 3B adds original painted atlases, measured sprite/terrain grounding, tuned and tested movement, source-aware multi-touch, local fish/orb combat, pause-safe active timing, focused combat/projectile/camera modules, fresh replay runs, full-viewport rendering, and World 1 checkpoint progression.
+- **Implemented:** focused App Router screens, compact post-registration email-confirmation UI, real Supabase auth Route Handlers, SSR cookie refresh, PKCE callback, logout/profile controls, pure validation, separate guest/auth progress, RLS migration, trusted progression/run endpoints, Fish response normalization, and React/browser cleanup. Gameplay includes original painted World 1/2 art, measured terrain grounding, tuned movement, source-aware multi-touch, local fish/orb combat, pause-safe timing, focused systems, fresh replay runs, fullscreen rendering, and sequential World 1/2 checkpoint progression.
 - **Configuration-dependent:** email delivery, Google consent, live cookie persistence, and deployed RLS behaviour require the owner's Supabase/Google project and are not claimed as locally integrated.
-- **Planned for Phase 3C+:** Sunset Ruins and Crystal Cavern level data, production audio, richer frame counts, trusted score evidence, Fish challenge attempt records/routes/UI, and achievement awarding.
+- **Planned:** Crystal Cavern treasure completion, production audio, richer frame counts, trusted score evidence, Fish challenge attempt records/routes/UI, and achievement awarding.

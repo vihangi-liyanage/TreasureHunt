@@ -16,7 +16,7 @@ Phase 3A extends this separation: `WorldScene` coordinates Phaser lifecycle and 
 
 **Runtime correction evidence:** `.next/dev/logs/next-development.log` identified `Sprite.setAllowGravity` as the initialization exception. `WorldScene.createPlayer` and respawn now call the actual `Phaser.Physics.Arcade.Body` method. This keeps display concerns on the sprite and physics state on its body instead of wrapping Phaser behind an unnecessary adapter.
 
-**Remaining:** Worlds 2 and 3 must supply configuration, final audio remains sound-ready rather than implemented, and authoritative run evidence must be designed before leaderboard score submission is connected.
+**Phase 4 evidence:** `sunset-ruins.js` implements World 2 entirely as data; `levels.js` is a two-entry lookup; `load-assets.js` and `getTerrainVisualLayout` accept the selected art contract; `EnemySystem` receives only presentation measurements. The same `WorldScene`, controllers, combat rules, HUD and progression path run both worlds. Separate scenes or subclasses were rejected because biome differences are data, while a generic entity framework would add concepts with no current reuse. World 3 and audio remain incomplete, and authoritative run evidence is still required before scores can be called cheat-proof.
 
 ## 2. Event-driven programming and handlers
 
@@ -34,6 +34,8 @@ Phase 3A now implements the bridge. React publishes small command payloads; Phas
 
 **Remaining:** local fish power/projectile events are implemented. External checkpoint challenge, achievement and revive events are **planned**, not claimed as implemented.
 
+**Phase 4 evidence:** the World 2 checkpoint is another Arcade overlap source and follows the existing order: guarded `RunState.complete` -> physics pause and final snapshot -> `world:completed` -> React guest or authenticated progression handler. The handler uses `world.number`, so it unlocks World 3 without a World-2-specific callback. Restart emits `game:restart` and recreates the selected level; cleanup ownership is unchanged. Polling the scene from React was rejected because it would duplicate state and miss exact transition edges; direct persistence inside the collision callback was rejected because network lifecycle does not belong to Phaser.
+
 ## 3. Third-party interoperability
 
 **Implemented files:** `lib/fish/fish-service.js`, `tests/fish-service.test.js`, `lib/supabase/*`, auth/progress/run Route Handlers, and the SQL migration.
@@ -50,6 +52,8 @@ Phase 3A now implements the bridge. React publishes small command payloads; Phas
 
 **Remaining:** Fish attempt storage, answer verification, achievements, and revive routes/UI are **planned**. The optional service must never block normal progression. Live Supabase interoperability also requires the owner's environment configuration.
 
+**Phase 4 evidence:** `sunset-ruins.js` contains a local fish coordinate only. Collection still enters `CombatState` and `ProjectileSystem`; neither imports `fish-service.js`. The remote adapter remains an HTTPS server-side anti-corruption layer with injected fetch, abort timeout, explicit text-to-JSON parsing, image allow-listing and normalized errors. Direct browser calls would expose provider formats and solutions and couple play to availability; a generic integration SDK would be excessive for one documented HTTP endpoint. External challenge UI and answer persistence remain planned, not represented by the local collectible.
+
 ## 4. Virtual identity, cookies, and authorization
 
 **Implemented files:** `proxy.js`, `lib/supabase/proxy.js`, `lib/auth/session.js`, `lib/auth/redirects.js`, `app/api/auth/*`, `app/auth/callback/route.js`, `app/auth/confirm/route.js`, `components/profile/profile-panel.js`, `.env.example`, and `supabase/migrations/202611050001_phase_2b_auth_and_progress.sql`.
@@ -65,3 +69,5 @@ Authenticated World 1 completion calls `/api/progress` without submitting a lead
 **Phase 3B critical discussion:** gameplay receives only a mode flag and stable progress result. On `world:completed`, guests update memory only; authenticated players call `/api/progress` without sending a user ID. The Route Handler verifies SSR cookie claims and the database function/RLS enforce sequential ownership. Phaser never imports Supabase, cookies or profile data. Keeping guests as anonymous Supabase users was rejected because it would mix guest and account identities and expand RLS/session complexity. Custom session cookies were rejected in favour of Supabase PKCE/SSR refresh because custom credential storage, rotation and OAuth linking add security risk. Configured email/OAuth and deployed RLS remain owner-environment checks, not falsely claimed here.
 
 **Current identity boundary:** guest reset cannot delete or overwrite registered data because it removes only `treasurehunt.guest-progress.v1` and mutates one browser-memory array. Authenticated World Map state still comes from `getPlayerProgress` using the verified cookie identity, and completion still reaches the service-role function only after Route Handler verification. Unit tests prove guest transitions do not mutate supplied authenticated progress. Live persistence across logout/login still requires the configured Supabase project and is not claimed as locally exercised.
+
+**Phase 4 evidence:** `app/game/[worldId]/page.js` authorizes authenticated World 2 from server-loaded `completed_worlds`; `GameScreen` independently guards guest World 2 from ordered in-memory state before Phaser boots. Authenticated completion submits no user ID: `/api/progress` uses `getClaims()`, bounded validation and the service-role-only sequential SQL function behind RLS and least-privilege grants. Registration success reports confirmation-required state but does not create a client session or bypass email verification; password values are cleared. Custom session cookies or anonymous Supabase guests would add credential/RLS responsibilities and blur identities. Live email delivery, OAuth consent, cookie persistence and deployed RLS denial remain owner-environment verification items.

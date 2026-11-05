@@ -55,6 +55,16 @@ Phase 1 establishes the cinematic interface with original generated concept artw
 
 The final prompts specified premium hand-painted 2D cartoon artwork, emerald/teal/gold/earth colours, transparent atlases with exact grids, consistent lighting, no text/watermarks, and explicit exclusion of copied Nintendo or other franchise designs. The earlier Phase 3A procedural artwork is retained only for tiny collision/particle utility textures, not visible character or environment presentation.
 
+### Phase 4 Sunset Ruins asset register
+
+| Asset | Source, license, and intended use |
+| --- | --- |
+| `public/art/gameplay/sunset-ruins-panorama.png` | Generated for TreasureHunt with OpenAI's built-in image-generation tool on 5 November 2026. Original wide golden-hour ruins, aqueducts and mountain valley; no characters, platforms, text, logos or copied locations. Project output is used under the applicable OpenAI output terms. |
+| `public/art/gameplay/sunset-terrain-atlas.png` | Generated for TreasureHunt with the same tool, then cropped, scaled and padded into four deterministic Phaser frames. Original sandstone ground, broken bridge, step and arch scenery. |
+| `public/art/gameplay/sunset-objects-atlas.png` | Generated for TreasureHunt with the same tool, then transparently padded to a 3x3 frame grid. Original scarab-stone enemy, compass coin, magical fish/orb, spikes, checkpoint, impact and vine art. |
+
+Prompts requested original premium cartoon side-view assets in warm sandstone, turquoise and gold, with transparent atlas cells and explicit exclusions for text, watermarks, trademarks and recognizable copyrighted designs. Mechanical atlas processing changed only framing and dimensions.
+
 ## Phase 3A playable scope
 
 Emerald Jungle is playable with Arcade Physics, camera-following traversal, layered parallax, platforms and gaps, coins, hazards, patrolling enemies, stomping, three lives, a 120-second timer, checkpoint completion, pause/resume/restart, keyboard controls, and mobile controls. Completion updates temporary in-memory guest progress or calls the authenticated progression endpoint. Sunset Ruins, Crystal Cavern, audio, and advanced combat remain later-phase work.
@@ -69,8 +79,12 @@ Guest completion is temporary for one active client-side adventure. Map-to-game 
 
 The local collectible is a deterministic gameplay mechanic and never calls the university Fish Game API. The remote API remains an optional later checkpoint/achievement/revive interaction.
 
+## Phase 4 playable scope
+
+Sunset Ruins is a real 105-second World 2 configuration consumed by the same `WorldScene`. It adds a longer golden-hour route, seven ground sections, fourteen elevated bridge/step platforms, 31 coins, five faster scarab enemies, three hazards, one reachable fish power-up and a checkpoint. It reuses the hunter, movement, gravity, stomp/projectile combat, eight-second power rule, pause/restart, mobile input, HUD and progression events. Completion says “World Complete / Checkpoint Reached” and unlocks World 3; it never claims final treasure victory.
+
 ## Acceptance boundaries
 
 - World progression and final treasure do not depend on the Fish API.
 - Game logic emits domain events and does not call React, Supabase, or remote services directly.
-- Signed-in players may persist checkpoints, achievements, profiles, and leaderboard results. Guest play remains possible, with persistence limited to the browser until later decisions.
+- Signed-in players may persist checkpoints, achievements, profiles, and leaderboard results. Guest play remains possible, but guest progression exists only for the current in-memory adventure and resets on refresh or a new Guest entry.

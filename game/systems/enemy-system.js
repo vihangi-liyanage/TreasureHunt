@@ -1,15 +1,15 @@
 import { ENEMY_PRESENTATION } from "@/game/render/create-textures";
 
 export class EnemySystem {
-  constructor(scene, definitions, platforms) {
+  constructor(scene, definitions, platforms, presentation = ENEMY_PRESENTATION) {
     this.group = scene.physics.add.group({ allowGravity: true });
     for (const definition of definitions) {
-      const enemy = this.group.create(definition.x, definition.y, "jungle-objects", 0);
+      const enemy = this.group.create(definition.x, definition.y, "world-objects", 0);
       enemy.setName(definition.id).setData("id", definition.id).setData("left", definition.left).setData("right", definition.right)
         .setData("speed", definition.speed).setData("direction", 1)
-        .setDisplaySize(ENEMY_PRESENTATION.displaySize, ENEMY_PRESENTATION.displaySize)
-        .setSize(ENEMY_PRESENTATION.bodyWidth, ENEMY_PRESENTATION.bodyHeight)
-        .setOffset(ENEMY_PRESENTATION.bodyOffsetX, ENEMY_PRESENTATION.bodyOffsetY)
+        .setDisplaySize(presentation.displaySize, presentation.displaySize)
+        .setSize(presentation.bodyWidth, presentation.bodyHeight)
+        .setOffset(presentation.bodyOffsetX, presentation.bodyOffsetY)
         .setVelocityX(definition.speed).setDepth(7).play("critter-walk");
     }
     this.platformCollider = scene.physics.add.collider(this.group, platforms);

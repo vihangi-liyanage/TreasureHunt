@@ -13,6 +13,16 @@ export const EMERALD_JUNGLE_MOTION = Object.freeze({
 
 export const EMERALD_JUNGLE_LEVEL = Object.freeze({
   width: 5_200, height: 720,
+  art: Object.freeze({
+    panorama: "emerald-jungle-panorama.png",
+    objects: "jungle-objects-atlas.png",
+    terrain: "jungle-terrain-atlas.png",
+    objectFrameSize: 444,
+    terrainFrameWidth: 888,
+    terrainFrameHeight: 444,
+    shade: 0x07382c,
+    foregroundTint: 0x5d9670,
+  }),
   playerStart: Object.freeze({ x: 150, y: 510 }), checkpoint: Object.freeze({ x: 5_045, y: 520 }),
   motion: EMERALD_JUNGLE_MOTION,
   platforms: Object.freeze([

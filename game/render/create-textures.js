@@ -22,12 +22,12 @@ export const ENEMY_PRESENTATION = Object.freeze({
   bodyOffsetY: 255,
 });
 
-export function getTerrainVisualLayout(platform) {
-  const presentation = TERRAIN_PRESENTATION[platform.kind] ?? TERRAIN_PRESENTATION.ledge;
+export function getTerrainVisualLayout(platform, presentationByKind = TERRAIN_PRESENTATION, frameHeight = TERRAIN_FRAME_HEIGHT) {
+  const presentation = presentationByKind[platform.kind] ?? presentationByKind.ledge;
   return Object.freeze({
     ...presentation,
     width: platform.width + presentation.widthPadding,
-    y: platform.top - (presentation.surfaceY / TERRAIN_FRAME_HEIGHT) * presentation.height,
+    y: platform.top - (presentation.surfaceY / frameHeight) * presentation.height,
   });
 }
 
@@ -45,8 +45,8 @@ function createAnimations(scene) {
   if (scene.anims.exists("hunter-idle")) return;
   scene.anims.create({ key: "hunter-idle", frames: [{ key: "hunter-atlas", frame: 0 }], frameRate: 1, repeat: -1 });
   scene.anims.create({ key: "hunter-run", frames: [{ key: "hunter-atlas", frame: 1 }, { key: "hunter-atlas", frame: 2 }], frameRate: 8, repeat: -1 });
-  scene.anims.create({ key: "critter-walk", frames: [{ key: "jungle-objects", frame: 0 }, { key: "jungle-objects", frame: 1 }], frameRate: 5, repeat: -1 });
-  scene.anims.create({ key: "coin-spin", frames: [{ key: "jungle-objects", frame: 2 }], frameRate: 1, repeat: -1 });
+  scene.anims.create({ key: "critter-walk", frames: [{ key: "world-objects", frame: 0 }, { key: "world-objects", frame: 1 }], frameRate: 5, repeat: -1 });
+  scene.anims.create({ key: "coin-spin", frames: [{ key: "world-objects", frame: 2 }], frameRate: 1, repeat: -1 });
 }
 
 export function createGameTextures(scene) {

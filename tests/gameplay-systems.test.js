@@ -3,6 +3,7 @@ import { CombatState, PROJECTILE_COOLDOWN_MS } from "@/game/core/combat-state";
 import { canLandOnPlatform, isStompCollision } from "@/game/core/collision-rules";
 import { InputState } from "@/game/core/input-state";
 import { EMERALD_JUNGLE_LEVEL, EMERALD_JUNGLE_MOTION } from "@/game/config/emerald-jungle";
+import { SUNSET_RUINS_LEVEL } from "@/game/config/sunset-ruins";
 import { getTerrainVisualLayout } from "@/game/render/create-textures";
 
 function calculateJumpMetrics({ gravity, jumpVelocity, moveSpeed }) {
@@ -57,6 +58,41 @@ describe("Emerald Jungle movement model", () => {
       const supported = ground.some((platform) => Math.abs(gapCenter - platform.x) <= platform.width / 2);
       expect(supported, `gap after ${ground[index].id}`).toBe(false);
     }
+  });
+});
+
+describe("Sunset Ruins level contract", () => {
+  it("uses the shared movement model and keeps every mandatory gap reachable", () => {
+    const byId = new Map(SUNSET_RUINS_LEVEL.platforms.map((platform) => [platform.id, platform]));
+    const route = SUNSET_RUINS_LEVEL.mandatoryRoute.map((id) => byId.get(id));
+    for (let index = 0; index < route.length - 1; index += 1) {
+      expect(canReachPlatform(route[index], route[index + 1], SUNSET_RUINS_LEVEL.motion), `${route[index].id} -> ${route[index + 1].id}`).toBe(true);
+    }
+  });
+
+  it("places its required collectibles above real collision surfaces", () => {
+    for (const collectible of [...SUNSET_RUINS_LEVEL.coins, ...SUNSET_RUINS_LEVEL.fishPowerUps]) {
+      const supportingPlatform = SUNSET_RUINS_LEVEL.platforms.find((platform) =>
+        Math.abs(collectible.x - platform.x) <= platform.width / 2 + 35 &&
+        platform.top - collectible.y >= 35 && platform.top - collectible.y <= 175);
+      expect(supportingPlatform, `${collectible.id} at ${collectible.x},${collectible.y}`).toBeTruthy();
+    }
+  });
+
+  it("aligns Sunset Ruins painted surfaces with Arcade collision tops", () => {
+    for (const platform of SUNSET_RUINS_LEVEL.platforms) {
+      const visual = getTerrainVisualLayout(platform, SUNSET_RUINS_LEVEL.art.terrainPresentation, SUNSET_RUINS_LEVEL.art.terrainFrameHeight);
+      const paintedSurface = visual.y + (visual.surfaceY / SUNSET_RUINS_LEVEL.art.terrainFrameHeight) * visual.height;
+      expect(paintedSurface, platform.id).toBeCloseTo(platform.top, 5);
+    }
+  });
+
+  it("adds a measured difficulty increase without changing fixed combat rules", () => {
+    expect(SUNSET_RUINS_LEVEL.enemies).toHaveLength(5);
+    expect(Math.max(...SUNSET_RUINS_LEVEL.enemies.map((enemy) => enemy.speed))).toBeGreaterThan(
+      Math.max(...EMERALD_JUNGLE_LEVEL.enemies.map((enemy) => enemy.speed)),
+    );
+    expect(SUNSET_RUINS_LEVEL.fishPowerUps).toHaveLength(1);
   });
 });
 

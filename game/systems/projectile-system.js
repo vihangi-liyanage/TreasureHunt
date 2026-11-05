@@ -20,7 +20,7 @@ export class ProjectileSystem {
   fire(player, direction, now) {
     if (!this.combat.tryShoot(now)) return false;
     const projectileY = player.body.center.y;
-    const projectile = this.group.get(player.x + direction * 46, projectileY, "jungle-objects", 4);
+    const projectile = this.group.get(player.x + direction * 46, projectileY, "world-objects", 4);
     if (!projectile) return false;
     projectile.enableBody(true, player.x + direction * 46, projectileY, true, true)
       .setDisplaySize(54, 54).setSize(220, 220, true).setVelocityX(direction * PROJECTILE_SPEED).setDepth(12);

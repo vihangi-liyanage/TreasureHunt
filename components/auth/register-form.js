@@ -15,6 +15,7 @@ export function RegisterForm() {
   const [values, setValues] = useState({ username: "", email: "", password: "", confirmPassword: "" });
   const [errors, setErrors] = useState({});
   const [notice, setNotice] = useState("");
+  const [confirmationEmail, setConfirmationEmail] = useState("");
   const [pending, setPending] = useState(false);
   function update(field, value) { setValues((current) => ({ ...current, [field]: value })); setErrors((current) => ({ ...current, [field]: undefined })); setNotice(""); }
   async function submit(event) {
@@ -33,12 +34,26 @@ export function RegisterForm() {
       return;
     }
     if (result.authenticated) {
+      setValues((current) => ({ ...current, password: "", confirmPassword: "" }));
       router.replace(result.redirectTo || "/worlds");
       router.refresh();
       return;
     }
-    setNotice("Check your email and open the confirmation link to finish creating your account.");
+    setValues((current) => ({ ...current, password: "", confirmPassword: "" }));
+    setErrors({});
+    setConfirmationEmail(values.email.trim());
   }
+  if (confirmationEmail) return (
+    <section className="auth-confirmation" aria-labelledby="confirmation-title">
+      <span className="auth-confirmation-icon" aria-hidden="true"><ShieldCheck size={34} /></span>
+      <div role="status">
+        <h2 id="confirmation-title">Check Your Email</h2>
+        <p>We sent a secure confirmation link to <strong>{confirmationEmail}</strong>. Open it to activate your explorer account.</p>
+      </div>
+      <GameButton className="w-full" href="/login">Go to Login</GameButton>
+      <p className="auth-confirmation-help">The link must be confirmed before password login can succeed.</p>
+    </section>
+  );
   return (
     <form noValidate onSubmit={submit} className="auth-form space-y-3">
       <FormField id="username" label="Username" error={errors.username} hint="3–24 characters"><input className="form-field" id="username" name="username" autoComplete="username" placeholder="JungleFox" value={values.username} onChange={(event) => update("username", event.target.value)} aria-describedby="username-help" aria-invalid={Boolean(errors.username)} /></FormField>

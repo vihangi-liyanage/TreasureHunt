@@ -141,3 +141,15 @@
 **Decision:** Keep configuration-owned static strips, but accept collision resolution only when the hunter is descending and its previous body bottom was at the platform top. Treat `blocked.down` as the grounded signal and keep gravity explicitly enabled after spawn/respawn.
 
 **Reason:** Global Arcade gravity was already correct. The permissive collision/grounded checks could classify non-supporting contact as ground. A small pure process rule fixes platform pass-through and edge falls without changing art, level spacing or introducing a physics manager.
+
+## D023 Add World 2 through the existing level contract
+
+**Decision:** Add `sunset-ruins.js` plus one `levels.js` lookup, and let `WorldScene` load generic world asset keys from level art metadata. Keep shared movement, collision, combat, HUD and progression systems unchanged.
+
+**Reason:** A copied scene would make fixes and event cleanup diverge. One small lookup and explicit presentation data handle genuine art differences without a class hierarchy, manager registry or framework.
+
+## D024 Replace registration form after confirmation-required signup
+
+**Decision:** After a successful Supabase signup without a session, clear both password values and replace the form with a compact “Check Your Email” state and direct Login action. Let the auth panel scroll internally only when a very short viewport requires it.
+
+**Reason:** Appending a notice preserved sensitive fields and pushed navigation below the viewport. The success state reflects the real server result without pretending confirmation or authentication succeeded.

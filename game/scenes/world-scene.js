@@ -23,7 +23,7 @@ export class WorldScene extends Phaser.Scene {
     this.safePosition = { ...level.playerStart };
   }
 
-  preload() { loadGameAssets(this); }
+  preload() { loadGameAssets(this, this.level.art); }
 
   create() {
     createGameTextures(this);
@@ -48,18 +48,19 @@ export class WorldScene extends Phaser.Scene {
   }
 
   createBackdrop() {
-    this.backdrop = this.add.image(0, 0, "jungle-panorama").setOrigin(0).setScrollFactor(0).setDepth(-100);
-    this.backdropShade = this.add.rectangle(0, 0, 10, 10, 0x07382c, 0.12).setOrigin(0).setScrollFactor(0).setDepth(-90);
+    this.backdrop = this.add.image(0, 0, "world-panorama").setOrigin(0).setScrollFactor(0).setDepth(-100);
+    this.backdropShade = this.add.rectangle(0, 0, 10, 10, this.level.art.shade, 0.12).setOrigin(0).setScrollFactor(0).setDepth(-90);
     this.foregroundRuins = [];
     for (let x = 780; x < this.level.width; x += 1_050) {
-      const ruin = this.add.image(x, 435 + (x % 170), "jungle-terrain", 3).setDisplaySize(260, 260)
-        .setAlpha(0.32).setTint(0x5d9670).setScrollFactor(0.45).setDepth(-10);
+      const ruin = this.add.image(x, 435 + (x % 170), "world-terrain", 3).setDisplaySize(260, 260)
+        .setAlpha(0.32).setTint(this.level.art.foregroundTint).setScrollFactor(0.45).setDepth(-10);
       this.foregroundRuins.push(ruin);
     }
   }
 
   resizeBackdrop(width, height) {
-    const sourceRatio = 2172 / 724;
+    const source = this.textures.get("world-panorama").getSourceImage();
+    const sourceRatio = source.width / source.height;
     const viewRatio = width / height;
     const displayWidth = viewRatio > sourceRatio ? width : height * sourceRatio;
     const displayHeight = viewRatio > sourceRatio ? width / sourceRatio : height;
@@ -75,8 +76,8 @@ export class WorldScene extends Phaser.Scene {
       hitbox.body.checkCollision.down = false;
       hitbox.body.checkCollision.left = false;
       hitbox.body.checkCollision.right = false;
-      const visual = getTerrainVisualLayout(definition);
-      this.add.image(definition.x, visual.y, "jungle-terrain", visual.frame)
+      const visual = getTerrainVisualLayout(definition, this.level.art.terrainPresentation, this.level.art.terrainFrameHeight);
+      this.add.image(definition.x, visual.y, "world-terrain", visual.frame)
         .setDisplaySize(visual.width, visual.height).setOrigin(0.5, 0).setDepth(2);
     }
     this.hazards = this.physics.add.staticGroup();
@@ -84,7 +85,7 @@ export class WorldScene extends Phaser.Scene {
       const hazard = this.hazards.create(definition.x, definition.top + 18, "platform-hitbox")
         .setDisplaySize(definition.width * 0.72, 34).setVisible(false).refreshBody();
       hazard.setData("cause", "thorns");
-      this.add.image(definition.x, definition.top - 28, "jungle-objects", 5)
+      this.add.image(definition.x, definition.top - 28, "world-objects", 5)
         .setDisplaySize(definition.width + 65, 120).setDepth(5);
     }
   }
@@ -102,27 +103,31 @@ export class WorldScene extends Phaser.Scene {
   createCollectibles() {
     this.coins = this.physics.add.group({ allowGravity: false, immovable: true });
     for (const definition of this.level.coins) {
-      const coin = this.coins.create(definition.x, definition.y, "jungle-objects", 2)
-        .setData("coinId", definition.id).setDisplaySize(64, 64).setCircle(118, 104, 104).setDepth(8);
+      const frameSize = this.level.art.objectFrameSize;
+      const coin = this.coins.create(definition.x, definition.y, "world-objects", 2)
+        .setData("coinId", definition.id).setDisplaySize(64, 64)
+        .setCircle(frameSize * 0.28, frameSize * 0.23, frameSize * 0.23).setDepth(8);
       this.tweens.add({ targets: coin, y: definition.y - 9, scaleX: 0.08, duration: 720, yoyo: true, repeat: -1, ease: "Sine.inOut" });
     }
     this.fishPowerUps = this.physics.add.group({ allowGravity: false, immovable: true });
     for (const definition of this.level.fishPowerUps) {
-      const fish = this.fishPowerUps.create(definition.x, definition.y, "jungle-objects", 3)
-        .setData("powerId", definition.id).setDisplaySize(78, 78).setCircle(125, 95, 100).setDepth(9);
+      const frameSize = this.level.art.objectFrameSize;
+      const fish = this.fishPowerUps.create(definition.x, definition.y, "world-objects", 3)
+        .setData("powerId", definition.id).setDisplaySize(78, 78)
+        .setCircle(frameSize * 0.28, frameSize * 0.22, frameSize * 0.22).setDepth(9);
       this.tweens.add({ targets: fish, y: definition.y - 12, angle: 5, duration: 900, yoyo: true, repeat: -1, ease: "Sine.inOut" });
     }
   }
 
   createEnemies() {
-    this.enemySystem = new EnemySystem(this, this.level.enemies, this.platforms);
+    this.enemySystem = new EnemySystem(this, this.level.enemies, this.platforms, this.level.art.enemyPresentation);
     this.projectileSystem = new ProjectileSystem(this, this.bridge, this.combat, this.enemySystem.group, (enemy, cause) => this.defeatEnemy(enemy, cause));
   }
 
   createCheckpoint() {
     const { x, y } = this.level.checkpoint;
     this.checkpoint = this.physics.add.staticImage(x, y, "platform-hitbox").setDisplaySize(76, 135).setVisible(false).refreshBody();
-    this.checkpointArt = this.add.image(x, y - 32, "jungle-objects", 6).setDisplaySize(190, 190).setDepth(4);
+    this.checkpointArt = this.add.image(x, y - 32, "world-objects", 6).setDisplaySize(190, 190).setDepth(4);
     this.add.text(x - 96, y - 145, "CHECKPOINT", { fontFamily: "Georgia, serif", fontSize: "18px", fontStyle: "bold", color: "#fff2b5", stroke: "#123b2d", strokeThickness: 6 }).setDepth(6);
   }
 

@@ -23,4 +23,5 @@
 - **Phase 3A complete:** reusable playable Emerald Jungle foundation, physics, HUD, progression bridge and responsive controls.
 - **Phase 3B complete:** painted original gameplay assets, tuned/reachability-tested movement, multi-touch input, local eight-second fish power, magical projectiles, projectile enemy defeat, active-clock pause/restart safety, full-viewport desktop/mobile polish and real World 1 checkpoint completion.
 - **Post-3B corrections complete:** measured sprite/terrain grounding, descending-only platform contact and fresh run construction are regression-tested. Guest unlocks now last only for one active adventure; registered Supabase progression remains persistent and separate.
-- **Next gameplay work:** build World 2/3 configurations and production audio hooks. External Fish API challenge UI remains separate future interoperability work.
+- **Phase 4 complete:** the reusable scene now loads per-world art and presentation metadata; Sunset Ruins supplies a tested 105-second route, distinct enemies/hazards, reachable coins/fish, checkpoint completion and World 3 unlocking. Registration now replaces the form with a compact email-confirmation state and clears password fields.
+- **Next gameplay work:** build World 3 treasure completion and production audio hooks. External Fish API challenge UI remains separate future interoperability work.
