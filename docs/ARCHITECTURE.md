@@ -20,6 +20,10 @@ Next.js Route Handlers form the server boundary. They validate the Supabase cook
 
 Phaser input, overlaps, collisions, timers, and scene lifecycle callbacks create domain events such as `coin:collected`, `player:damaged`, `power:started`, `power:expired`, `world:completed`, and `run:ended`. Focused systems update local state once and the bridge publishes a serialisable snapshot to React. Scene shutdown must remove listeners and timers. A run state machine prevents duplicate completion or Game Over transitions.
 
+Phase 3A implements this boundary in `game/core/game-bridge.js` and `game/core/events.js`. React sends only input, pause, resume, and restart commands. Phaser returns ready, state snapshot, completion, and game-over events. `GameScreen` never receives a scene, sprite, or physics object. `WorldScene` owns Arcade Physics and delegates input to `PlayerController`, patrol behaviour to `EnemySystem`, and deterministic score/lives/timer transitions to `RunState`. Scene shutdown destroys those systems and their bridge subscriptions before Phaser is destroyed.
+
+`game/config/emerald-jungle.js` is level data consumed by the reusable `WorldScene`; it contains dimensions, platforms, coins, enemies, hazards, spawn, and checkpoint positions rather than scene-specific control flow. New worlds can provide the same shape without copying movement, collision, HUD, or persistence logic.
+
 Remote flows are asynchronous events at the application boundary. A checkpoint or Game Over screen requests a challenge from a Route Handler; the server obtains and validates an upstream response, stores the solution server-side with expiry/single-use metadata, and returns only the challenge image and local challenge ID. Answer validation and any bonus/revive mutation happen atomically on the server.
 
 ## Fish Game API verification
@@ -62,6 +66,6 @@ The World Map delegates browser storage subscription and cleanup to `components/
 
 ## Implementation status
 
-- **Implemented:** focused App Router screens, real Supabase auth Route Handlers, SSR cookie refresh, PKCE callback, logout/profile controls, pure validation, separate guest/auth progress, RLS migration, trusted progression/run endpoints, Fish response normalization, and React/browser cleanup.
+- **Implemented:** focused App Router screens, real Supabase auth Route Handlers, SSR cookie refresh, PKCE callback, logout/profile controls, pure validation, separate guest/auth progress, RLS migration, trusted progression/run endpoints, Fish response normalization, and React/browser cleanup. Phase 3A adds a reusable Phaser `WorldScene`, Arcade Physics, procedural temporary assets, focused player/enemy/run-state systems, a narrow lifecycle-safe React–Phaser bridge, responsive HUD/touch controls, and real World 1 progression wiring.
 - **Configuration-dependent:** email delivery, Google consent, live cookie persistence, and deployed RLS behaviour require the owner's Supabase/Google project and are not claimed as locally integrated.
-- **Planned for Phase 3+:** Phaser scenes and bridge implementation, trusted gameplay event connection to progress/run routes, Fish challenge attempt records/routes/UI, and achievement awarding.
+- **Planned for Phase 3B+:** Sunset Ruins and Crystal Cavern level data, fish/projectile combat, audio, final production sprite sheets, trusted score evidence, Fish challenge attempt records/routes/UI, and achievement awarding.

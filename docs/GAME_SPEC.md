@@ -23,7 +23,7 @@ TreasureHunt is a cinematic single-player 2D web platformer. A charming original
 
 Screens: splash/loading, Welcome main menu, login, register, world map, gameplay HUD, pause, checkpoint, Fish Challenge, Game Over, Mission Complete, leaderboard, profile, and game-style Settings and About overlays.
 
-Keyboard baseline: A/D or arrows to move, Space to jump, F to shoot while powered, and Escape to pause. Responsive menu screens are required; gameplay is desktop-first until touch controls are explicitly scoped.
+Keyboard baseline: A/D or arrows to move, Space/Up to jump, F to shoot while powered, and Escape to pause. Phase 3A also provides hold-to-move and jump controls on touch devices.
 
 ## Art and audio plan
 
@@ -37,6 +37,16 @@ Phase 1 establishes the cinematic interface with original generated concept artw
 | --- | --- |
 | `public/art/treasurehunt-hero.png` | Generated for this project with OpenAI's built-in image-generation tool on 4 November 2026. Prompt: an original teal-hatted explorer overlooking a glowing jungle temple, composed with left-side UI space. The supplied images were mood references only; recognizable characters and franchise elements were explicitly excluded. Used for splash, welcome, forms, and menu backgrounds. |
 | `public/art/worlds-atlas.png` | Generated for this project with OpenAI's built-in image-generation tool on 4 November 2026. Prompt: an original three-zone panorama of Emerald Jungle, Sunset Ruins, and Crystal Cavern with no characters, text, logos, or copied locations. Used for the fullscreen journey map and circular destination crops. |
+
+### Phase 3A temporary asset register
+
+| Asset | Source, license, and intended use |
+| --- | --- |
+| Procedural hunter, jungle critter, coins, platforms, spikes, checkpoint, and parallax layers in `game/render/create-textures.js` | Original shapes drawn at runtime specifically for TreasureHunt. No third-party files or copied character designs are included. These are project-owned temporary gameplay assets and may be replaced by polished, separately licensed sprite sheets later. |
+
+## Phase 3A playable scope
+
+Emerald Jungle is playable with Arcade Physics, camera-following traversal, layered parallax, platforms and gaps, coins, hazards, patrolling enemies, stomping, three lives, a 120-second timer, checkpoint completion, pause/resume/restart, keyboard controls, and mobile controls. Completion updates guest local progress or calls the authenticated progression endpoint. Sunset Ruins, Crystal Cavern, fish shooting, audio, and advanced combat remain later-phase work.
 
 ## Acceptance boundaries
 

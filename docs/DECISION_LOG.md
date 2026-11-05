@@ -97,3 +97,9 @@
 **Decision:** With automatic table exposure disabled, revoke broad `service_role` access on Phase 2B tables and grant only the operations required by current server routes and invoker functions. Do not grant the unused achievements identity sequence. Accept completed leaderboard rows only when the owned run declares World 3 and persistent progression already confirms all three worlds complete.
 
 **Reason:** The service key bypasses RLS, so its SQL privileges must remain narrow. Database invariants provide a second check behind server-side claims verification, while unused achievement access can be added later with the feature that needs it.
+
+## D017 Build World 1 with procedural temporary art and focused Phaser systems
+
+**Decision:** Render original temporary sprites and jungle layers at runtime, drive one reusable `WorldScene` from level configuration, and cross the React boundary only through serialisable bridge events.
+
+**Reason:** This produces a polished playable demonstration without unlicensed assets, keeps art replacement independent of mechanics, and prevents Phaser objects, React state, and persistence services from becoming coupled.

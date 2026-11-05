@@ -261,3 +261,60 @@ button, a { -webkit-tap-highlight-color: transparent; }
 @media (prefers-reduced-motion: reduce) {
   *,*::before,*::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* Phase 3A gameplay */
+.world-detail-action { display: grid; justify-items: end; gap: .4rem; }
+.world-detail-action strong,.world-detail-action > span { color: var(--gold-light); font-size: .64rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+.play-world-button { display: inline-flex; min-width: 5.2rem; min-height: 2.25rem; align-items: center; justify-content: center; border: 1px solid #ffe59b; border-radius: 999px; background: linear-gradient(#ffe49b,#efb335); color: #152117; font-size: .72rem; font-weight: 950; text-transform: uppercase; box-shadow: 0 8px 22px rgba(244,187,69,.22); }
+.gameplay-screen { position: relative; isolation: isolate; width: 100%; height: 100svh; overflow: hidden; background: radial-gradient(circle at 50% 30%,#1e6a50,#061b16 70%); touch-action: none; user-select: none; }
+.phaser-stage { position: absolute; inset: 0; display: grid; place-items: center; overflow: hidden; }
+.phaser-stage canvas { display: block; max-width: 100%; max-height: 100%; box-shadow: 0 0 80px rgba(0,0,0,.4); }
+.game-hud { position: absolute; z-index: 20; top: max(.75rem,env(safe-area-inset-top)); right: .85rem; left: .85rem; display: grid; grid-template-columns: minmax(9rem,1fr) auto minmax(2.8rem,1fr); align-items: center; pointer-events: none; }
+.hud-world { justify-self: start; display: flex; min-height: 3rem; flex-direction: column; justify-content: center; border: 1px solid rgba(255,232,168,.32); border-radius: .8rem; background: rgba(3,26,20,.78); padding: .45rem .8rem; backdrop-filter: blur(10px); }
+.hud-world span { color: #f4c95a; font-size: .58rem; font-weight: 950; letter-spacing: .14em; text-transform: uppercase; }
+.hud-world strong { font-family: Georgia,"Times New Roman",serif; font-size: .95rem; }
+.hud-stats { display: flex; gap: .35rem; border: 1px solid rgba(255,232,168,.32); border-radius: 999px; background: rgba(3,26,20,.82); padding: .38rem; backdrop-filter: blur(10px); }
+.hud-stats span { display: inline-flex; min-width: 4.2rem; height: 2.1rem; align-items: center; justify-content: center; gap: .35rem; border-radius: 999px; background: rgba(255,255,255,.07); font-size: .78rem; font-weight: 900; font-variant-numeric: tabular-nums; }
+.hud-stats svg { color: #f5c94c; }
+.hud-stats .is-danger { color: #ffc1ae; background: rgba(184,48,35,.36); }
+.hud-pause { justify-self: end; display: grid; width: 3rem; height: 3rem; place-items: center; border: 1px solid rgba(255,232,168,.34); border-radius: 50%; background: rgba(3,26,20,.82); color: #fff3c9; pointer-events: auto; backdrop-filter: blur(10px); }
+.game-loading { position: absolute; inset: 0; z-index: 18; display: flex; align-items: center; justify-content: center; gap: .75rem; background: #09271f; color: #fff1bd; }
+.loading-spinner { width: 1.45rem; height: 1.45rem; border: 3px solid rgba(255,255,255,.18); border-top-color: #f4c95a; border-radius: 50%; animation: game-spin .7s linear infinite; }
+@keyframes game-spin { to { transform: rotate(360deg); } }
+.game-state-overlay { position: absolute; inset: 0; z-index: 50; display: grid; place-items: center; padding: 1rem; background: rgba(1,13,10,.7); backdrop-filter: blur(8px); }
+.game-state-panel { width: min(100%,31rem); border: 1px solid rgba(255,224,136,.4); border-radius: 1.4rem; background: linear-gradient(145deg,rgba(15,65,47,.97),rgba(3,25,19,.98)); padding: clamp(1.4rem,4vw,2.3rem); text-align: center; box-shadow: 0 30px 90px rgba(0,0,0,.62); }
+.game-state-panel.is-victory { border-color: rgba(255,218,92,.7); }
+.game-state-panel.is-defeat { border-color: rgba(255,126,102,.45); }
+.state-kicker { color: #f4c95a; font-size: .68rem; font-weight: 950; letter-spacing: .16em; text-transform: uppercase; }
+.game-state-panel h1 { margin: .55rem 0; font-family: Georgia,"Times New Roman",serif; font-size: clamp(2rem,7vw,3.25rem); line-height: 1; }
+.game-state-panel p { margin: .6rem 0; color: rgba(255,247,220,.72); }
+.game-state-panel small { display: block; margin: .65rem 0; color: #a8edc7; }
+.state-actions { display: grid; grid-template-columns: repeat(3,1fr); gap: .55rem; margin-top: 1.25rem; }
+.is-victory .state-actions,.is-defeat .state-actions { grid-template-columns: repeat(2,1fr); }
+.mobile-game-controls { position: absolute; z-index: 25; right: max(.8rem,env(safe-area-inset-right)); bottom: max(.8rem,env(safe-area-inset-bottom)); left: max(.8rem,env(safe-area-inset-left)); display: none; align-items: end; justify-content: space-between; pointer-events: none; }
+.movement-pad { display: flex; gap: .5rem; }
+.touch-control { display: grid; width: 4.25rem; height: 4.25rem; place-items: center; border: 1px solid rgba(255,235,178,.38); border-radius: 1.25rem; background: rgba(3,29,21,.68); color: #fff3cb; pointer-events: auto; backdrop-filter: blur(8px); touch-action: none; }
+.touch-control:active { transform: scale(.94); background: rgba(47,128,83,.82); }
+.jump-control { width: 5rem; height: 5rem; border-radius: 50%; }
+.jump-control span { font-size: .55rem; font-weight: 900; text-transform: uppercase; }
+
+@media (max-width: 760px), (pointer: coarse) {
+  .mobile-game-controls { display: flex; }
+  .game-hud { top: max(.4rem,env(safe-area-inset-top)); right: .45rem; left: .45rem; grid-template-columns: 1fr auto; gap: .35rem; }
+  .hud-world { min-height: 2.45rem; padding: .3rem .55rem; }
+  .hud-world strong { font-size: .75rem; }
+  .hud-stats { grid-column: 1 / span 2; grid-row: 2; justify-self: center; }
+  .hud-stats span { min-width: 3.45rem; height: 1.8rem; font-size: .68rem; }
+  .hud-pause { grid-column: 2; grid-row: 1; width: 2.5rem; height: 2.5rem; }
+  .world-detail-action { grid-column: 1; grid-row: 2; justify-items: start; }
+  .world-detail > .world-detail-action { grid-column: 1; grid-row: 2; }
+  .play-world-button { min-width: 4.6rem; min-height: 1.9rem; font-size: .62rem; }
+  .state-actions { grid-template-columns: 1fr; }
+  .is-victory .state-actions,.is-defeat .state-actions { grid-template-columns: 1fr 1fr; }
+}
+@media (max-height: 500px) {
+  .touch-control { width: 3.6rem; height: 3.6rem; }
+  .jump-control { width: 4rem; height: 4rem; }
+  .game-state-panel { padding: .8rem 1rem; }
+  .game-state-panel h1 { font-size: 1.8rem; }
+}

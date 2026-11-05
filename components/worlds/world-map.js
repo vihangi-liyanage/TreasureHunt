@@ -71,7 +71,10 @@ export function WorldMap({ worlds, mode = "guest", completedWorldIds = [], profi
       <aside className="world-detail" aria-live="polite">
         <span>World {selectedWorld.number}</span>
         <div><h2 className="font-display">{selectedWorld.name}</h2><p>{selectedWorld.description}</p></div>
-        <strong>{selectedWorld.difficulty}</strong>
+        <div className="world-detail-action">
+          <strong>{selectedWorld.difficulty}</strong>
+          {selectedWorld.number === 1 ? <Link className="play-world-button" href={`/game/${selectedWorld.id}${mode === "guest" ? "?mode=guest" : ""}`}>Play</Link> : <span>Coming next</span>}
+        </div>
       </aside>
 
       <GameOverlay title="Settings" open={overlay === "settings"} onClose={closeOverlay}><SettingsPanel /></GameOverlay>

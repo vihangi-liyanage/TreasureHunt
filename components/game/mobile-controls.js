@@ -1,0 +1,5 @@
+"use client";
+import { ArrowLeft, ArrowRight, ArrowUp } from "lucide-react";
+import { GAME_COMMANDS } from "@/game/core/events";
+function ControlButton({bridge,control,label,children,className=""}){const send=(pressed)=>bridge.emit(GAME_COMMANDS.INPUT,{control,pressed});return <button className={`touch-control ${className}`} type="button" aria-label={label} onPointerDown={(event)=>{event.preventDefault();event.currentTarget.setPointerCapture(event.pointerId);send(true);}} onPointerUp={()=>send(false)} onPointerCancel={()=>send(false)} onPointerLeave={()=>send(false)}>{children}</button>;}
+export function MobileControls({bridge}){return <div className="mobile-game-controls" aria-label="Touch game controls"><div className="movement-pad"><ControlButton bridge={bridge} control="left" label="Move left"><ArrowLeft/></ControlButton><ControlButton bridge={bridge} control="right" label="Move right"><ArrowRight/></ControlButton></div><ControlButton bridge={bridge} control="jump" label="Jump" className="jump-control"><ArrowUp/><span>Jump</span></ControlButton></div>;}
