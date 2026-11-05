@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CombatState, PROJECTILE_COOLDOWN_MS } from "@/game/core/combat-state";
-import { isStompCollision } from "@/game/core/collision-rules";
+import { canLandOnPlatform, isStompCollision } from "@/game/core/collision-rules";
 import { InputState } from "@/game/core/input-state";
 import { EMERALD_JUNGLE_LEVEL, EMERALD_JUNGLE_MOTION } from "@/game/config/emerald-jungle";
 import { getTerrainVisualLayout } from "@/game/render/create-textures";
@@ -47,6 +47,15 @@ describe("Emerald Jungle movement model", () => {
         Math.abs(collectible.x - platform.x) <= platform.width / 2 + 35 &&
         platform.top - collectible.y >= 35 && platform.top - collectible.y <= 175);
       expect(supportingPlatform, `${collectible.id} at ${collectible.x},${collectible.y}`).toBeTruthy();
+    }
+  });
+
+  it("contains real unsupported gaps between mandatory ground bodies", () => {
+    const ground = EMERALD_JUNGLE_LEVEL.platforms.filter((platform) => platform.kind === "ground");
+    for (let index = 0; index < ground.length - 1; index += 1) {
+      const gapCenter = ((ground[index].x + ground[index].width / 2) + (ground[index + 1].x - ground[index + 1].width / 2)) / 2;
+      const supported = ground.some((platform) => Math.abs(gapCenter - platform.x) <= platform.width / 2);
+      expect(supported, `gap after ${ground[index].id}`).toBe(false);
     }
   });
 });
@@ -109,5 +118,14 @@ describe("enemy collision rules", () => {
     expect(isStompCollision({ playerVelocityY: 260, playerBottom: 500, enemyCenterY: 510 })).toBe(true);
     expect(isStompCollision({ playerVelocityY: 0, playerBottom: 500, enemyCenterY: 510 })).toBe(false);
     expect(isStompCollision({ playerVelocityY: 260, playerBottom: 545, enemyCenterY: 510 })).toBe(false);
+  });
+});
+
+describe("one-way platform collision rules", () => {
+  it("lands only while descending from above the platform surface", () => {
+    expect(canLandOnPlatform({ playerVelocityY: 300, previousBottom: 495, platformTop: 500 })).toBe(true);
+    expect(canLandOnPlatform({ playerVelocityY: 0, previousBottom: 500, platformTop: 500 })).toBe(true);
+    expect(canLandOnPlatform({ playerVelocityY: -300, previousBottom: 495, platformTop: 500 })).toBe(false);
+    expect(canLandOnPlatform({ playerVelocityY: 300, previousBottom: 530, platformTop: 500 })).toBe(false);
   });
 });

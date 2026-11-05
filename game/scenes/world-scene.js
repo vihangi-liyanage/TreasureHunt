@@ -1,7 +1,7 @@
 import * as Phaser from "phaser";
 import { GAME_COMMANDS, GAME_EVENTS } from "@/game/core/events";
 import { CombatState } from "@/game/core/combat-state";
-import { isStompCollision } from "@/game/core/collision-rules";
+import { canLandOnPlatform, isStompCollision } from "@/game/core/collision-rules";
 import { RunState } from "@/game/core/run-state";
 import { RUN_RULES } from "@/game/config/worlds";
 import { loadGameAssets } from "@/game/render/load-assets";
@@ -95,6 +95,7 @@ export class WorldScene extends Phaser.Scene {
       .setCollideWorldBounds(false).setDragX(this.level.motion.groundDrag);
     this.player.setSize(HUNTER_PRESENTATION.bodyWidth, HUNTER_PRESENTATION.bodyHeight)
       .setOffset(HUNTER_PRESENTATION.bodyOffsetX, HUNTER_PRESENTATION.bodyOffsetY);
+    this.player.body.setAllowGravity(true);
     this.playerController = new PlayerController(this, this.player, this.bridge, this.level.motion);
   }
 
@@ -126,7 +127,16 @@ export class WorldScene extends Phaser.Scene {
   }
 
   registerCollisions() {
-    this.physics.add.collider(this.player, this.platforms);
+    this.platformCollider = this.physics.add.collider(
+      this.player,
+      this.platforms,
+      undefined,
+      (player, platform) => canLandOnPlatform({
+        playerVelocityY: player.body.velocity.y,
+        previousBottom: player.body.prev.y + player.body.height,
+        platformTop: platform.body.top,
+      }),
+    );
     this.physics.add.overlap(this.player, this.coins, (_player, coin) => this.collectCoin(coin));
     this.physics.add.overlap(this.player, this.fishPowerUps, (_player, fish) => this.collectFish(fish));
     this.physics.add.overlap(this.player, this.hazards, () => this.damagePlayer("hazard"));
@@ -159,7 +169,7 @@ export class WorldScene extends Phaser.Scene {
     this.enemySystem.update();
     this.projectileSystem.update(this.runClockMs, this.level.width);
     this.player.x = Phaser.Math.Clamp(this.player.x, 25, this.level.width - 25);
-    if (this.player.y > this.level.height + 90) this.damagePlayer("fall");
+    if (this.player.body.top > this.level.height + 90) this.damagePlayer("fall");
     if (this.combat.consumeExpiry(this.runClockMs)) {
       this.bridge.emit(GAME_EVENTS.POWER_EXPIRED, { worldId: this.worldConfig.id });
       this.publishState();
@@ -224,6 +234,7 @@ export class WorldScene extends Phaser.Scene {
     this.publishState();
     if (this.run.status === "game-over") { this.finishRun("lives"); return; }
     this.player.setPosition(this.safePosition.x, this.safePosition.y).setVelocity(0, 0);
+    this.player.body.setAllowGravity(true);
   }
 
   completeWorld() {
@@ -290,6 +301,7 @@ export class WorldScene extends Phaser.Scene {
     this.projectileSystem?.destroy();
     this.enemySystem?.destroy();
     this.cameraController?.destroy();
+    this.platformCollider?.destroy();
     for (const cleanup of this.commandCleanups) cleanup();
     this.input.keyboard.off("keydown-ESC", this.escapeHandler);
   }

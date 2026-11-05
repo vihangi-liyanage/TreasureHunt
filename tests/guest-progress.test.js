@@ -1,56 +1,63 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { WORLD_CONFIGS } from "@/game/config/worlds";
-import { completeGuestWorld, deriveWorldStates, getJourneyProgress, GUEST_PROGRESS_KEY } from "@/lib/progress/guest-progress";
+import {
+  completeGuestWorld,
+  deriveWorldStates,
+  getJourneyProgress,
+  GUEST_PROGRESS_KEY,
+  readGuestProgress,
+  startGuestAdventure,
+} from "@/lib/progress/guest-progress";
 
-function createMemoryStorage() {
-  const values = new Map();
+function createMemoryStorage(values = {}) {
+  const entries = new Map(Object.entries(values));
   return {
-    getItem: (key) => values.get(key) ?? null,
-    setItem: (key, value) => values.set(key, value),
+    removeItem: vi.fn((key) => entries.delete(key)),
+    snapshot: () => Object.fromEntries(entries),
   };
 }
 
-describe("guest world progression", () => {
-  it("starts with only Emerald Jungle current and unlocked", () => {
-    const states = deriveWorldStates(WORLD_CONFIGS, []);
-    expect(states.map(({ locked, current, completed }) => ({ locked, current, completed }))).toEqual([
-      { locked: false, current: true, completed: false },
-      { locked: true, current: false, completed: false },
-      { locked: true, current: false, completed: false },
+describe("guest adventure progression", () => {
+  beforeEach(() => startGuestAdventure(createMemoryStorage()));
+
+  it("starts every guest entry with only Emerald Jungle current", () => {
+    completeGuestWorld(WORLD_CONFIGS, "emerald-jungle");
+    const storage = createMemoryStorage({
+      [GUEST_PROGRESS_KEY]: JSON.stringify({ completedWorldIds: ["emerald-jungle"] }),
+      "unrelated.preference": "keep-me",
+    });
+
+    expect(startGuestAdventure(storage)).toEqual({ completedWorldIds: [] });
+    expect(storage.removeItem).toHaveBeenCalledWith(GUEST_PROGRESS_KEY);
+    expect(storage.snapshot()).toEqual({ "unrelated.preference": "keep-me" });
+    expect(deriveWorldStates(WORLD_CONFIGS, readGuestProgress().completedWorldIds).map(({ locked, current }) => ({ locked, current }))).toEqual([
+      { locked: false, current: true },
+      { locked: true, current: false },
+      { locked: true, current: false },
     ]);
   });
 
-  it("unlocks each world only after the preceding completion", () => {
-    const afterWorldOne = deriveWorldStates(WORLD_CONFIGS, ["emerald-jungle"]);
-    expect(afterWorldOne[0].completed).toBe(true);
-    expect(afterWorldOne[1]).toMatchObject({ current: true, locked: false });
-    expect(afterWorldOne[2].locked).toBe(true);
-
-    const afterWorldTwo = deriveWorldStates(WORLD_CONFIGS, ["emerald-jungle", "sunset-ruins"]);
-    expect(afterWorldTwo[2]).toMatchObject({ current: true, locked: false });
-    expect(getJourneyProgress(WORLD_CONFIGS, afterWorldTwo.filter((world) => world.completed).map((world) => world.id))).toBe(100);
+  it("unlocks worlds sequentially during one active guest adventure", () => {
+    expect(completeGuestWorld(WORLD_CONFIGS, "emerald-jungle").completedWorldIds).toEqual(["emerald-jungle"]);
+    expect(completeGuestWorld(WORLD_CONFIGS, "sunset-ruins").completedWorldIds).toEqual(["emerald-jungle", "sunset-ruins"]);
+    const states = deriveWorldStates(WORLD_CONFIGS, readGuestProgress().completedWorldIds);
+    expect(states[2]).toMatchObject({ current: true, locked: false });
+    expect(getJourneyProgress(WORLD_CONFIGS, readGuestProgress().completedWorldIds)).toBe(100);
   });
 
-  it("rejects out-of-order completions", () => {
-    const states = deriveWorldStates(WORLD_CONFIGS, ["crystal-cavern"]);
-    expect(states[0].current).toBe(true);
-    expect(states[2].locked).toBe(true);
+  it("rejects out-of-order and duplicate guest completions", () => {
+    expect(completeGuestWorld(WORLD_CONFIGS, "sunset-ruins").completedWorldIds).toEqual([]);
+    completeGuestWorld(WORLD_CONFIGS, "emerald-jungle");
+    expect(completeGuestWorld(WORLD_CONFIGS, "emerald-jungle").completedWorldIds).toEqual(["emerald-jungle"]);
   });
 
-  it("stores a valid current-world completion locally", () => {
-    const storage = createMemoryStorage();
-    const progress = completeGuestWorld(WORLD_CONFIGS, "emerald-jungle", storage);
-    expect(progress.completedWorldIds).toEqual(["emerald-jungle"]);
-    expect(JSON.parse(storage.getItem(GUEST_PROGRESS_KEY))).toMatchObject({ version: 1, completedWorldIds: ["emerald-jungle"] });
-  });
+  it("keeps authenticated progress independent across guest transitions", () => {
+    const registeredCompletedWorldIds = Object.freeze(["emerald-jungle", "sunset-ruins"]);
+    completeGuestWorld(WORLD_CONFIGS, "emerald-jungle");
+    startGuestAdventure(createMemoryStorage());
 
-  it("keeps World 2 unlocked when World 1 is replayed and completed again", () => {
-    const storage = createMemoryStorage();
-    completeGuestWorld(WORLD_CONFIGS, "emerald-jungle", storage);
-    const replayCompletion = completeGuestWorld(WORLD_CONFIGS, "emerald-jungle", storage);
-    const states = deriveWorldStates(WORLD_CONFIGS, replayCompletion.completedWorldIds);
-    expect(replayCompletion.completedWorldIds).toEqual(["emerald-jungle"]);
-    expect(states[0]).toMatchObject({ completed:true, current:false });
-    expect(states[1]).toMatchObject({ locked:false, current:true });
+    expect(readGuestProgress().completedWorldIds).toEqual([]);
+    expect(deriveWorldStates(WORLD_CONFIGS, registeredCompletedWorldIds)[2]).toMatchObject({ current: true, locked: false });
+    expect(registeredCompletedWorldIds).toEqual(["emerald-jungle", "sunset-ruins"]);
   });
 });

@@ -2,29 +2,15 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
+  clearLegacyGuestProgress,
   deriveWorldStates,
   getJourneyProgress,
-  GUEST_PROGRESS_KEY,
-  readGuestProgress,
+  subscribeGuestProgress,
 } from "@/lib/progress/guest-progress";
 
-export function subscribeToGuestProgress(onProgress, {
-  eventTarget = window,
-  storage = window.localStorage,
-  requestFrame = window.requestAnimationFrame,
-  cancelFrame = window.cancelAnimationFrame,
-} = {}) {
-  const syncProgress = () => onProgress(readGuestProgress(storage).completedWorldIds);
-  const initialFrame = requestFrame(syncProgress);
-  const syncStorage = (event) => {
-    if (event.key === GUEST_PROGRESS_KEY) syncProgress();
-  };
-
-  eventTarget.addEventListener("storage", syncStorage);
-  return () => {
-    cancelFrame(initialFrame);
-    eventTarget.removeEventListener("storage", syncStorage);
-  };
+export function subscribeToGuestProgress(onProgress) {
+  clearLegacyGuestProgress();
+  return subscribeGuestProgress(onProgress);
 }
 
 export function useGuestWorldProgress(worlds, enabled = true) {

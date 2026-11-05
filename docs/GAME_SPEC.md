@@ -57,13 +57,15 @@ The final prompts specified premium hand-painted 2D cartoon artwork, emerald/tea
 
 ## Phase 3A playable scope
 
-Emerald Jungle is playable with Arcade Physics, camera-following traversal, layered parallax, platforms and gaps, coins, hazards, patrolling enemies, stomping, three lives, a 120-second timer, checkpoint completion, pause/resume/restart, keyboard controls, and mobile controls. Completion updates guest local progress or calls the authenticated progression endpoint. Sunset Ruins, Crystal Cavern, fish shooting, audio, and advanced combat remain later-phase work.
+Emerald Jungle is playable with Arcade Physics, camera-following traversal, layered parallax, platforms and gaps, coins, hazards, patrolling enemies, stomping, three lives, a 120-second timer, checkpoint completion, pause/resume/restart, keyboard controls, and mobile controls. Completion updates temporary in-memory guest progress or calls the authenticated progression endpoint. Sunset Ruins, Crystal Cavern, audio, and advanced combat remain later-phase work.
 
 ## Phase 3B polished scope
 
 Emerald Jungle now uses the painted gameplay assets above, full-viewport resize behavior, a larger animated hunter, measured jump physics, coyote time, jump buffering, air steering, independent multi-touch controls, reachable upper collectibles, landing/collection/impact feedback, and patrol bounds that keep enemies on terrain. The local fish collectible grants exactly eight seconds of pause-safe magic-orb shooting; F or the mobile Shoot control fires in the facing direction, and projectile overlap defeats an enemy. Repeated pickup rules reset rather than stack the eight-second window. World 1 ends only with “World Complete” and “Checkpoint Reached,” then unlocks World 2 through the existing guest/authenticated progression boundary.
 
-Painted terrain surfaces and opaque character baselines are measured against their Arcade bodies so standing, patrol and landing frames remain visually grounded. Replaying a completed World 1 always creates a fresh 3-life, 120-second run with new enemies and collectibles; saved completion remains persistent and World 2 stays unlocked.
+Painted terrain surfaces and opaque character baselines are measured against their Arcade bodies so standing, patrol and landing frames remain visually grounded. One-way collision accepts the player only while descending from above a platform; leaving an edge restores normal gravity and a gap fall uses the existing damage/respawn rule. Replaying World 1 creates a fresh 3-life, 120-second run with new enemies and collectibles.
+
+Guest completion is temporary for one active client-side adventure. Map-to-game navigation retains sequential unlocks, but choosing Play as Guest again, refreshing, or opening a new browser session resets to World 1. Registered progression remains Supabase-backed and is never merged with guest state.
 
 The local collectible is a deterministic gameplay mechanic and never calls the university Fish Game API. The remote API remains an optional later checkpoint/achievement/revive interaction.
 

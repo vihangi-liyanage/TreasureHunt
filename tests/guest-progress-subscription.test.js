@@ -1,39 +1,21 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { subscribeToGuestProgress } from "@/components/worlds/use-guest-world-progress";
-import { GUEST_PROGRESS_KEY } from "@/lib/progress/guest-progress";
+import { WORLD_CONFIGS } from "@/game/config/worlds";
+import { completeGuestWorld, startGuestAdventure } from "@/lib/progress/guest-progress";
 
-describe("guest progress browser events", () => {
-  it("syncs relevant storage changes and removes every scheduled resource", () => {
-    const listeners = new Map();
-    const eventTarget = {
-      addEventListener: vi.fn((name, listener) => listeners.set(name, listener)),
-      removeEventListener: vi.fn((name, listener) => {
-        if (listeners.get(name) === listener) listeners.delete(name);
-      }),
-    };
-    const storage = {
-      getItem: vi.fn(() => JSON.stringify({ completedWorldIds: ["emerald-jungle"] })),
-    };
+describe("guest progress in-memory events", () => {
+  beforeEach(() => startGuestAdventure({ removeItem: vi.fn() }));
+
+  it("publishes active-adventure changes and stops after unsubscribe", () => {
     const onProgress = vi.fn();
-    const cancelFrame = vi.fn();
-    let initialSync;
+    const unsubscribe = subscribeToGuestProgress(onProgress);
 
-    const unsubscribe = subscribeToGuestProgress(onProgress, {
-      eventTarget,
-      storage,
-      requestFrame: (callback) => { initialSync = callback; return 42; },
-      cancelFrame,
-    });
-
-    initialSync();
-    listeners.get("storage")({ key: "unrelated" });
-    listeners.get("storage")({ key: GUEST_PROGRESS_KEY });
-
-    expect(onProgress).toHaveBeenCalledTimes(2);
+    expect(onProgress).toHaveBeenLastCalledWith([]);
+    completeGuestWorld(WORLD_CONFIGS, "emerald-jungle");
     expect(onProgress).toHaveBeenLastCalledWith(["emerald-jungle"]);
 
     unsubscribe();
-    expect(cancelFrame).toHaveBeenCalledWith(42);
-    expect(listeners.has("storage")).toBe(false);
+    completeGuestWorld(WORLD_CONFIGS, "sunset-ruins");
+    expect(onProgress).toHaveBeenCalledTimes(2);
   });
 });

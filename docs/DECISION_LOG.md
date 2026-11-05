@@ -62,11 +62,15 @@
 
 **Reason:** Guests need durable progress without authentication, while deriving states prevents out-of-order world unlocking and keeps Supabase concerns out of the UI until Phase 2B.
 
+**Status:** Superseded by D021. Guest progress is no longer durable.
+
 ## D011 Isolate browser progression synchronization
 
 **Decision:** Keep pure progression and storage serialization in `lib/progress/guest-progress.js`, and move the browser `storage` subscription into a focused World Map hook.
 
 **Reason:** The map should render journey state without owning persistence-event lifecycle details. The hook supplies a small `{ states, journeyProgress }` interface and cleans up its listener independently.
+
+**Status:** Superseded by D021. The focused hook remains, but subscribes to in-memory adventure events rather than browser storage.
 
 ## D012 Restrict Fish question images to the verified contract
 
@@ -91,6 +95,8 @@
 **Decision:** Guest progression stays in versioned local storage; authenticated progression comes only from Supabase. Guests may view the map but cannot read or submit leaderboard records.
 
 **Reason:** This preserves optional play without creating anonymous database identities, prevents accidental local progress merging, and makes the virtual-identity boundary explicit.
+
+**Status:** Partly superseded by D021. Identity separation remains; guest progression is now temporary rather than persisted locally.
 
 ## D016 Explicit least-privilege service grants
 
@@ -121,3 +127,17 @@
 **Decision:** Store measured terrain surface coordinates and sprite body baselines in the render module, then align those pixels to configuration-owned collision tops. Enter gameplay from the World Map with a normal document navigation so every attempt creates a new Phaser scene and `RunState`, while completed-world progress remains in its existing guest or authenticated store.
 
 **Reason:** The floating characters were a presentation-origin error, not faulty physics; changing collision geometry would have broken reachable layouts. A fresh route lifecycle prevents a cached terminal UI from becoming run state without adding run IDs or another reset service. The test-only `physics-model` wrapper was removed because it had no runtime consumer; reachability calculations now live beside the tests that use them.
+
+**Status:** Route-navigation portion superseded by D021; measured visual alignment remains current.
+
+## D021 Keep guest progression in one active adventure only
+
+**Decision:** Store ordered guest completions only in module memory. Reset them on every Welcome-screen guest entry, let refresh/new sessions reset naturally, and remove only the obsolete TreasureHunt guest key. Use client navigation plus a simple attempt number to retain map progress while reconstructing each gameplay run. Registered progress remains exclusively Supabase-backed.
+
+**Reason:** Guest mode must allow a three-world journey without becoming a second identity store. Session storage or another cookie would still restore progress after refresh and blur the guest/authenticated boundary; a global state framework is unnecessary for one small array and subscription set.
+
+## D022 Validate one-way platform contact from above
+
+**Decision:** Keep configuration-owned static strips, but accept collision resolution only when the hunter is descending and its previous body bottom was at the platform top. Treat `blocked.down` as the grounded signal and keep gravity explicitly enabled after spawn/respawn.
+
+**Reason:** Global Arcade gravity was already correct. The permissive collision/grounded checks could classify non-supporting contact as ground. A small pure process rule fixes platform pass-through and edge falls without changing art, level spacing or introducing a physics manager.

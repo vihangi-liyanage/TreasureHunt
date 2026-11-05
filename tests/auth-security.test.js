@@ -1,7 +1,8 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getPublicAuthError } from "@/lib/auth/errors";
 import { safeNextPath } from "@/lib/auth/redirects";
 import { getVerifiedIdentity } from "@/lib/auth/session";
+import { getPlayerProgress } from "@/lib/data/player-repository";
 import { resetRateLimitsForTests, takeRateLimit } from "@/lib/security/rate-limit";
 
 describe("authentication security boundaries", () => {
@@ -31,5 +32,17 @@ describe("authentication security boundaries", () => {
     const rejected = { auth: { getClaims: async () => ({ data: null, error: new Error("invalid") }) } };
     await expect(getVerifiedIdentity(trusted)).resolves.toEqual({ id: "user-1", email: "player@example.com" });
     await expect(getVerifiedIdentity(rejected)).resolves.toBeNull();
+  });
+
+  it("loads registered progression by the verified account id rather than guest state", async () => {
+    const savedProgress = { completed_worlds: 2, current_world: 3 };
+    const maybeSingle = vi.fn(async () => ({ data: savedProgress, error: null }));
+    const eq = vi.fn(() => ({ maybeSingle }));
+    const select = vi.fn(() => ({ eq }));
+    const supabase = { from: vi.fn(() => ({ select })) };
+
+    await expect(getPlayerProgress(supabase, "account-7")).resolves.toBe(savedProgress);
+    expect(supabase.from).toHaveBeenCalledWith("player_progress");
+    expect(eq).toHaveBeenCalledWith("user_id", "account-7");
   });
 });

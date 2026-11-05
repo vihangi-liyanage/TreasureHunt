@@ -2,11 +2,12 @@
 
 import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowLeft, Check, Compass, LockKeyhole, Settings, Trophy, UserRound } from "lucide-react";
 import { GameOverlay } from "@/components/overlays/game-overlay";
 import { SettingsPanel } from "@/components/settings/settings-panel";
 import { useGuestWorldProgress } from "./use-guest-world-progress";
-import { deriveWorldStates, getJourneyProgress } from "@/lib/progress/guest-progress";
+import { beginGuestRun, deriveWorldStates, getJourneyProgress } from "@/lib/progress/guest-progress";
 import { ProfilePanel } from "@/components/profile/profile-panel";
 import { LeaderboardPanel } from "@/components/leaderboard/leaderboard-panel";
 
@@ -18,6 +19,7 @@ function NodeStatus({ world }) {
 }
 
 export function WorldMap({ worlds, mode = "guest", completedWorldIds = [], profile = null, leaderboard = [] }) {
+  const router = useRouter();
   const [selectedId, setSelectedId] = useState(null);
   const [overlay, setOverlay] = useState(null);
   const closeOverlay = useCallback(() => setOverlay(null), []);
@@ -28,6 +30,10 @@ export function WorldMap({ worlds, mode = "guest", completedWorldIds = [], profi
   }), [worlds, completedWorldIds]);
   const { states, journeyProgress } = mode === "guest" ? guestProgress : authenticatedProgress;
   const selectedWorld = states.find((world) => world.id === selectedId && !world.locked) || states.find((world) => world.current) || states[0];
+  const playWorld = useCallback(() => {
+    const guestQuery = mode === "guest" ? `?mode=guest&attempt=${beginGuestRun()}` : "";
+    router.push(`/game/${selectedWorld.id}${guestQuery}`);
+  }, [mode, router, selectedWorld.id]);
 
   return (
     <main className="world-map-screen">
@@ -73,7 +79,7 @@ export function WorldMap({ worlds, mode = "guest", completedWorldIds = [], profi
         <div><h2 className="font-display">{selectedWorld.name}</h2><p>{selectedWorld.description}</p></div>
         <div className="world-detail-action">
           <strong>{selectedWorld.difficulty}</strong>
-          {selectedWorld.number === 1 ? <a className="play-world-button" href={`/game/${selectedWorld.id}${mode === "guest" ? "?mode=guest" : ""}`}>Play</a> : <span>Coming next</span>}
+          {selectedWorld.number === 1 ? <button className="play-world-button" type="button" onClick={playWorld}>Play</button> : <span>Coming next</span>}
         </div>
       </aside>
 
