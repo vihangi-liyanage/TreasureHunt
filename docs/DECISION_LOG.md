@@ -115,3 +115,9 @@
 **Decision:** Keep the collectible's eight-second power window, cooldown, pause/restart behavior and expiry in `CombatState`, separate from projectile rendering and completely separate from the remote Fish API adapter.
 
 **Reason:** A pure state model gives exact tests and one expiry transition. Extending a pickup from its latest collection is understandable, while stacking durations could exceed the fixed eight-second rule. Using Phaser timers directly was rejected after browser throttling demonstrated catch-up bursts.
+
+## D020 Align painted surfaces and reset runs at the route boundary
+
+**Decision:** Store measured terrain surface coordinates and sprite body baselines in the render module, then align those pixels to configuration-owned collision tops. Enter gameplay from the World Map with a normal document navigation so every attempt creates a new Phaser scene and `RunState`, while completed-world progress remains in its existing guest or authenticated store.
+
+**Reason:** The floating characters were a presentation-origin error, not faulty physics; changing collision geometry would have broken reachable layouts. A fresh route lifecycle prevents a cached terminal UI from becoming run state without adding run IDs or another reset service. The test-only `physics-model` wrapper was removed because it had no runtime consumer; reachability calculations now live beside the tests that use them.

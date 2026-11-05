@@ -43,4 +43,14 @@ describe("guest world progression", () => {
     expect(progress.completedWorldIds).toEqual(["emerald-jungle"]);
     expect(JSON.parse(storage.getItem(GUEST_PROGRESS_KEY))).toMatchObject({ version: 1, completedWorldIds: ["emerald-jungle"] });
   });
+
+  it("keeps World 2 unlocked when World 1 is replayed and completed again", () => {
+    const storage = createMemoryStorage();
+    completeGuestWorld(WORLD_CONFIGS, "emerald-jungle", storage);
+    const replayCompletion = completeGuestWorld(WORLD_CONFIGS, "emerald-jungle", storage);
+    const states = deriveWorldStates(WORLD_CONFIGS, replayCompletion.completedWorldIds);
+    expect(replayCompletion.completedWorldIds).toEqual(["emerald-jungle"]);
+    expect(states[0]).toMatchObject({ completed:true, current:false });
+    expect(states[1]).toMatchObject({ locked:false, current:true });
+  });
 });

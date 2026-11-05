@@ -22,4 +22,5 @@
 
 - **Phase 3A complete:** reusable playable Emerald Jungle foundation, physics, HUD, progression bridge and responsive controls.
 - **Phase 3B complete:** painted original gameplay assets, tuned/reachability-tested movement, multi-touch input, local eight-second fish power, magical projectiles, projectile enemy defeat, active-clock pause/restart safety, full-viewport desktop/mobile polish and real World 1 checkpoint completion.
+- **Post-3B correction complete:** measured sprite/terrain grounding and fresh replay construction are regression-tested without changing persistent guest/authenticated progression; one unused test-only physics wrapper was removed.
 - **Next gameplay work:** build World 2/3 configurations and production audio hooks. External Fish API challenge UI remains separate future interoperability work.

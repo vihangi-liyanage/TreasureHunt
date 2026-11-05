@@ -5,7 +5,7 @@ import { isStompCollision } from "@/game/core/collision-rules";
 import { RunState } from "@/game/core/run-state";
 import { RUN_RULES } from "@/game/config/worlds";
 import { loadGameAssets } from "@/game/render/load-assets";
-import { createGameTextures } from "@/game/render/create-textures";
+import { createGameTextures, getTerrainVisualLayout, HUNTER_PRESENTATION } from "@/game/render/create-textures";
 import { CameraController } from "@/game/systems/camera-controller";
 import { PlayerController } from "@/game/systems/player-controller";
 import { EnemySystem } from "@/game/systems/enemy-system";
@@ -75,11 +75,9 @@ export class WorldScene extends Phaser.Scene {
       hitbox.body.checkCollision.down = false;
       hitbox.body.checkCollision.left = false;
       hitbox.body.checkCollision.right = false;
-      const frame = definition.kind === "ground" ? 0 : definition.kind === "step" ? 2 : 1;
-      const visualHeight = definition.kind === "ground" ? 280 : definition.kind === "step" ? 125 : 160;
-      this.add.image(definition.x, definition.top - 30, "jungle-terrain", frame)
-        .setDisplaySize(definition.width + (definition.kind === "ground" ? 110 : 50), visualHeight)
-        .setOrigin(0.5, 0.18).setDepth(2);
+      const visual = getTerrainVisualLayout(definition);
+      this.add.image(definition.x, visual.y, "jungle-terrain", visual.frame)
+        .setDisplaySize(visual.width, visual.height).setOrigin(0.5, 0).setDepth(2);
     }
     this.hazards = this.physics.add.staticGroup();
     for (const definition of this.level.hazards) {
@@ -93,8 +91,10 @@ export class WorldScene extends Phaser.Scene {
 
   createPlayer() {
     this.player = this.physics.add.sprite(this.level.playerStart.x, this.level.playerStart.y, "hunter-atlas", 0)
-      .setDisplaySize(160, 160).setDepth(10).setCollideWorldBounds(false).setDragX(this.level.motion.groundDrag);
-    this.player.setSize(102, 188).setOffset(171, 220);
+      .setDisplaySize(HUNTER_PRESENTATION.displaySize, HUNTER_PRESENTATION.displaySize).setDepth(10)
+      .setCollideWorldBounds(false).setDragX(this.level.motion.groundDrag);
+    this.player.setSize(HUNTER_PRESENTATION.bodyWidth, HUNTER_PRESENTATION.bodyHeight)
+      .setOffset(HUNTER_PRESENTATION.bodyOffsetX, HUNTER_PRESENTATION.bodyOffsetY);
     this.playerController = new PlayerController(this, this.player, this.bridge, this.level.motion);
   }
 

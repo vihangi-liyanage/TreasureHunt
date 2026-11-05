@@ -73,7 +73,7 @@ export function WorldMap({ worlds, mode = "guest", completedWorldIds = [], profi
         <div><h2 className="font-display">{selectedWorld.name}</h2><p>{selectedWorld.description}</p></div>
         <div className="world-detail-action">
           <strong>{selectedWorld.difficulty}</strong>
-          {selectedWorld.number === 1 ? <Link className="play-world-button" href={`/game/${selectedWorld.id}${mode === "guest" ? "?mode=guest" : ""}`}>Play</Link> : <span>Coming next</span>}
+          {selectedWorld.number === 1 ? <a className="play-world-button" href={`/game/${selectedWorld.id}${mode === "guest" ? "?mode=guest" : ""}`}>Play</a> : <span>Coming next</span>}
         </div>
       </aside>
 

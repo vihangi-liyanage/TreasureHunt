@@ -1,3 +1,36 @@
+const TERRAIN_FRAME_HEIGHT = 444;
+
+export const TERRAIN_PRESENTATION = Object.freeze({
+  ground: Object.freeze({ frame: 0, height: 280, widthPadding: 110, surfaceY: 188 }),
+  ledge: Object.freeze({ frame: 1, height: 160, widthPadding: 50, surfaceY: 126 }),
+  step: Object.freeze({ frame: 2, height: 125, widthPadding: 50, surfaceY: 206 }),
+});
+
+export const HUNTER_PRESENTATION = Object.freeze({
+  displaySize: 160,
+  bodyWidth: 102,
+  bodyHeight: 188,
+  bodyOffsetX: 171,
+  bodyOffsetY: 229,
+});
+
+export const ENEMY_PRESENTATION = Object.freeze({
+  displaySize: 112,
+  bodyWidth: 235,
+  bodyHeight: 125,
+  bodyOffsetX: 100,
+  bodyOffsetY: 255,
+});
+
+export function getTerrainVisualLayout(platform) {
+  const presentation = TERRAIN_PRESENTATION[platform.kind] ?? TERRAIN_PRESENTATION.ledge;
+  return Object.freeze({
+    ...presentation,
+    width: platform.width + presentation.widthPadding,
+    y: platform.top - (presentation.surfaceY / TERRAIN_FRAME_HEIGHT) * presentation.height,
+  });
+}
+
 function createUtilityTextures(scene) {
   if (scene.textures.exists("platform-hitbox")) return;
   const graphics = scene.add.graphics();

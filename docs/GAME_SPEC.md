@@ -63,6 +63,8 @@ Emerald Jungle is playable with Arcade Physics, camera-following traversal, laye
 
 Emerald Jungle now uses the painted gameplay assets above, full-viewport resize behavior, a larger animated hunter, measured jump physics, coyote time, jump buffering, air steering, independent multi-touch controls, reachable upper collectibles, landing/collection/impact feedback, and patrol bounds that keep enemies on terrain. The local fish collectible grants exactly eight seconds of pause-safe magic-orb shooting; F or the mobile Shoot control fires in the facing direction, and projectile overlap defeats an enemy. Repeated pickup rules reset rather than stack the eight-second window. World 1 ends only with “World Complete” and “Checkpoint Reached,” then unlocks World 2 through the existing guest/authenticated progression boundary.
 
+Painted terrain surfaces and opaque character baselines are measured against their Arcade bodies so standing, patrol and landing frames remain visually grounded. Replaying a completed World 1 always creates a fresh 3-life, 120-second run with new enemies and collectibles; saved completion remains persistent and World 2 stays unlocked.
+
 The local collectible is a deterministic gameplay mechanic and never calls the university Fish Game API. The remote API remains an optional later checkpoint/achievement/revive interaction.
 
 ## Acceptance boundaries

@@ -2,8 +2,23 @@ import { describe, expect, it } from "vitest";
 import { CombatState, PROJECTILE_COOLDOWN_MS } from "@/game/core/combat-state";
 import { isStompCollision } from "@/game/core/collision-rules";
 import { InputState } from "@/game/core/input-state";
-import { calculateJumpMetrics, canReachPlatform } from "@/game/core/physics-model";
 import { EMERALD_JUNGLE_LEVEL, EMERALD_JUNGLE_MOTION } from "@/game/config/emerald-jungle";
+import { getTerrainVisualLayout } from "@/game/render/create-textures";
+
+function calculateJumpMetrics({ gravity, jumpVelocity, moveSpeed }) {
+  const riseTime = Math.abs(jumpVelocity) / gravity;
+  return {
+    apexHeight: (jumpVelocity * jumpVelocity) / (2 * gravity),
+    maximumRange: moveSpeed * riseTime * 2,
+  };
+}
+
+function canReachPlatform(from, to, motion) {
+  const metrics = calculateJumpMetrics(motion);
+  const verticalRise = Math.max(0, from.top - to.top);
+  const horizontalGap = Math.max(0, to.x - to.width / 2 - (from.x + from.width / 2));
+  return verticalRise <= metrics.apexHeight - 24 && horizontalGap <= metrics.maximumRange * 0.72;
+}
 
 describe("Emerald Jungle movement model", () => {
   it("documents a jump envelope that clears every mandatory ground gap", () => {
@@ -14,6 +29,14 @@ describe("Emerald Jungle movement model", () => {
     const route = EMERALD_JUNGLE_LEVEL.mandatoryRoute.map((id) => byId.get(id));
     for (let index = 0; index < route.length - 1; index += 1) {
       expect(canReachPlatform(route[index], route[index + 1], EMERALD_JUNGLE_MOTION), `${route[index].id} -> ${route[index + 1].id}`).toBe(true);
+    }
+  });
+
+  it("aligns each painted terrain surface with its Arcade collision top", () => {
+    for (const platform of EMERALD_JUNGLE_LEVEL.platforms) {
+      const visual = getTerrainVisualLayout(platform);
+      const paintedSurface = visual.y + (visual.surfaceY / 444) * visual.height;
+      expect(paintedSurface, platform.id).toBeCloseTo(platform.top, 5);
     }
   });
 
