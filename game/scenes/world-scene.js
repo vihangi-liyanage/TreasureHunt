@@ -1,47 +1,296 @@
 import * as Phaser from "phaser";
 import { GAME_COMMANDS, GAME_EVENTS } from "@/game/core/events";
+import { CombatState } from "@/game/core/combat-state";
+import { isStompCollision } from "@/game/core/collision-rules";
 import { RunState } from "@/game/core/run-state";
 import { RUN_RULES } from "@/game/config/worlds";
+import { loadGameAssets } from "@/game/render/load-assets";
 import { createGameTextures } from "@/game/render/create-textures";
+import { CameraController } from "@/game/systems/camera-controller";
 import { PlayerController } from "@/game/systems/player-controller";
 import { EnemySystem } from "@/game/systems/enemy-system";
+import { ProjectileSystem } from "@/game/systems/projectile-system";
 
 export class WorldScene extends Phaser.Scene {
-  constructor(){super("WorldScene");}
-  init({world,level,bridge}){this.worldConfig=world;this.level=level;this.bridge=bridge;this.commandCleanups=[];this.isPaused=false;this.safePosition={...level.playerStart};}
-  create(){
-    createGameTextures(this); this.run=new RunState({lives:RUN_RULES.startingLives,timerSeconds:this.worldConfig.timerSeconds});
-    this.physics.world.setBounds(0,0,this.level.width,this.level.height+220); this.cameras.main.setBounds(0,0,this.level.width,this.level.height);
-    this.createParallaxBackground(); this.createLevelGeometry(); this.createPlayer(); this.createCollectibles(); this.createEnemies(); this.createCheckpoint(); this.registerCollisions(); this.registerCommands();
-    this.timerEvent=this.time.addEvent({delay:1000,loop:true,callback:()=>{if(!this.run.tick())return;this.publishState();if(this.run.status==="game-over")this.finishRun("timer");}});
-    this.cameras.main.startFollow(this.player,true,.09,.09).setDeadzone(260,120).fadeIn(350,8,35,28);
-    this.bridge.emit(GAME_EVENTS.READY,{worldId:this.worldConfig.id}); this.publishState();
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN,this.cleanup,this);
+  constructor() { super("WorldScene"); }
+
+  init({ world, level, bridge }) {
+    this.worldConfig = world;
+    this.level = level;
+    this.bridge = bridge;
+    this.commandCleanups = [];
+    this.isPaused = false;
+    this.safePosition = { ...level.playerStart };
   }
-  createParallaxBackground(){const w=1280,h=720;this.parallax=[
-    {factor:0,sprite:this.add.tileSprite(0,0,w,h,"jungle-sky").setOrigin(0).setScrollFactor(0).setDepth(-50)},
-    {factor:.12,sprite:this.add.tileSprite(0,0,w,h,"jungle-mountains").setOrigin(0).setScrollFactor(0).setDepth(-40)},
-    {factor:.28,sprite:this.add.tileSprite(0,0,w,h,"jungle-canopy").setOrigin(0).setScrollFactor(0).setDepth(-30)},
-    {factor:.45,sprite:this.add.tileSprite(0,0,w,h,"jungle-mist").setOrigin(0).setScrollFactor(0).setDepth(-20)},
-  ];}
-  createLevelGeometry(){
-    this.platforms=this.physics.add.staticGroup(); for(const d of this.level.platforms){const p=this.platforms.create(d.x,d.y,"jungle-platform");p.setDisplaySize(d.width,d.height).refreshBody();}
-    this.hazards=this.physics.add.staticGroup(); for(const d of this.level.hazards){const h=this.hazards.create(d.x,d.y,"jungle-spikes");h.setDisplaySize(d.width,42).refreshBody();h.body.setSize(d.width*.82,25).setOffset(d.width*.09,12);}
-    for(let x=240;x<this.level.width;x+=460){const v=this.add.graphics().setDepth(-10);v.lineStyle(5,0x174b32,.75).lineBetween(x,0,x+25,150+(x%130));v.fillStyle(0x4a9a58,.75).fillEllipse(x+19,90,32,15);}
+
+  preload() { loadGameAssets(this); }
+
+  create() {
+    createGameTextures(this);
+    this.run = new RunState({ lives: RUN_RULES.startingLives, timerSeconds: this.worldConfig.timerSeconds });
+    this.combat = new CombatState();
+    this.runClockMs = 0;
+    this.timerAccumulatorMs = 0;
+    this.physics.world.setBounds(0, 0, this.level.width, this.level.height + 220);
+    this.createBackdrop();
+    this.createLevelGeometry();
+    this.createPlayer();
+    this.createCollectibles();
+    this.createEnemies();
+    this.createCheckpoint();
+    this.registerCollisions();
+    this.registerCommands();
+    this.cameraController = new CameraController(this, this.player, this.level.width, this.level.height);
+    this.cameras.main.fadeIn(450, 8, 35, 28);
+    this.bridge.emit(GAME_EVENTS.READY, { worldId: this.worldConfig.id });
+    this.publishState();
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.cleanup, this);
   }
-  createPlayer(){this.player=this.physics.add.sprite(this.level.playerStart.x,this.level.playerStart.y,"hunter-idle-1");this.player.setDepth(8).setCollideWorldBounds(false).setSize(29,56).setOffset(10,8).setDragX(1450);this.playerController=new PlayerController(this,this.player,this.bridge);}
-  createCollectibles(){this.coins=this.physics.add.group({allowGravity:false,immovable:true});for(const d of this.level.coins){const coin=this.coins.create(d.x,d.y,"gold-coin");coin.setData("coinId",d.id).setDepth(4).setCircle(11,3,3);this.tweens.add({targets:coin,y:d.y-8,duration:850+(d.x%300),yoyo:true,repeat:-1,ease:"Sine.inOut"});}}
-  createEnemies(){this.enemySystem=new EnemySystem(this,this.level.enemies,this.platforms);}
-  createCheckpoint(){const{x,y}=this.level.checkpoint;this.checkpoint=this.physics.add.staticImage(x,y,"jungle-checkpoint").setDepth(3);this.checkpoint.body.setSize(54,110).setOffset(13,5);this.add.text(x-84,y-112,"JUNGLE GATE",{fontFamily:"Arial, sans-serif",fontSize:"18px",fontStyle:"bold",color:"#fff2b5",stroke:"#15362a",strokeThickness:5}).setDepth(3);}
-  registerCollisions(){this.physics.add.collider(this.player,this.platforms);this.physics.add.overlap(this.player,this.coins,(_p,c)=>this.collectCoin(c));this.physics.add.overlap(this.player,this.hazards,()=>this.damagePlayer("hazard"));this.physics.add.overlap(this.player,this.enemySystem.group,(_p,e)=>this.touchEnemy(e));this.physics.add.overlap(this.player,this.checkpoint,()=>this.completeWorld());}
-  registerCommands(){this.commandCleanups.push(this.bridge.on(GAME_COMMANDS.PAUSE,()=>this.setPaused(true)),this.bridge.on(GAME_COMMANDS.RESUME,()=>this.setPaused(false)),this.bridge.on(GAME_COMMANDS.RESTART,()=>this.scene.restart({world:this.worldConfig,level:this.level,bridge:this.bridge})));this.escapeHandler=()=>this.setPaused(!this.isPaused);this.input.keyboard.on("keydown-ESC",this.escapeHandler);}
-  update(){const sx=this.cameras.main.scrollX;for(const layer of this.parallax)layer.sprite.tilePositionX=sx*layer.factor;if(this.isPaused||this.run.status!=="playing")return;this.playerController.update();this.enemySystem.update();this.player.x=Phaser.Math.Clamp(this.player.x,18,this.level.width-18);if(this.player.y>this.level.height+80)this.damagePlayer("fall");}
-  collectCoin(coin){const id=coin.getData("coinId");if(!this.run.collectCoin(id))return;const burst=this.add.circle(coin.x,coin.y,8,0xffe77d,.9).setDepth(12);this.tweens.add({targets:burst,scale:3.2,alpha:0,duration:260,onComplete:()=>burst.destroy()});coin.disableBody(true,true);this.bridge.emit(GAME_EVENTS.COIN_COLLECTED,{id,score:this.run.score,coins:this.run.coins});this.publishState();}
-  touchEnemy(enemy){if(!enemy.active||this.run.status!=="playing")return;const stomped=this.player.body.velocity.y>120&&this.player.body.bottom<enemy.body.center.y+12;if(stomped){const id=enemy.getData("id");if(this.run.stompEnemy(id)){this.enemySystem.stomp(enemy);this.player.setVelocityY(-360);this.cameras.main.shake(80,.0025);this.bridge.emit(GAME_EVENTS.ENEMY_STOMPED,{id,score:this.run.score});this.publishState();}return;}this.damagePlayer("enemy");}
-  damagePlayer(cause){if(this.run.status!=="playing")return;const damaged=this.run.damage(this.time.now);if(!damaged&&cause!=="fall")return;this.cameras.main.shake(170,.007);this.player.setTint(0xff8d72).setVelocity(0,-260);this.time.delayedCall(220,()=>this.player?.active&&this.player.clearTint());this.bridge.emit(GAME_EVENTS.PLAYER_DAMAGED,{cause,lives:this.run.lives});this.publishState();if(this.run.status==="game-over"){this.finishRun("lives");return;}this.player.setPosition(this.safePosition.x,this.safePosition.y).setVelocity(0,0);}
-  completeWorld(){if(!this.run.complete())return;this.physics.pause();this.timerEvent.paused=true;this.cameras.main.flash(500,255,225,116);const result={...this.run.snapshot(),worldId:this.worldConfig.id};this.publishState();this.bridge.emit(GAME_EVENTS.WORLD_COMPLETED,result);}
-  finishRun(reason){this.physics.pause();this.timerEvent.paused=true;this.publishState();this.bridge.emit(GAME_EVENTS.RUN_ENDED,{...this.run.snapshot(),reason});}
-  setPaused(paused){if(this.run.status!=="playing"||this.isPaused===paused)return;this.isPaused=paused;if(paused)this.physics.pause();else this.physics.resume();this.timerEvent.paused=paused;this.publishState();}
-  publishState(){this.bridge.emit(GAME_EVENTS.STATE_CHANGED,{...this.run.snapshot(),paused:this.isPaused,worldId:this.worldConfig.id,worldName:this.worldConfig.name});}
-  cleanup(){this.playerController?.destroy();for(const cleanup of this.commandCleanups)cleanup();this.input.keyboard.off("keydown-ESC",this.escapeHandler);}
+
+  createBackdrop() {
+    this.backdrop = this.add.image(0, 0, "jungle-panorama").setOrigin(0).setScrollFactor(0).setDepth(-100);
+    this.backdropShade = this.add.rectangle(0, 0, 10, 10, 0x07382c, 0.12).setOrigin(0).setScrollFactor(0).setDepth(-90);
+    this.foregroundRuins = [];
+    for (let x = 780; x < this.level.width; x += 1_050) {
+      const ruin = this.add.image(x, 435 + (x % 170), "jungle-terrain", 3).setDisplaySize(260, 260)
+        .setAlpha(0.32).setTint(0x5d9670).setScrollFactor(0.45).setDepth(-10);
+      this.foregroundRuins.push(ruin);
+    }
+  }
+
+  resizeBackdrop(width, height) {
+    const sourceRatio = 2172 / 724;
+    const viewRatio = width / height;
+    const displayWidth = viewRatio > sourceRatio ? width : height * sourceRatio;
+    const displayHeight = viewRatio > sourceRatio ? width / sourceRatio : height;
+    this.backdrop.setDisplaySize(displayWidth, displayHeight).setPosition((width - displayWidth) / 2, 0);
+    this.backdropShade.setDisplaySize(width, height);
+  }
+
+  createLevelGeometry() {
+    this.platforms = this.physics.add.staticGroup();
+    for (const definition of this.level.platforms) {
+      const hitbox = this.platforms.create(definition.x, definition.top + 14, "platform-hitbox")
+        .setDisplaySize(definition.width, 28).setVisible(false).refreshBody().setData("platformId", definition.id);
+      hitbox.body.checkCollision.down = false;
+      hitbox.body.checkCollision.left = false;
+      hitbox.body.checkCollision.right = false;
+      const frame = definition.kind === "ground" ? 0 : definition.kind === "step" ? 2 : 1;
+      const visualHeight = definition.kind === "ground" ? 280 : definition.kind === "step" ? 125 : 160;
+      this.add.image(definition.x, definition.top - 30, "jungle-terrain", frame)
+        .setDisplaySize(definition.width + (definition.kind === "ground" ? 110 : 50), visualHeight)
+        .setOrigin(0.5, 0.18).setDepth(2);
+    }
+    this.hazards = this.physics.add.staticGroup();
+    for (const definition of this.level.hazards) {
+      const hazard = this.hazards.create(definition.x, definition.top + 18, "platform-hitbox")
+        .setDisplaySize(definition.width * 0.72, 34).setVisible(false).refreshBody();
+      hazard.setData("cause", "thorns");
+      this.add.image(definition.x, definition.top - 28, "jungle-objects", 5)
+        .setDisplaySize(definition.width + 65, 120).setDepth(5);
+    }
+  }
+
+  createPlayer() {
+    this.player = this.physics.add.sprite(this.level.playerStart.x, this.level.playerStart.y, "hunter-atlas", 0)
+      .setDisplaySize(160, 160).setDepth(10).setCollideWorldBounds(false).setDragX(this.level.motion.groundDrag);
+    this.player.setSize(102, 188).setOffset(171, 220);
+    this.playerController = new PlayerController(this, this.player, this.bridge, this.level.motion);
+  }
+
+  createCollectibles() {
+    this.coins = this.physics.add.group({ allowGravity: false, immovable: true });
+    for (const definition of this.level.coins) {
+      const coin = this.coins.create(definition.x, definition.y, "jungle-objects", 2)
+        .setData("coinId", definition.id).setDisplaySize(64, 64).setCircle(118, 104, 104).setDepth(8);
+      this.tweens.add({ targets: coin, y: definition.y - 9, scaleX: 0.08, duration: 720, yoyo: true, repeat: -1, ease: "Sine.inOut" });
+    }
+    this.fishPowerUps = this.physics.add.group({ allowGravity: false, immovable: true });
+    for (const definition of this.level.fishPowerUps) {
+      const fish = this.fishPowerUps.create(definition.x, definition.y, "jungle-objects", 3)
+        .setData("powerId", definition.id).setDisplaySize(78, 78).setCircle(125, 95, 100).setDepth(9);
+      this.tweens.add({ targets: fish, y: definition.y - 12, angle: 5, duration: 900, yoyo: true, repeat: -1, ease: "Sine.inOut" });
+    }
+  }
+
+  createEnemies() {
+    this.enemySystem = new EnemySystem(this, this.level.enemies, this.platforms);
+    this.projectileSystem = new ProjectileSystem(this, this.bridge, this.combat, this.enemySystem.group, (enemy, cause) => this.defeatEnemy(enemy, cause));
+  }
+
+  createCheckpoint() {
+    const { x, y } = this.level.checkpoint;
+    this.checkpoint = this.physics.add.staticImage(x, y, "platform-hitbox").setDisplaySize(76, 135).setVisible(false).refreshBody();
+    this.checkpointArt = this.add.image(x, y - 32, "jungle-objects", 6).setDisplaySize(190, 190).setDepth(4);
+    this.add.text(x - 96, y - 145, "CHECKPOINT", { fontFamily: "Georgia, serif", fontSize: "18px", fontStyle: "bold", color: "#fff2b5", stroke: "#123b2d", strokeThickness: 6 }).setDepth(6);
+  }
+
+  registerCollisions() {
+    this.physics.add.collider(this.player, this.platforms);
+    this.physics.add.overlap(this.player, this.coins, (_player, coin) => this.collectCoin(coin));
+    this.physics.add.overlap(this.player, this.fishPowerUps, (_player, fish) => this.collectFish(fish));
+    this.physics.add.overlap(this.player, this.hazards, () => this.damagePlayer("hazard"));
+    this.physics.add.overlap(this.player, this.enemySystem.group, (_player, enemy) => this.touchEnemy(enemy));
+    this.physics.add.overlap(this.player, this.checkpoint, () => this.completeWorld());
+  }
+
+  registerCommands() {
+    this.commandCleanups.push(
+      this.bridge.on(GAME_COMMANDS.PAUSE, () => this.setPaused(true)),
+      this.bridge.on(GAME_COMMANDS.RESUME, () => this.setPaused(false)),
+      this.bridge.on(GAME_COMMANDS.RESTART, () => this.scene.restart({ world: this.worldConfig, level: this.level, bridge: this.bridge })),
+    );
+    this.escapeHandler = () => this.setPaused(!this.isPaused);
+    this.input.keyboard.on("keydown-ESC", this.escapeHandler);
+  }
+
+  update(_time, delta) {
+    if (this.isPaused || this.run.status !== "playing") return;
+    const activeDelta = Math.min(delta, 100);
+    this.runClockMs += activeDelta;
+    this.timerAccumulatorMs += activeDelta;
+    while (this.timerAccumulatorMs >= 1_000 && this.run.status === "playing") {
+      this.timerAccumulatorMs -= 1_000;
+      this.tickTimer();
+    }
+    const actions = this.playerController.update(this.runClockMs);
+    if (actions.landed) this.createDust(this.player.x, this.player.body.bottom);
+    if (actions.shoot && this.projectileSystem.fire(this.player, actions.facing, this.runClockMs)) this.playerController.showShoot(this.runClockMs);
+    this.enemySystem.update();
+    this.projectileSystem.update(this.runClockMs, this.level.width);
+    this.player.x = Phaser.Math.Clamp(this.player.x, 25, this.level.width - 25);
+    if (this.player.y > this.level.height + 90) this.damagePlayer("fall");
+    if (this.combat.consumeExpiry(this.runClockMs)) {
+      this.bridge.emit(GAME_EVENTS.POWER_EXPIRED, { worldId: this.worldConfig.id });
+      this.publishState();
+    } else if (this.combat.isPowered(this.runClockMs)) this.publishPowerState(this.runClockMs);
+  }
+
+  tickTimer() {
+    if (!this.run.tick()) return;
+    this.publishState();
+    if (this.run.status === "game-over") this.finishRun("timer");
+  }
+
+  collectCoin(coin) {
+    const id = coin.getData("coinId");
+    if (!this.run.collectCoin(id)) return;
+    this.createImpact(coin.x, coin.y);
+    coin.disableBody(true, true);
+    this.bridge.emit(GAME_EVENTS.COIN_COLLECTED, { id, score: this.run.score, coins: this.run.coins });
+    this.publishState();
+  }
+
+  collectFish(fish) {
+    if (!fish.active) return;
+    const id = fish.getData("powerId");
+    fish.disableBody(true, true);
+    this.combat.activate(this.runClockMs);
+    this.createImpact(fish.x, fish.y, 0x5fffe1);
+    this.bridge.emit(GAME_EVENTS.FISH_COLLECTED, { id });
+    this.bridge.emit(GAME_EVENTS.POWER_STARTED, { durationMs: RUN_RULES.fishPowerDurationMs });
+    this.publishState();
+  }
+
+  touchEnemy(enemy) {
+    if (!enemy.active || this.run.status !== "playing") return;
+    const stomped = isStompCollision({ playerVelocityY: this.player.body.velocity.y, playerBottom: this.player.body.bottom, enemyCenterY: enemy.body.center.y });
+    if (stomped) {
+      this.defeatEnemy(enemy, "stomp");
+      this.player.setVelocityY(-390);
+      return;
+    }
+    this.damagePlayer("enemy");
+  }
+
+  defeatEnemy(enemy, cause) {
+    const id = this.enemySystem.defeat(enemy);
+    if (!id || !this.run.stompEnemy(id)) return;
+    this.cameras.main.shake(90, 0.0025);
+    const eventName = cause === "stomp" ? GAME_EVENTS.ENEMY_STOMPED : GAME_EVENTS.ENEMY_DEFEATED;
+    this.bridge.emit(eventName, { id, cause, score: this.run.score });
+    this.publishState();
+  }
+
+  damagePlayer(cause) {
+    if (this.run.status !== "playing") return;
+    const damaged = this.run.damage(this.runClockMs);
+    if (!damaged && cause !== "fall") return;
+    this.cameras.main.shake(180, 0.008);
+    this.playerController.showDamage(this.runClockMs);
+    this.player.setTint(0xff9a82).setVelocity(0, -260);
+    this.time.delayedCall(260, () => this.player?.active && this.player.clearTint());
+    this.bridge.emit(GAME_EVENTS.PLAYER_DAMAGED, { cause, lives: this.run.lives });
+    this.publishState();
+    if (this.run.status === "game-over") { this.finishRun("lives"); return; }
+    this.player.setPosition(this.safePosition.x, this.safePosition.y).setVelocity(0, 0);
+  }
+
+  completeWorld() {
+    if (!this.run.complete()) return;
+    this.physics.pause();
+    this.player.anims.stop().setFrame(7);
+    this.cameras.main.flash(600, 255, 225, 116);
+    const result = { ...this.run.snapshot(), worldId: this.worldConfig.id };
+    this.publishState();
+    this.bridge.emit(GAME_EVENTS.WORLD_COMPLETED, result);
+  }
+
+  finishRun(reason) {
+    this.physics.pause();
+    this.publishState();
+    this.bridge.emit(GAME_EVENTS.RUN_ENDED, { ...this.run.snapshot(), reason });
+  }
+
+  setPaused(paused) {
+    if (this.run.status !== "playing" || this.isPaused === paused) return;
+    this.isPaused = paused;
+    if (paused) { this.physics.pause(); this.combat.pause(this.runClockMs); }
+    else { this.physics.resume(); this.combat.resume(this.runClockMs); }
+    this.bridge.emit(GAME_COMMANDS.INPUT_RELEASE_ALL);
+    this.publishState();
+  }
+
+  publishPowerState(time) {
+    const remaining = this.combat.remainingMs(time);
+    const roundedSeconds = Math.ceil(remaining / 250) / 4;
+    if (roundedSeconds !== this.lastPublishedPowerSeconds) {
+      this.lastPublishedPowerSeconds = roundedSeconds;
+      this.publishState();
+    }
+  }
+
+  publishState() {
+    const remaining = this.combat?.remainingMs(this.runClockMs) ?? 0;
+    this.bridge.emit(GAME_EVENTS.STATE_CHANGED, {
+      ...this.run.snapshot(), paused: this.isPaused, worldId: this.worldConfig.id, worldName: this.worldConfig.name,
+      powerRemainingMs: remaining, powered: remaining > 0,
+    });
+  }
+
+  createImpact(x, y, color = 0xffd75e) {
+    const burst = this.add.circle(x, y, 10, color, 0.9).setDepth(20);
+    this.tweens.add({ targets: burst, scale: 4, alpha: 0, duration: 280, onComplete: () => burst.destroy() });
+    for (let index = 0; index < 7; index += 1) {
+      const spark = this.add.image(x, y, "gold-spark").setTint(color).setScale(0.45).setDepth(20);
+      const angle = (Math.PI * 2 * index) / 7;
+      this.tweens.add({ targets: spark, x: x + Math.cos(angle) * 55, y: y + Math.sin(angle) * 55, alpha: 0, scale: 0.05, duration: 340, onComplete: () => spark.destroy() });
+    }
+  }
+
+  createDust(x, y) {
+    for (let index = 0; index < 4; index += 1) {
+      const dust = this.add.image(x + (index - 2) * 8, y, "dust-particle").setDepth(9);
+      this.tweens.add({ targets: dust, x: dust.x + (index - 1.5) * 18, y: y - 18, alpha: 0, duration: 260, onComplete: () => dust.destroy() });
+    }
+  }
+
+  cleanup() {
+    this.playerController?.destroy();
+    this.projectileSystem?.destroy();
+    this.enemySystem?.destroy();
+    this.cameraController?.destroy();
+    for (const cleanup of this.commandCleanups) cleanup();
+    this.input.keyboard.off("keydown-ESC", this.escapeHandler);
+  }
 }

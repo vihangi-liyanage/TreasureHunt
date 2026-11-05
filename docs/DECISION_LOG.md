@@ -103,3 +103,15 @@
 **Decision:** Render original temporary sprites and jungle layers at runtime, drive one reusable `WorldScene` from level configuration, and cross the React boundary only through serialisable bridge events.
 
 **Reason:** This produces a polished playable demonstration without unlicensed assets, keeps art replacement independent of mechanics, and prevents Phaser objects, React state, and persistence services from becoming coupled.
+
+## D018 Separate painted presentation from collision geometry
+
+**Decision:** Load original generated gameplay atlases through one asset module, render terrain art independently, and collide against invisible configuration-sized strips.
+
+**Reason:** Stretching one tile into every platform looked crude and made hitboxes follow decorative transparent padding. Separate layers preserve visual quality, accurate collisions and future art replacement without changing level rules.
+
+## D019 Model local fish combat as deterministic gameplay state
+
+**Decision:** Keep the collectible's eight-second power window, cooldown, pause/restart behavior and expiry in `CombatState`, separate from projectile rendering and completely separate from the remote Fish API adapter.
+
+**Reason:** A pure state model gives exact tests and one expiry transition. Extending a pickup from its latest collection is understandable, while stacking durations could exceed the fixed eight-second rule. Using Phaser timers directly was rejected after browser throttling demonstrated catch-up bursts.

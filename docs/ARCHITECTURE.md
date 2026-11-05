@@ -24,6 +24,16 @@ Phase 3A implements this boundary in `game/core/game-bridge.js` and `game/core/e
 
 `game/config/emerald-jungle.js` is level data consumed by the reusable `WorldScene`; it contains dimensions, platforms, coins, enemies, hazards, spawn, and checkpoint positions rather than scene-specific control flow. New worlds can provide the same shape without copying movement, collision, HUD, or persistence logic.
 
+## Phase 3B gameplay composition
+
+`WorldScene` remains an event/lifecycle coordinator rather than a rule container. `PlayerController` owns keyboard/virtual input translation, acceleration, coyote time, buffering and animation selection. `InputState` tracks sources per control, so two touch pointers can hold movement and jump independently. `CombatState` owns the exact eight-second window, shot cooldown, pause shifting, repeated pickup and single expiry transition. `ProjectileSystem`, `EnemySystem`, and `CameraController` own their Phaser objects/listeners. Pure `physics-model` and `collision-rules` modules make jump envelopes and stomp decisions testable without Phaser.
+
+The render boundary is `load-assets.js` plus `create-textures.js`: the former knows project asset URLs and atlas geometry; the latter registers animations and small runtime-only particle/hitbox textures. World configuration never imports asset files, React or persistence. Generated terrain art is separate from invisible collision strips, so attractive visual dimensions do not distort platform physics.
+
+The event ordering for a fish is overlap callback -> `CombatState.activate` -> `fish:collected` and `power:started` -> serialisable `state:changed` snapshot. F/touch input crosses as `input:changed`; `PlayerController` exposes a shoot action; `ProjectileSystem` emits `projectile:fired`; Arcade overlap disables the projectile/enemy before `enemy:defeated` and the updated snapshot. Expiry is edge-triggered once by `CombatState.consumeExpiry`. Completion first transitions `RunState`, pauses physics, publishes final state, then emits `world:completed`; React persists progression once. Terminal `RunState` guards reject duplicate mutations.
+
+Scene shutdown owns bridge unsubscribe callbacks, Escape removal, resize removal and collider destruction. Phaser owns physics-group disposal; custom cleanup deliberately does not clear groups after Arcade Physics shutdown. The scene active clock clamps large throttled-frame deltas and stops while paused, preventing browser catch-up bursts from consuming the timer or power window.
+
 Remote flows are asynchronous events at the application boundary. A checkpoint or Game Over screen requests a challenge from a Route Handler; the server obtains and validates an upstream response, stores the solution server-side with expiry/single-use metadata, and returns only the challenge image and local challenge ID. Answer validation and any bonus/revive mutation happen atomically on the server.
 
 ## Fish Game API verification
@@ -66,6 +76,6 @@ The World Map delegates browser storage subscription and cleanup to `components/
 
 ## Implementation status
 
-- **Implemented:** focused App Router screens, real Supabase auth Route Handlers, SSR cookie refresh, PKCE callback, logout/profile controls, pure validation, separate guest/auth progress, RLS migration, trusted progression/run endpoints, Fish response normalization, and React/browser cleanup. Phase 3A adds a reusable Phaser `WorldScene`, Arcade Physics, procedural temporary assets, focused player/enemy/run-state systems, a narrow lifecycle-safe React–Phaser bridge, responsive HUD/touch controls, and real World 1 progression wiring.
+- **Implemented:** focused App Router screens, real Supabase auth Route Handlers, SSR cookie refresh, PKCE callback, logout/profile controls, pure validation, separate guest/auth progress, RLS migration, trusted progression/run endpoints, Fish response normalization, and React/browser cleanup. Phase 3B adds original painted atlases, tuned and tested movement, source-aware multi-touch, local fish/orb combat, pause-safe active timing, focused combat/projectile/camera modules, full-viewport rendering, and verified World 1 checkpoint progression.
 - **Configuration-dependent:** email delivery, Google consent, live cookie persistence, and deployed RLS behaviour require the owner's Supabase/Google project and are not claimed as locally integrated.
-- **Planned for Phase 3B+:** Sunset Ruins and Crystal Cavern level data, fish/projectile combat, audio, final production sprite sheets, trusted score evidence, Fish challenge attempt records/routes/UI, and achievement awarding.
+- **Planned for Phase 3C+:** Sunset Ruins and Crystal Cavern level data, production audio, richer frame counts, trusted score evidence, Fish challenge attempt records/routes/UI, and achievement awarding.

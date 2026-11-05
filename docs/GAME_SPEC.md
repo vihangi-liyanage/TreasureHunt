@@ -44,9 +44,26 @@ Phase 1 establishes the cinematic interface with original generated concept artw
 | --- | --- |
 | Procedural hunter, jungle critter, coins, platforms, spikes, checkpoint, and parallax layers in `game/render/create-textures.js` | Original shapes drawn at runtime specifically for TreasureHunt. No third-party files or copied character designs are included. These are project-owned temporary gameplay assets and may be replaced by polished, separately licensed sprite sheets later. |
 
+### Phase 3B gameplay asset register
+
+| Asset | Source, license, and intended use |
+| --- | --- |
+| `public/art/gameplay/hunter-atlas.png` | Generated for TreasureHunt with OpenAI's built-in image-generation tool on 5 November 2026, then padded without resampling for exact Phaser frames. Original teal-hatted explorer in eight consistent poses: idle, two run frames, jump, fall, damage, magic shooting, and checkpoint celebration. No supplied or franchise character was copied. Project output is used under the applicable OpenAI output terms. |
+| `public/art/gameplay/emerald-jungle-panorama.png` | Generated for TreasureHunt with OpenAI's built-in image-generation tool on 5 November 2026. Original side-view emerald valley with distant ruins, waterfalls, mist and sunlight; no characters, text, logos or copied locations. Project output is used under the applicable OpenAI output terms. |
+| `public/art/gameplay/jungle-objects-atlas.png` | Generated for TreasureHunt with OpenAI's built-in image-generation tool on 5 November 2026, then frame-padded. Original leafy armadillo-lizard enemy, compass coin, magical fish, orb, thorns, checkpoint and impact art. No mushroom/franchise enemy or gun is included. Project output is used under the applicable OpenAI output terms. |
+| `public/art/gameplay/jungle-terrain-atlas.png` | Generated for TreasureHunt with OpenAI's built-in image-generation tool on 5 November 2026, then frame-padded. Original mossy carved ground, floating temple ledges, stepping stone and ruin arch. Project output is used under the applicable OpenAI output terms. |
+
+The final prompts specified premium hand-painted 2D cartoon artwork, emerald/teal/gold/earth colours, transparent atlases with exact grids, consistent lighting, no text/watermarks, and explicit exclusion of copied Nintendo or other franchise designs. The earlier Phase 3A procedural artwork is retained only for tiny collision/particle utility textures, not visible character or environment presentation.
+
 ## Phase 3A playable scope
 
 Emerald Jungle is playable with Arcade Physics, camera-following traversal, layered parallax, platforms and gaps, coins, hazards, patrolling enemies, stomping, three lives, a 120-second timer, checkpoint completion, pause/resume/restart, keyboard controls, and mobile controls. Completion updates guest local progress or calls the authenticated progression endpoint. Sunset Ruins, Crystal Cavern, fish shooting, audio, and advanced combat remain later-phase work.
+
+## Phase 3B polished scope
+
+Emerald Jungle now uses the painted gameplay assets above, full-viewport resize behavior, a larger animated hunter, measured jump physics, coyote time, jump buffering, air steering, independent multi-touch controls, reachable upper collectibles, landing/collection/impact feedback, and patrol bounds that keep enemies on terrain. The local fish collectible grants exactly eight seconds of pause-safe magic-orb shooting; F or the mobile Shoot control fires in the facing direction, and projectile overlap defeats an enemy. Repeated pickup rules reset rather than stack the eight-second window. World 1 ends only with “World Complete” and “Checkpoint Reached,” then unlocks World 2 through the existing guest/authenticated progression boundary.
+
+The local collectible is a deterministic gameplay mechanic and never calls the university Fish Game API. The remote API remains an optional later checkpoint/achievement/revive interaction.
 
 ## Acceptance boundaries
 

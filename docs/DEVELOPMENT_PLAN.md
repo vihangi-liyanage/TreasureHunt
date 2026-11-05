@@ -17,3 +17,9 @@
 - Asset additions include source and license records.
 - `npm test`, `npm run lint`, and `npm run build` pass before commit.
 - Significant tradeoffs are added to `DECISION_LOG.md` without duplicating the full specification.
+
+## Current verified status
+
+- **Phase 3A complete:** reusable playable Emerald Jungle foundation, physics, HUD, progression bridge and responsive controls.
+- **Phase 3B complete:** painted original gameplay assets, tuned/reachability-tested movement, multi-touch input, local eight-second fish power, magical projectiles, projectile enemy defeat, active-clock pause/restart safety, full-viewport desktop/mobile polish and real World 1 checkpoint completion.
+- **Next gameplay work:** build World 2/3 configurations and production audio hooks. External Fish API challenge UI remains separate future interoperability work.

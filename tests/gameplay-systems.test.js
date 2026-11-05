@@ -1,0 +1,90 @@
+import { describe, expect, it } from "vitest";
+import { CombatState, PROJECTILE_COOLDOWN_MS } from "@/game/core/combat-state";
+import { isStompCollision } from "@/game/core/collision-rules";
+import { InputState } from "@/game/core/input-state";
+import { calculateJumpMetrics, canReachPlatform } from "@/game/core/physics-model";
+import { EMERALD_JUNGLE_LEVEL, EMERALD_JUNGLE_MOTION } from "@/game/config/emerald-jungle";
+
+describe("Emerald Jungle movement model", () => {
+  it("documents a jump envelope that clears every mandatory ground gap", () => {
+    const metrics = calculateJumpMetrics(EMERALD_JUNGLE_MOTION);
+    expect(metrics.apexHeight).toBeGreaterThan(150);
+    expect(metrics.maximumRange).toBeGreaterThan(285);
+    const byId = new Map(EMERALD_JUNGLE_LEVEL.platforms.map((platform) => [platform.id, platform]));
+    const route = EMERALD_JUNGLE_LEVEL.mandatoryRoute.map((id) => byId.get(id));
+    for (let index = 0; index < route.length - 1; index += 1) {
+      expect(canReachPlatform(route[index], route[index + 1], EMERALD_JUNGLE_MOTION), `${route[index].id} -> ${route[index + 1].id}`).toBe(true);
+    }
+  });
+
+  it("places every coin and fish over a reachable collision surface", () => {
+    const collectibles = [...EMERALD_JUNGLE_LEVEL.coins, ...EMERALD_JUNGLE_LEVEL.fishPowerUps];
+    for (const collectible of collectibles) {
+      const supportingPlatform = EMERALD_JUNGLE_LEVEL.platforms.find((platform) =>
+        Math.abs(collectible.x - platform.x) <= platform.width / 2 + 35 &&
+        platform.top - collectible.y >= 35 && platform.top - collectible.y <= 175);
+      expect(supportingPlatform, `${collectible.id} at ${collectible.x},${collectible.y}`).toBeTruthy();
+    }
+  });
+});
+
+describe("multi-source input state", () => {
+  it("keeps simultaneous movement and jump pointers independent", () => {
+    const input = new InputState();
+    input.set("right", true, "touch-1");
+    input.set("jump", true, "touch-2");
+    expect(input.isDown("right")).toBe(true);
+    expect(input.consumePress("jump")).toBe(true);
+    input.set("jump", false, "touch-2");
+    expect(input.isDown("right")).toBe(true);
+    input.releaseSource("touch-1");
+    expect(input.isDown("right")).toBe(false);
+  });
+
+  it("does not release a control while a second pointer still holds it", () => {
+    const input = new InputState();
+    input.set("left", true, "touch-1");
+    input.set("left", true, "touch-2");
+    input.set("left", false, "touch-1");
+    expect(input.isDown("left")).toBe(true);
+  });
+});
+
+describe("fish power-up combat rules", () => {
+  it("lasts exactly eight active seconds and publishes expiry once", () => {
+    const combat = new CombatState();
+    combat.activate(1_000);
+    expect(combat.remainingMs(8_999)).toBe(1);
+    expect(combat.isPowered(9_000)).toBe(false);
+    expect(combat.consumeExpiry(9_000)).toBe(true);
+    expect(combat.consumeExpiry(9_001)).toBe(false);
+  });
+
+  it("freezes the remaining duration while paused", () => {
+    const combat = new CombatState();
+    combat.activate(0);
+    combat.pause(3_000);
+    expect(combat.remainingMs(12_000)).toBe(5_000);
+    combat.resume(12_000);
+    expect(combat.remainingMs(16_999)).toBe(1);
+    expect(combat.remainingMs(17_000)).toBe(0);
+  });
+
+  it("resets to eight seconds on another pickup and rate-limits shots", () => {
+    const combat = new CombatState();
+    combat.activate(0);
+    combat.activate(5_000);
+    expect(combat.remainingMs(5_000)).toBe(8_000);
+    expect(combat.tryShoot(5_000)).toBe(true);
+    expect(combat.tryShoot(5_000 + PROJECTILE_COOLDOWN_MS - 1)).toBe(false);
+    expect(combat.tryShoot(5_000 + PROJECTILE_COOLDOWN_MS)).toBe(true);
+  });
+});
+
+describe("enemy collision rules", () => {
+  it("accepts a descending top hit and rejects side contact", () => {
+    expect(isStompCollision({ playerVelocityY: 260, playerBottom: 500, enemyCenterY: 510 })).toBe(true);
+    expect(isStompCollision({ playerVelocityY: 0, playerBottom: 500, enemyCenterY: 510 })).toBe(false);
+    expect(isStompCollision({ playerVelocityY: 260, playerBottom: 545, enemyCenterY: 510 })).toBe(false);
+  });
+});

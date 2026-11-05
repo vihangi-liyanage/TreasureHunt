@@ -1,26 +1,46 @@
-const platform = (x, y, width, height = 48) => Object.freeze({ x, y, width, height });
+const platform = (id, x, top, width, kind = "ledge") => Object.freeze({ id, x, top, width, kind });
+
+export const EMERALD_JUNGLE_MOTION = Object.freeze({
+  gravity: 1_500,
+  jumpVelocity: 680,
+  moveSpeed: 320,
+  groundAcceleration: 1_900,
+  airAcceleration: 1_150,
+  groundDrag: 1_750,
+  coyoteTimeMs: 110,
+  jumpBufferMs: 130,
+});
+
 export const EMERALD_JUNGLE_LEVEL = Object.freeze({
   width: 5_200, height: 720,
-  playerStart: Object.freeze({ x: 140, y: 520 }), checkpoint: Object.freeze({ x: 5_020, y: 548 }),
+  playerStart: Object.freeze({ x: 150, y: 510 }), checkpoint: Object.freeze({ x: 5_045, y: 520 }),
+  motion: EMERALD_JUNGLE_MOTION,
   platforms: Object.freeze([
-    platform(400, 682, 800, 100), platform(1_265, 682, 670, 100), platform(2_095, 682, 710, 100),
-    platform(2_975, 682, 750, 100), platform(3_850, 682, 700, 100), platform(4_775, 682, 850, 100),
-    platform(650, 520, 230, 34), platform(1_080, 470, 210, 34), platform(1_465, 555, 180, 34),
-    platform(1_920, 475, 250, 34), platform(2_360, 390, 180, 34), platform(2_720, 520, 230, 34),
-    platform(3_165, 450, 230, 34), platform(3_610, 540, 180, 34), platform(4_030, 435, 240, 34), platform(4_460, 520, 220, 34),
+    platform("ground-1",400,640,800,"ground"), platform("ground-2",1_210,640,660,"ground"),
+    platform("ground-3",1_990,640,720,"ground"), platform("ground-4",2_790,640,700,"ground"),
+    platform("ground-5",3_590,640,720,"ground"), platform("ground-6",4_690,640,1_300,"ground"),
+    platform("ledge-1",610,505,250), platform("ledge-2",905,390,220,"step"),
+    platform("ledge-3",1_260,500,240), platform("ledge-4",1_650,445,250),
+    platform("ledge-5",2_010,370,230,"step"), platform("ledge-6",2_365,500,260),
+    platform("ledge-7",2_760,415,245), platform("ledge-8",3_125,505,250),
+    platform("ledge-9",3_485,385,230,"step"), platform("ledge-10",3_845,495,260),
+    platform("ledge-11",4_215,405,240), platform("ledge-12",4_570,505,250),
   ]),
+  mandatoryRoute: Object.freeze(["ground-1","ground-2","ground-3","ground-4","ground-5","ground-6"]),
   coins: Object.freeze([
-    [320,590],[470,590],[610,455],[690,455],[1000,405],[1080,405],[1280,590],[1450,490],
-    [1900,410],[2000,410],[2320,325],[2390,325],[2690,455],[2790,455],[3120,385],[3220,385],
-    [3560,475],[3830,590],[4000,370],[4100,370],[4430,455],[4520,455],[4790,590],[4930,590],
+    [300,575],[480,575],[560,440],[650,440],[860,325],[950,325],[1_130,575],[1_230,435],
+    [1_610,380],[1_710,380],[1_970,305],[2_050,305],[2_320,435],[2_410,435],
+    [2_720,350],[2_810,350],[3_080,440],[3_170,440],[3_445,320],[3_525,320],
+    [3_805,430],[3_895,430],[4_175,340],[4_255,340],[4_525,440],[4_615,440],[4_860,575],[5_010,575],
   ].map(([x,y], index) => Object.freeze({ id: `coin-${index + 1}`, x, y }))),
+  fishPowerUps: Object.freeze([Object.freeze({ id:"fish-1", x:540, y:565 })]),
   enemies: Object.freeze([
-    Object.freeze({ id:"critter-1",x:1230,y:590,left:980,right:1520,speed:70 }),
-    Object.freeze({ id:"critter-2",x:2840,y:590,left:2680,right:3250,speed:82 }),
-    Object.freeze({ id:"critter-3",x:3890,y:590,left:3600,right:4140,speed:88 }),
-    Object.freeze({ id:"critter-4",x:4620,y:590,left:4480,right:4920,speed:96 }),
+    Object.freeze({ id:"critter-1",x:740,y:570,left:650,right:780,speed:54 }),
+    Object.freeze({ id:"critter-2",x:2_620,y:570,left:2_500,right:3_020,speed:84 }),
+    Object.freeze({ id:"critter-3",x:3_710,y:570,left:3_390,right:3_900,speed:92 }),
+    Object.freeze({ id:"critter-4",x:4_650,y:570,left:4_480,right:4_900,speed:98 }),
   ]),
   hazards: Object.freeze([
-    Object.freeze({ x:1365,y:615,width:82 }), Object.freeze({ x:3040,y:615,width:92 }), Object.freeze({ x:4690,y:615,width:72 }),
+    Object.freeze({ x:1_345,top:588,width:88 }), Object.freeze({ x:2_900,top:588,width:96 }), Object.freeze({ x:4_735,top:588,width:82 }),
   ]),
 });
