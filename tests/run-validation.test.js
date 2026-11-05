@@ -9,10 +9,17 @@ describe("persistent game mutation validation", () => {
   });
 
   it("accepts a complete bounded run result", () => {
-    expect(parseRunResult({ score: 1200, coins: 18, worldReached: 2, durationSeconds: 94, completed: true })).toEqual({
+    expect(parseRunResult({
+      userId: "untrusted-client-id",
       score: 1200,
       coins: 18,
-      worldReached: 2,
+      worldReached: 3,
+      durationSeconds: 94,
+      completed: true,
+    })).toEqual({
+      score: 1200,
+      coins: 18,
+      worldReached: 3,
       durationSeconds: 94,
       completed: true,
     });
@@ -21,5 +28,6 @@ describe("persistent game mutation validation", () => {
   it("rejects excessive, partial, and incorrectly typed results", () => {
     expect(parseRunResult({ score: 100_000_001, coins: 1, worldReached: 1, durationSeconds: 1, completed: true })).toBeNull();
     expect(parseRunResult({ score: 1, coins: 1, worldReached: 1, durationSeconds: 1, completed: "yes" })).toBeNull();
+    expect(parseRunResult({ score: 1, coins: 1, worldReached: 2, durationSeconds: 30, completed: true })).toBeNull();
   });
 });

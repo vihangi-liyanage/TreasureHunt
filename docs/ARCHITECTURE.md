@@ -44,11 +44,13 @@ The meaning and permitted ranges of `fish` and `chest` are not specified on the 
 
 Email registration, password login, Google PKCE initiation/callback, email token-hash confirmation, and logout are Route Handlers under `app/api/auth/` and `app/auth/`. Safe local return paths prevent open redirects. Responses use no-store headers and focused public-error mapping. A bounded per-instance request guard supplements Supabase Auth provider limits; production must also configure provider/dashboard limits because an in-memory limiter is not distributed across Vercel instances.
 
-The migration creates `profiles`, `player_progress`, `achievements`, `game_runs`, and a denormalised safe `leaderboard_entries` projection. RLS restricts private rows to `auth.uid()`. Direct player writes to progression, achievements, and runs are revoked. Server Route Handlers validate bounds and call service-role-only database functions for sequential world completion and single-use run submission. The secret key never enters a client bundle.
+The migration creates `profiles`, `player_progress`, `achievements`, `game_runs`, and a denormalised safe `leaderboard_entries` projection. RLS restricts private rows to `auth.uid()`. Direct player writes to progression, achievements, and runs are revoked. Because automatic table exposure is disabled, `service_role` receives only the table operations used by the server adapters: profile lookup, progress read/update, run read/insert/update, and leaderboard insert. It receives no achievement or identity-sequence access. Trigger functions are not directly executable by API roles.
+
+Server Route Handlers validate bounds and call service-role-only database functions for sequential world completion and single-use run submission. A completed leaderboard submission must identify World 3 and the locked progress row must already record all three worlds complete; earlier-world, out-of-order, foreign, and repeated submissions are rejected. The secret key never enters a client bundle.
 
 Guest progress remains versioned local storage and is disabled by the World Map hook for authenticated players. Guests cannot read or submit leaderboard data. The UI consumes stable profile/progress/leaderboard shapes from `lib/data/player-repository.js`, not database internals.
 
-Fully authoritative score validation is impossible while Phaser executes in the browser. The design reduces casual tampering through server-issued run IDs, bounds, unlocked-world checks, atomic one-time submission, and rate limits; Phase 3 must connect actual game events before score submission is considered complete.
+Fully authoritative score calculation is impossible while Phaser executes in the browser. The server does not blindly accept a user ID or completion flag: it derives identity from verified claims and cross-checks the owned server-issued run, numeric bounds, unlocked progression, persistent World 3 completion, and single submission in one transaction. The numeric score remains client-originated; Phase 3 must connect trusted gameplay evidence or server-recomputable scoring before treating it as cheat-proof.
 
 ## Phase 2A interface boundary
 

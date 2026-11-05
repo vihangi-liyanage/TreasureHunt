@@ -91,3 +91,9 @@
 **Decision:** Guest progression stays in versioned local storage; authenticated progression comes only from Supabase. Guests may view the map but cannot read or submit leaderboard records.
 
 **Reason:** This preserves optional play without creating anonymous database identities, prevents accidental local progress merging, and makes the virtual-identity boundary explicit.
+
+## D016 Explicit least-privilege service grants
+
+**Decision:** With automatic table exposure disabled, revoke broad `service_role` access on Phase 2B tables and grant only the operations required by current server routes and invoker functions. Do not grant the unused achievements identity sequence. Accept completed leaderboard rows only when the owned run declares World 3 and persistent progression already confirms all three worlds complete.
+
+**Reason:** The service key bypasses RLS, so its SQL privileges must remain narrow. Database invariants provide a second check behind server-side claims verification, while unused achievement access can be added later with the feature that needs it.

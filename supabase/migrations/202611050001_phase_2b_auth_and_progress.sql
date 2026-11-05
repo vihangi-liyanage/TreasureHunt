@@ -70,6 +70,21 @@ revoke all on public.achievements from anon, authenticated;
 revoke all on public.game_runs from anon, authenticated;
 revoke all on public.leaderboard_entries from anon, authenticated;
 
+-- This project does not auto-grant new public tables. Give the server role only
+-- the operations used by the current Route Handlers and invoker functions.
+revoke all on public.profiles from service_role;
+revoke all on public.player_progress from service_role;
+revoke all on public.achievements from service_role;
+revoke all on public.game_runs from service_role;
+revoke all on public.leaderboard_entries from service_role;
+revoke all on sequence public.achievements_id_seq from anon, authenticated, service_role;
+
+grant usage on schema public to service_role;
+grant select on public.profiles to service_role;
+grant select, update on public.player_progress to service_role;
+grant select, insert, update on public.game_runs to service_role;
+grant insert on public.leaderboard_entries to service_role;
+
 grant select on public.profiles to authenticated;
 grant update (username) on public.profiles to authenticated;
 grant select on public.player_progress to authenticated;
@@ -121,6 +136,8 @@ create trigger progress_touch_updated_at
 before update on public.player_progress
 for each row execute function private.touch_updated_at();
 
+revoke all on function private.touch_updated_at() from public, anon, authenticated, service_role;
+
 create or replace function private.handle_new_user()
 returns trigger
 language plpgsql
@@ -158,6 +175,8 @@ $$;
 create trigger on_auth_user_created
 after insert on auth.users
 for each row execute function private.handle_new_user();
+
+revoke all on function private.handle_new_user() from public, anon, authenticated, service_role;
 
 create or replace function public.username_exists_admin(p_username text)
 returns boolean
@@ -246,6 +265,10 @@ begin
   select * into progress from public.player_progress where user_id = p_user_id;
   if progress.user_id is null or p_world_reached > least(3, progress.completed_worlds + 1) then
     raise exception 'run exceeds unlocked progression';
+  end if;
+
+  if p_completed and (p_world_reached <> 3 or progress.completed_worlds <> 3) then
+    raise exception 'completed leaderboard run requires a completed world 3 mission';
   end if;
 
   update public.game_runs
