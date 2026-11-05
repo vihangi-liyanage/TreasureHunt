@@ -1,79 +1,43 @@
-# Assessment Code Evidence
+# Assessment code evidence
 
-This guide maps the current TreasureHunt source to the four assessment themes. It separates evidence that can be demonstrated now from work reserved for later phases; planned architecture is not presented as finished code.
+This maps the actual source to the rubric and distinguishes implemented evidence from planned gameplay.
 
-## 1. Software design principles
+## 1. High cohesion, low coupling, and encapsulation
 
-### Implemented evidence
+**Implemented files:** `components/auth/`, `components/profile/profile-panel.js`, `components/leaderboard/leaderboard-panel.js`, `lib/validation/auth.js`, `lib/auth/`, `lib/data/player-repository.js`, `lib/supabase/`, `lib/progress/guest-progress.js`, `components/worlds/use-guest-world-progress.js`, and `game/config/worlds.js`.
 
-- `app/` contains thin App Router pages that compose screens instead of owning domain rules.
-- `components/auth/`, `components/overlays/`, `components/settings/`, and `components/worlds/` group focused presentation responsibilities. `components/worlds/use-guest-world-progress.js` owns browser storage-event synchronization so `world-map.js` can focus on map state and rendering.
-- `lib/validation/auth.js` contains pure form rules; forms call it through a small values/errors contract and do not know Supabase details.
-- `game/config/worlds.js` is the single source for the three worlds and fixed run rules. The UI receives world configuration as data rather than copying it into three screen implementations.
-- `lib/progress/guest-progress.js` owns sequential guest-progression rules and storage serialization. Its functions accept a storage object, so the rules can be tested without a browser.
+**Evidence and justification:** pages compose focused screens; pure validation does not import React or Supabase; session verification, redirect safety, error mapping, HTTP responses, and database queries are separate modules with small function APIs. The World Map receives profile/progress/leaderboard models instead of querying services, while the guest hook owns only local-storage events. Shared world rules remain configuration, so React and future Phaser scenes do not copy them. This creates focused reasons to change and permits unit tests without a browser or database.
 
-**Why this approach:** feature-focused components and small service boundaries give each module a clear reason to change. Configuration and pure rules remain reusable by the future Phaser scene, React UI, and tests without those consumers depending on one another.
+**Alternative:** a single page/server action could validate, authenticate, query, and render with fewer files. It would be faster initially, but UI changes would be coupled to identity and persistence, tests would need more infrastructure, and Phaser reuse would be harder. A class/repository hierarchy was also rejected because it adds abstraction without multiple implementations.
 
-**Alternative and trade-off:** a single page component could own validation, local storage, and screen rendering. It would initially use fewer files, but UI changes would risk progression and validation code, and isolated tests would be harder. A deeper repository/service-class hierarchy would add interfaces but is premature while persistence and gameplay are not implemented.
+**Remaining:** Phase 3 must implement focused Phaser systems and use the same world configuration. The run endpoints exist, but no gameplay component calls them yet.
 
-### Planned work
+## 2. Event-driven programming and handlers
 
-Phaser entities, systems, a run state machine, persistence repositories, and authenticated route handlers do not exist yet. They must preserve the current direction: game rules in `game/`, orchestration at Route Handlers, and Supabase details behind `lib/supabase/` or focused repositories.
+**Implemented files:** `components/screens/splash-screen.js`, `components/overlays/game-overlay.js`, auth forms, `components/worlds/use-guest-world-progress.js`, `game/core/events.js`, and `tests/guest-progress-subscription.test.js`.
 
-## 2. Event-driven programming
+**Evidence and justification:** submit/click/change handlers perform one UI responsibility and call narrow helpers. Timers, Escape listeners, animation frames, and storage listeners are removed during cleanup. The storage subscription filters unrelated keys and exposes derived map state rather than raw events. `game/core/events.js` defines serialisable React/Phaser event names so neither side needs the other's internal objects.
 
-### Implemented evidence
+**Alternative:** a global event bus for every UI action would reduce prop callbacks but obscure control flow and listener ownership. Directly passing Phaser scenes into React would be convenient but couple two lifecycles and make teardown/testing fragile.
 
-- `components/screens/splash-screen.js` reacts to image load/error events and timers, then cancels its transition timer when unmounted.
-- Welcome, forms, overlays, settings, and the World Map use focused React handlers for click, submit, change, keyboard, and storage events.
-- `components/overlays/game-overlay.js` adds an Escape handler only while open and removes it on close/unmount.
-- `components/worlds/use-guest-world-progress.js` subscribes to the browser `storage` event and removes the listener and initial animation frame during cleanup. `tests/guest-progress-subscription.test.js` verifies synchronization, event filtering, and teardown with injected browser boundaries.
-- `game/core/events.js` defines the intended serialisable gameplay event names. These constants are a contract only; no Phaser gameplay event publisher or React bridge is implemented yet.
+**Remaining:** the Phaser publisher/consumer bridge and gameplay event payload validation are **planned**, not implemented. Phase 3 must prove shutdown cleanup and prevent duplicate completion/game-over transitions.
 
-**Why this approach:** local UI interactions use callbacks and component state because their ownership is clear. Cross-boundary gameplay events will use small serialisable payloads, allowing Phaser to publish outcomes without importing React components.
+## 3. Third-party interoperability
 
-**Alternative and trade-off:** a global event bus for all UI actions would reduce some prop callbacks, but it would hide control flow and make listener lifetime bugs more likely. Direct React access to Phaser scenes would be simpler for one screen, but would tightly couple rendering lifecycles to game objects.
+**Implemented files:** `lib/fish/fish-service.js`, `tests/fish-service.test.js`, `lib/supabase/*`, auth/progress/run Route Handlers, and the SQL migration.
 
-### Planned work
+**Evidence and justification:** the Fish adapter is an anti-corruption layer: it owns URL construction, timeout, text parsing for the provider's inaccurate content type, schema/image validation, and stable errors. It accepts injected fetch for isolated tests, and React never imports the upstream `{ question, fish, chest }` response. Supabase transport/cookies are similarly isolated; UI calls stable application routes/models instead of Auth or PostgREST response shapes.
 
-Phase 3 must implement the bridge, event payload validation, listener teardown on scene shutdown, and a run state machine that prevents duplicate world-complete and game-over transitions. Tests must prove those behaviours; the event-name constants alone are not proof of a working gameplay event system.
+**Alternative:** React could call Fish/Supabase directly. That would reduce server code, but expose Fish solutions, spread third-party formats through UI, weaken identity checks, and make provider outages screen concerns. A generic integration framework was rejected as unnecessary for two explicit adapters.
 
-## 3. Interoperability
+**Remaining:** Fish attempt storage, answer verification, achievements, and revive routes/UI are **planned**. The optional service must never block normal progression. Live Supabase interoperability also requires the owner's environment configuration.
 
-### Implemented evidence
+## 4. Virtual identity, cookies, and authorization
 
-- `lib/fish/fish-service.js` is the only Fish API adapter. It builds the verified HTTPS query, applies a timeout, disables caching, parses response text despite the inaccurate upstream content type, and normalises the response.
-- The adapter validates the observed `{ question, fish, chest }` contract, accepts verified PNG URL/base64 encodings, restricts remote images to the observed HTTPS provider path, and converts transport/HTTP/JSON/schema failures into stable `FishServiceError` codes.
-- `requestFishChallenge` accepts a `fetchImpl`, making network behaviour independently testable in `tests/fish-service.test.js`.
-- No React component imports Fish response fields, and no fake challenge response is used.
+**Implemented files:** `proxy.js`, `lib/supabase/proxy.js`, `lib/auth/session.js`, `lib/auth/redirects.js`, `app/api/auth/*`, `app/auth/callback/route.js`, `app/auth/confirm/route.js`, `components/profile/profile-panel.js`, `.env.example`, and `supabase/migrations/202611050001_phase_2b_auth_and_progress.sql`.
 
-**Why this approach:** an anti-corruption adapter prevents an unstable third-party schema and unusual headers from spreading through the application. The future Route Handler can return an application DTO without exposing solution fields to the browser.
+**Evidence and justification:** `@supabase/ssr` refreshes cookie sessions at the Next.js proxy boundary; protected routes call `getClaims()` and use the verified `sub`, never a submitted user ID. OAuth uses PKCE code exchange, email confirmation exchanges a short-lived token hash with `verifyOtp`, and both use allow-listed local return paths. Public and secret keys have separate factories. RLS limits private selects/updates to `auth.uid()`, while direct progression/run writes are revoked and trusted mutations are atomic, service-role-only functions reached only after server identity and input checks. Logout remains inside the authenticated profile panel. Guests use separate versioned local data and cannot submit leaderboard runs.
 
-**Alternative and trade-off:** calling the Fish endpoint directly from React would require less server code, but would expose solutions, couple UI to upstream fields, and make outages/CORS behaviour part of every screen. A generic API-client framework would add dependency weight without improving this single, small contract.
+**Alternative:** custom password hashes/session tables provide control but add credential, recovery, OAuth, rotation, and cookie-security responsibilities. Client-only local-storage tokens are simpler but script-readable and unsuitable as a server authorization source. Supabase SSR plus RLS was selected for managed identity and layered authorization.
 
-### Planned work
-
-There is not yet a Fish Route Handler, server-side attempt record, answer-verification transaction, challenge UI, achievement, or revive flow. Later work must store solutions server-side with expiry and single-use metadata, return only a local challenge ID plus image, and keep failures optional to progression. If the verified image host changes, it must be re-verified before updating the allow-list.
-
-## 4. Virtual identity
-
-### Implemented evidence
-
-- `lib/supabase/client.js` creates the browser client from browser-safe `NEXT_PUBLIC_` values.
-- `lib/supabase/server.js` creates the SSR server client through the Next.js cookie store and keeps session-cookie handling outside UI components.
-- `.env.example` documents only the public project URL/publishable key and server-only Fish configuration. Real environment files and secrets remain ignored.
-- Login and registration currently perform client-side validation only. Their Google and submit actions explicitly state that no request, account, or session was created.
-
-**Why this approach:** Supabase Auth supplies the external identity mechanism while `@supabase/ssr` supports cookie-backed server rendering. Server routes will derive the user from the verified session rather than trusting user IDs submitted by the browser; PostgreSQL Row Level Security provides a second authorization boundary.
-
-**Alternative and trade-off:** custom password hashing and a bespoke session-cookie table would offer maximum control, but would substantially increase responsibility for credential storage, rotation, OAuth, recovery, and cookie security. A client-only token in local storage would be simpler but is more exposed to script access and is unsuitable as the server authorization source.
-
-### Planned Phase 2B security work
-
-- Configure email/password and Google providers, allowed redirect URLs, and a callback that exchanges the OAuth code securely.
-- Add the Next.js session-refresh proxy/middleware path required by the installed Supabase SSR version.
-- Verify identity on the server with a trusted claims/user call; never authorize from form data or client-supplied IDs.
-- Add logout, protected-route checks, safe return URLs, generic authentication errors, and appropriate rate limiting.
-- Create profile/progression tables with least-privilege RLS policies and test cross-user denial. Keep any service-role key server-only and out of ordinary user flows.
-- Define secure cookie behaviour, account recovery/email verification, and atomic score/checkpoint mutations before persistence is enabled.
-
+**Remaining and limitations:** email delivery, Google consent, live cookie refresh, and RLS cross-user denial require a configured Supabase project. The in-memory request guard is a best-effort application layer; distributed production limits must use Supabase/platform controls. Client-side Phaser scores cannot be fully cheat-proof, so Phase 3 must connect server-issued run IDs and document the remaining trust limitation.

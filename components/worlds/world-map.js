@@ -1,11 +1,14 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Check, Compass, LockKeyhole, Settings, Trophy } from "lucide-react";
+import { ArrowLeft, Check, Compass, LockKeyhole, Settings, Trophy, UserRound } from "lucide-react";
 import { GameOverlay } from "@/components/overlays/game-overlay";
 import { SettingsPanel } from "@/components/settings/settings-panel";
 import { useGuestWorldProgress } from "./use-guest-world-progress";
+import { deriveWorldStates, getJourneyProgress } from "@/lib/progress/guest-progress";
+import { ProfilePanel } from "@/components/profile/profile-panel";
+import { LeaderboardPanel } from "@/components/leaderboard/leaderboard-panel";
 
 function NodeStatus({ world }) {
   if (world.completed) return <span className="node-status is-completed"><Check size={14} />Completed</span>;
@@ -14,11 +17,16 @@ function NodeStatus({ world }) {
   return <span className="node-status">Unlocked</span>;
 }
 
-export function WorldMap({ worlds }) {
+export function WorldMap({ worlds, mode = "guest", completedWorldIds = [], profile = null, leaderboard = [] }) {
   const [selectedId, setSelectedId] = useState(null);
   const [overlay, setOverlay] = useState(null);
   const closeOverlay = useCallback(() => setOverlay(null), []);
-  const { states, journeyProgress } = useGuestWorldProgress(worlds);
+  const guestProgress = useGuestWorldProgress(worlds, mode === "guest");
+  const authenticatedProgress = useMemo(() => ({
+    states: deriveWorldStates(worlds, completedWorldIds),
+    journeyProgress: getJourneyProgress(worlds, completedWorldIds),
+  }), [worlds, completedWorldIds]);
+  const { states, journeyProgress } = mode === "guest" ? guestProgress : authenticatedProgress;
   const selectedWorld = states.find((world) => world.id === selectedId && !world.locked) || states.find((world) => world.current) || states[0];
 
   return (
@@ -28,6 +36,7 @@ export function WorldMap({ worlds }) {
         <Link className="screen-control" href="/welcome"><ArrowLeft size={18} />Back</Link>
         <div className="map-actions">
           <button className="icon-control" type="button" onClick={() => setOverlay("leaderboard")} aria-label="Leaderboard"><Trophy size={20} /></button>
+          {mode === "authenticated" ? <button className="icon-control" type="button" onClick={() => setOverlay("profile")} aria-label="Profile"><UserRound size={20} /></button> : null}
           <button className="icon-control" type="button" onClick={() => setOverlay("settings")} aria-label="Settings"><Settings size={20} /></button>
         </div>
       </div>
@@ -67,8 +76,9 @@ export function WorldMap({ worlds }) {
 
       <GameOverlay title="Settings" open={overlay === "settings"} onClose={closeOverlay}><SettingsPanel /></GameOverlay>
       <GameOverlay title="Leaderboard" open={overlay === "leaderboard"} onClose={closeOverlay}>
-        <div className="empty-game-state"><Trophy size={34} /><h3>Rankings await</h3><p>Guest scores stay local. Shared rankings connect with player accounts in Phase 2B.</p></div>
+        <LeaderboardPanel mode={mode} entries={leaderboard} />
       </GameOverlay>
+      <GameOverlay title="Explorer Profile" open={overlay === "profile"} onClose={closeOverlay}>{profile ? <ProfilePanel profile={profile} /> : null}</GameOverlay>
     </main>
   );
 }

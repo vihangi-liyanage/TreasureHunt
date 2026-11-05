@@ -38,9 +38,17 @@ Verified on 4 November 2026 against the provider documentation and live service:
 
 The meaning and permitted ranges of `fish` and `chest` are not specified on the documentation page. The adapter therefore preserves them as validated non-negative integers without inventing additional semantics. Gameplay integration will be confirmed against the provider’s example UI before the challenge screen is finalized. Server requests use an abort timeout and validate the observed HTTPS image host/path or PNG base64 data. Future challenge routes must avoid logging solutions and degrade to a skippable unavailable state.
 
-## Security and persistence direction
+## Phase 2B identity and persistence
 
-`@supabase/ssr` will read and refresh HttpOnly cookie sessions through the Next.js server boundary. Route Handlers derive identity from the session rather than request bodies. RLS provides a second authorisation layer. Completed score submissions require a server-issued run ID, valid progression, bounds checks, single completion, and rate limits; fully authoritative anti-cheat is outside a client-side platformer’s scope and will be documented honestly.
+`proxy.js` and `lib/supabase/proxy.js` refresh Supabase SSR cookies with `getClaims()`. Browser and server client construction remains isolated in `lib/supabase/`; the server-only secret client is created only for narrowly scoped trusted operations. Route Handlers call `lib/auth/session.js` and derive the player ID from verified claims, never from a request body.
+
+Email registration, password login, Google PKCE initiation/callback, email token-hash confirmation, and logout are Route Handlers under `app/api/auth/` and `app/auth/`. Safe local return paths prevent open redirects. Responses use no-store headers and focused public-error mapping. A bounded per-instance request guard supplements Supabase Auth provider limits; production must also configure provider/dashboard limits because an in-memory limiter is not distributed across Vercel instances.
+
+The migration creates `profiles`, `player_progress`, `achievements`, `game_runs`, and a denormalised safe `leaderboard_entries` projection. RLS restricts private rows to `auth.uid()`. Direct player writes to progression, achievements, and runs are revoked. Server Route Handlers validate bounds and call service-role-only database functions for sequential world completion and single-use run submission. The secret key never enters a client bundle.
+
+Guest progress remains versioned local storage and is disabled by the World Map hook for authenticated players. Guests cannot read or submit leaderboard data. The UI consumes stable profile/progress/leaderboard shapes from `lib/data/player-repository.js`, not database internals.
+
+Fully authoritative score validation is impossible while Phaser executes in the browser. The design reduces casual tampering through server-issued run IDs, bounds, unlocked-world checks, atomic one-time submission, and rate limits; Phase 3 must connect actual game events before score submission is considered complete.
 
 ## Phase 2A interface boundary
 
@@ -50,9 +58,8 @@ Welcome is the single main menu. Settings and About use accessible in-place dial
 
 The World Map delegates browser storage subscription and cleanup to `components/worlds/use-guest-world-progress.js`. This keeps the persistence event lifecycle out of the visual map component while retaining the pure progression rules in `lib/progress/guest-progress.js`.
 
-## Phase 2A audit status
+## Implementation status
 
-- **Implemented:** focused App Router screens, reusable UI/form components, pure validation and progression rules, world configuration, guest storage synchronization, Fish response normalization, Supabase SSR client factories, and React/browser event cleanup.
-- **Planned:** Phaser scenes and bridge, gameplay event payloads, Fish Route Handlers and server-side attempt records, Supabase authentication actions, session refresh, protected routes, database schema, and RLS policies.
-- UI modules do not import Fish or Supabase response formats. Future Route Handlers are the orchestration boundary between sessions, application services, and stable DTOs.
-- Phase 2B must treat the cookie-backed server session as the identity source, apply least-privilege RLS, keep privileged keys server-only, validate redirects, and make score/checkpoint writes atomic and user-scoped.
+- **Implemented:** focused App Router screens, real Supabase auth Route Handlers, SSR cookie refresh, PKCE callback, logout/profile controls, pure validation, separate guest/auth progress, RLS migration, trusted progression/run endpoints, Fish response normalization, and React/browser cleanup.
+- **Configuration-dependent:** email delivery, Google consent, live cookie persistence, and deployed RLS behaviour require the owner's Supabase/Google project and are not claimed as locally integrated.
+- **Planned for Phase 3+:** Phaser scenes and bridge implementation, trusted gameplay event connection to progress/run routes, Fish challenge attempt records/routes/UI, and achievement awarding.

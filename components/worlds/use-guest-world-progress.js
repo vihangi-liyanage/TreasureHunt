@@ -27,10 +27,13 @@ export function subscribeToGuestProgress(onProgress, {
   };
 }
 
-export function useGuestWorldProgress(worlds) {
+export function useGuestWorldProgress(worlds, enabled = true) {
   const [completedWorldIds, setCompletedWorldIds] = useState([]);
 
-  useEffect(() => subscribeToGuestProgress(setCompletedWorldIds), []);
+  useEffect(() => {
+    if (!enabled) return undefined;
+    return subscribeToGuestProgress(setCompletedWorldIds);
+  }, [enabled]);
 
   return useMemo(() => ({
     states: deriveWorldStates(worlds, completedWorldIds),

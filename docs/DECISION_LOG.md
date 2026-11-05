@@ -73,3 +73,21 @@
 **Decision:** Accept remote Fish questions only as HTTPS PNGs under the observed `www.sanfoh.com/uob/fish/data/` path, while retaining the observed raw PNG base64 form.
 
 **Reason:** A URL prefix alone accepted malformed or untrusted values. The stricter adapter protects downstream UI from arbitrary image origins and can be updated only after a provider change is re-verified.
+
+## D013 Use Supabase SSR claims as the identity boundary
+
+**Decision:** Refresh cookie sessions in the Next.js proxy and derive every protected mutation's user ID from `getClaims()`. Keep the secret key in a server-only client used only after that check.
+
+**Reason:** A browser-provided user ID is forgeable. Verified claims plus RLS create independent application and database authorization boundaries.
+
+## D014 Make trusted progression and run writes server-only
+
+**Decision:** Revoke direct authenticated writes to progress and runs. Route Handlers validate bounded inputs and call service-role-only PostgreSQL functions that lock rows, enforce sequential completion, and prevent repeat run submissions.
+
+**Reason:** RLS ownership alone would still let a player unlock worlds or rewrite scores. Atomic functions keep cross-row invariants in one transaction while the UI receives a small application contract.
+
+## D015 Keep guest and authenticated persistence separate
+
+**Decision:** Guest progression stays in versioned local storage; authenticated progression comes only from Supabase. Guests may view the map but cannot read or submit leaderboard records.
+
+**Reason:** This preserves optional play without creating anonymous database identities, prevents accidental local progress merging, and makes the virtual-identity boundary explicit.
