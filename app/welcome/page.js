@@ -15,6 +15,7 @@ export default function WelcomePage() {
     <AdventureShell className="welcome-screen">
       <section className="welcome-menu" aria-labelledby="game-title">
         <h1 className="game-title menu-title" id="game-title"><span className="welcome-prefix">Welcome to</span><span className="welcome-name">TreasureHunt</span></h1>
+        <p className="menu-subtitle">Three worlds. One legendary treasure.</p>
         <div className="primary-menu" aria-label="Main game menu">
           <Link className="menu-option menu-option-primary menu-enter-1" href="/worlds?mode=guest">Play as Guest</Link>
           <Link className="menu-option menu-enter-2" href="/login">Player Login</Link>
