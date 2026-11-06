@@ -30,7 +30,7 @@ export function WorldMap({ worlds, mode = "guest", completedWorldIds = [], profi
     journeyProgress: getJourneyProgress(worlds, completedWorldIds),
   }), [worlds, completedWorldIds]);
   const { states, journeyProgress } = mode === "guest" ? guestProgress : authenticatedProgress;
-  const selectedWorld = states.find((world) => world.id === selectedId && !world.locked) || states.find((world) => world.current) || states[0];
+  const selectedWorld = states.find((world) => world.id === selectedId && !world.locked) || states.find((world) => world.current) || states.findLast((world) => world.completed) || states[0];
   const selectedHref = `/game/${selectedWorld.id}${mode === "guest" ? "?mode=guest" : ""}`;
 
   useEffect(() => {
@@ -89,7 +89,7 @@ export function WorldMap({ worlds, mode = "guest", completedWorldIds = [], profi
         <div><h2 className="font-display">{selectedWorld.name}</h2><p>{selectedWorld.description}</p></div>
         <div className="world-detail-action">
           <strong>{selectedWorld.difficulty}</strong>
-          {selectedWorld.number <= 2 ? <button className="play-world-button" type="button" onClick={playWorld}>Play</button> : <span>Coming next</span>}
+          <button className="play-world-button" type="button" onClick={playWorld}>Play</button>
         </div>
       </aside>
 

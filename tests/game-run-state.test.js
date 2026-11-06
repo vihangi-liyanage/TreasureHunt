@@ -27,6 +27,15 @@ describe("Emerald Jungle run state", () => {
     expect(replay.collectCoin("coin-1")).toBe(true);
     expect(replay.stompEnemy("enemy-1")).toBe(true);
   });
+  it("runs the final mission for 90 seconds and accepts victory only once", () => {
+    const run = new RunState({ lives:3, timerSeconds:90 });
+    expect(run.snapshot().timeLeft).toBe(90);
+    expect(run.complete()).toBe(true);
+    const completed = run.snapshot();
+    expect(run.complete()).toBe(false);
+    expect(run.snapshot()).toEqual(completed);
+    expect(completed).toMatchObject({ status:"completed", score:900, lives:3, timeLeft:90 });
+  });
 });
 
 describe("React–Phaser bridge", () => {

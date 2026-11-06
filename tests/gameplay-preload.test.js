@@ -50,8 +50,8 @@ describe("selected-world gameplay preload", () => {
     expect(loadImage.mock.calls.filter(([url]) => url.endsWith("sunset-terrain-atlas.png"))).toHaveLength(2);
   });
 
-  it("rejects unimplemented worlds rather than faking readiness", async () => {
+  it("rejects unknown worlds rather than faking readiness", async () => {
     const preloader = createGameplayPreloader({ loadRuntime: vi.fn(), loadImage: vi.fn() });
-    await expect(preloader.preloadWorld("crystal-cavern")).rejects.toThrow("No playable level");
+    await expect(preloader.preloadWorld("unknown-world")).rejects.toThrow("No playable level");
   });
 });

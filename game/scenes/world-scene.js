@@ -45,7 +45,7 @@ export class WorldScene extends Phaser.Scene {
     this.createPlayer();
     this.createCollectibles();
     this.createEnemies();
-    this.createCheckpoint();
+    this.createGoal();
     this.registerCollisions();
     this.registerCommands();
     this.cameraController = new CameraController(this, this.player, this.level.width, this.level.height);
@@ -132,11 +132,20 @@ export class WorldScene extends Phaser.Scene {
     this.projectileSystem = new ProjectileSystem(this, this.bridge, this.combat, this.enemySystem.group, (enemy, cause) => this.defeatEnemy(enemy, cause));
   }
 
-  createCheckpoint() {
-    const { x, y } = this.level.checkpoint;
-    this.checkpoint = this.physics.add.staticImage(x, y, "platform-hitbox").setDisplaySize(76, 135).setVisible(false).refreshBody();
-    this.checkpointArt = this.add.image(x, y - 32, "world-objects", 6).setDisplaySize(190, 190).setDepth(4);
-    this.add.text(x - 96, y - 145, "CHECKPOINT", { fontFamily: "Georgia, serif", fontSize: "18px", fontStyle: "bold", color: "#fff2b5", stroke: "#123b2d", strokeThickness: 6 }).setDepth(6);
+  createGoal() {
+    const { x, y, type } = this.level.goal;
+    const isTreasure = type === "treasure";
+    this.goal = this.physics.add.staticImage(x, y, "platform-hitbox")
+      .setDisplaySize(isTreasure ? 110 : 76, 135).setVisible(false).refreshBody();
+    this.goalArt = this.add.image(x, y - 32, "world-objects", 6)
+      .setDisplaySize(isTreasure ? 205 : 190, isTreasure ? 205 : 190).setDepth(4);
+    if (isTreasure) {
+      const glow = this.add.circle(x, y - 42, 72, 0x8dfcff, 0.18).setDepth(3);
+      this.tweens.add({ targets: [this.goalArt, glow], y: "-=8", alpha: { from: 0.72, to: 1 }, duration: 900, yoyo: true, repeat: -1, ease: "Sine.inOut" });
+    }
+    this.add.text(x - (isTreasure ? 105 : 96), y - 145, isTreasure ? "LEGENDARY TREASURE" : "CHECKPOINT", {
+      fontFamily: "Georgia, serif", fontSize: "18px", fontStyle: "bold", color: "#fff2b5", stroke: "#123b2d", strokeThickness: 6,
+    }).setDepth(6);
   }
 
   registerCollisions() {
@@ -154,7 +163,7 @@ export class WorldScene extends Phaser.Scene {
     this.physics.add.overlap(this.player, this.fishPowerUps, (_player, fish) => this.collectFish(fish));
     this.physics.add.overlap(this.player, this.hazards, () => this.damagePlayer("hazard"));
     this.physics.add.overlap(this.player, this.enemySystem.group, (_player, enemy) => this.touchEnemy(enemy));
-    this.physics.add.overlap(this.player, this.checkpoint, () => this.completeWorld());
+    this.physics.add.overlap(this.player, this.goal, () => this.completeWorld());
   }
 
   registerCommands() {
@@ -255,7 +264,7 @@ export class WorldScene extends Phaser.Scene {
     this.physics.pause();
     this.player.anims.stop().setFrame(7);
     this.cameras.main.flash(600, 255, 225, 116);
-    const result = { ...this.run.snapshot(), worldId: this.worldConfig.id };
+    const result = { ...this.run.snapshot(), worldId: this.worldConfig.id, completion: this.worldConfig.completion };
     this.publishState();
     this.bridge.emit(GAME_EVENTS.WORLD_COMPLETED, result);
   }

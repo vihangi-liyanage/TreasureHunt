@@ -4,6 +4,7 @@ import { parseRunResult, parseWorldCompletion } from "@/lib/game/run-validation"
 describe("persistent game mutation validation", () => {
   it("accepts bounded world completion values", () => {
     expect(parseWorldCompletion({ world: 2, coins: 45 })).toEqual({ world: 2, coins: 45 });
+    expect(parseWorldCompletion({ world: 3, coins: 33, userId: "ignored-client-id" })).toEqual({ world: 3, coins: 33 });
     expect(parseWorldCompletion({ world: 4, coins: 1 })).toBeNull();
     expect(parseWorldCompletion({ world: 1, coins: -1 })).toBeNull();
   });

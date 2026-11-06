@@ -23,7 +23,7 @@ export const EMERALD_JUNGLE_LEVEL = Object.freeze({
     shade: 0x07382c,
     foregroundTint: 0x5d9670,
   }),
-  playerStart: Object.freeze({ x: 150, y: 510 }), checkpoint: Object.freeze({ x: 5_045, y: 520 }),
+  playerStart: Object.freeze({ x: 150, y: 510 }), goal: Object.freeze({ type: "checkpoint", x: 5_045, y: 520 }),
   motion: EMERALD_JUNGLE_MOTION,
   platforms: Object.freeze([
     platform("ground-1",400,640,700,"ground"), platform("ground-2",1_210,640,560,"ground"),

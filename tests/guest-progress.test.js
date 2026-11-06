@@ -43,6 +43,10 @@ describe("guest adventure progression", () => {
     const states = deriveWorldStates(WORLD_CONFIGS, readGuestProgress().completedWorldIds);
     expect(states[2]).toMatchObject({ current: true, locked: false });
     expect(getJourneyProgress(WORLD_CONFIGS, readGuestProgress().completedWorldIds)).toBe(100);
+    expect(completeGuestWorld(WORLD_CONFIGS, "crystal-cavern").completedWorldIds).toEqual([
+      "emerald-jungle", "sunset-ruins", "crystal-cavern",
+    ]);
+    expect(deriveWorldStates(WORLD_CONFIGS, readGuestProgress().completedWorldIds).every((world) => world.completed && !world.current)).toBe(true);
   });
 
   it("rejects out-of-order and duplicate guest completions", () => {

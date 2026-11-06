@@ -4,6 +4,7 @@ import { canLandOnPlatform, isBelowFallBoundary, isStompCollision } from "@/game
 import { InputState } from "@/game/core/input-state";
 import { EMERALD_JUNGLE_LEVEL, EMERALD_JUNGLE_MOTION } from "@/game/config/emerald-jungle";
 import { SUNSET_RUINS_LEVEL } from "@/game/config/sunset-ruins";
+import { CRYSTAL_CAVERN_LEVEL } from "@/game/config/crystal-cavern";
 import { getTerrainVisualLayout } from "@/game/render/create-textures";
 
 function calculateJumpMetrics({ gravity, jumpVelocity, moveSpeed }) {
@@ -148,6 +149,53 @@ describe("Sunset Ruins level contract", () => {
       Math.max(...EMERALD_JUNGLE_LEVEL.enemies.map((enemy) => enemy.speed)),
     );
     expect(SUNSET_RUINS_LEVEL.fishPowerUps).toHaveLength(1);
+  });
+});
+
+describe("Crystal Cavern final-level contract", () => {
+  it("keeps its complete mandatory route within the shared jump envelope", () => {
+    const byId = new Map(CRYSTAL_CAVERN_LEVEL.platforms.map((platform) => [platform.id, platform]));
+    const route = CRYSTAL_CAVERN_LEVEL.mandatoryRoute.map((id) => byId.get(id));
+    for (let index = 0; index < route.length - 1; index += 1) {
+      expect(canReachPlatform(route[index], route[index + 1], CRYSTAL_CAVERN_LEVEL.motion), `${route[index].id} -> ${route[index + 1].id}`).toBe(true);
+    }
+  });
+
+  it("aligns painted crystal surfaces with their real colliders", () => {
+    expectTerrainAligned(
+      CRYSTAL_CAVERN_LEVEL,
+      CRYSTAL_CAVERN_LEVEL.art.terrainPresentation,
+      CRYSTAL_CAVERN_LEVEL.art.terrainFrameHeight,
+    );
+  });
+
+  it("uses unsupported but reachable gaps and grounded enemy patrols", () => {
+    expectDeliberateGroundGaps(CRYSTAL_CAVERN_LEVEL);
+    expectEnemyPatrolsSupported(CRYSTAL_CAVERN_LEVEL);
+  });
+
+  it("places every collectible and the final treasure over real terrain", () => {
+    for (const collectible of [...CRYSTAL_CAVERN_LEVEL.coins, ...CRYSTAL_CAVERN_LEVEL.fishPowerUps]) {
+      const support = CRYSTAL_CAVERN_LEVEL.platforms.find((platform) =>
+        Math.abs(collectible.x - platform.x) <= platform.width / 2 + 35 &&
+        platform.top - collectible.y >= 35 && platform.top - collectible.y <= 175);
+      expect(support, `${collectible.id} at ${collectible.x},${collectible.y}`).toBeTruthy();
+    }
+    const treasureSupport = CRYSTAL_CAVERN_LEVEL.platforms.find((platform) =>
+      Math.abs(CRYSTAL_CAVERN_LEVEL.goal.x - platform.x) <= platform.width / 2 &&
+      CRYSTAL_CAVERN_LEVEL.goal.y < platform.top);
+    expect(CRYSTAL_CAVERN_LEVEL.goal.type).toBe("treasure");
+    expect(treasureSupport?.id).toBe("ground-7");
+  });
+
+  it("increases enemy pressure without changing the eight-second power rule", () => {
+    expect(CRYSTAL_CAVERN_LEVEL.enemies).toHaveLength(7);
+    expect(Math.max(...CRYSTAL_CAVERN_LEVEL.enemies.map((enemy) => enemy.speed))).toBeGreaterThan(
+      Math.max(...SUNSET_RUINS_LEVEL.enemies.map((enemy) => enemy.speed)),
+    );
+    const combat = new CombatState();
+    combat.activate(2_000);
+    expect(combat.remainingMs(10_000)).toBe(0);
   });
 });
 

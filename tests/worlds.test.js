@@ -15,9 +15,10 @@ describe("world configuration", () => {
   });
 
   it("maps playable worlds to data-driven levels without duplicating scenes", () => {
-    expect(getLevelConfig("emerald-jungle")?.checkpoint).toBeTruthy();
-    expect(getLevelConfig("sunset-ruins")?.checkpoint).toBeTruthy();
-    expect(getLevelConfig("crystal-cavern")).toBeNull();
+    expect(getLevelConfig("emerald-jungle")?.goal.type).toBe("checkpoint");
+    expect(getLevelConfig("sunset-ruins")?.goal.type).toBe("checkpoint");
+    expect(getLevelConfig("crystal-cavern")?.goal.type).toBe("treasure");
     expect(getLevelConfig("sunset-ruins")?.fishPowerUps).toHaveLength(1);
+    expect(getLevelConfig("crystal-cavern")?.fishPowerUps).toHaveLength(1);
   });
 });

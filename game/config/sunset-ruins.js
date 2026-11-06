@@ -38,7 +38,7 @@ export const SUNSET_RUINS_LEVEL = Object.freeze({
     }),
   }),
   playerStart: Object.freeze({ x: 145, y: 510 }),
-  checkpoint: Object.freeze({ x: 5_430, y: 520 }),
+  goal: Object.freeze({ type: "checkpoint", x: 5_430, y: 520 }),
   motion: Object.freeze({
     ...EMERALD_JUNGLE_MOTION,
     moveSpeed: 330,

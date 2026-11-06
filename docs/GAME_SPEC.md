@@ -65,6 +65,16 @@ The final prompts specified premium hand-painted 2D cartoon artwork, emerald/tea
 
 Prompts requested original premium cartoon side-view assets in warm sandstone, turquoise and gold, with transparent atlas cells and explicit exclusions for text, watermarks, trademarks and recognizable copyrighted designs. Mechanical atlas processing changed only framing and dimensions.
 
+### Phase 5 Crystal Cavern asset register
+
+| Asset | Source, license, and intended use |
+| --- | --- |
+| `public/art/gameplay/crystal-cavern-panorama.png` | Generated specifically for TreasureHunt with OpenAI's built-in image-generation tool on 6 November 2026. Original wide luminous cavern with cyan/amethyst crystals, ruins, mist and underground waterfalls; no characters, text, logos, copied locations or foreground gameplay platforms. |
+| `public/art/gameplay/crystal-terrain-atlas.png` | Generated with the same tool as an original transparent 2x2 sheet: crystal-stone ground, bridge, step and decorative broken arch. The exact 627px cells and measured crop metadata are consumed directly by Phaser. |
+| `public/art/gameplay/crystal-objects-atlas.png` | Generated with the same tool as an original transparent 3x3 sheet: two matching crystal-beetle poses, medallion coin, magical fish, magic orb, crystal hazard, legendary treasure chest, impact sparkle and crystal decoration. The exact 418px cells are consumed directly by Phaser. |
+
+The prompts specified project-original polished cartoon fantasy game art, strict equal atlas cells, transparent backgrounds where required, blue/violet/cyan crystal lighting, restrained gold accents, and explicit exclusions for copied characters, guns, text, logos and watermarks. Project output is used under the applicable OpenAI output terms; no supplied reference image is shipped.
+
 ## Phase 3A playable scope
 
 Emerald Jungle is playable with Arcade Physics, camera-following traversal, layered parallax, platforms and gaps, coins, hazards, patrolling enemies, stomping, three lives, a 120-second timer, checkpoint completion, pause/resume/restart, keyboard controls, and mobile controls. Completion updates temporary in-memory guest progress or calls the authenticated progression endpoint. Sunset Ruins is also playable through the shared scene; Crystal Cavern, production audio, and remote Fish challenge gameplay remain later-phase work.
@@ -84,6 +94,12 @@ The local collectible is a deterministic gameplay mechanic and never calls the u
 Sunset Ruins is a real 105-second World 2 configuration consumed by the same `WorldScene`. It adds a longer golden-hour route, seven ground sections, fourteen elevated bridge/step platforms, 31 coins, five faster scarab enemies, three hazards, one reachable fish power-up and a checkpoint. It reuses the hunter, movement, gravity, stomp/projectile combat, eight-second power rule, pause/restart, mobile input, HUD and progression events. Completion says “World Complete / Checkpoint Reached” and unlocks World 3; it never claims final treasure victory.
 
 The World Map selectively warms the currently selected playable world's route, Phaser runtime and required local artwork. Gameplay is considered ready only after Phaser completes real loading and scene creation. Cached normal launches should not show a loading screen; slow first loads retain a short fallback, and failed runtime/art loads offer Retry or return to the World Map.
+
+## Phase 5 playable scope
+
+Crystal Cavern is the real 90-second final configuration consumed by the same `WorldScene`. It provides seven separated ground sections, fifteen elevated crystal platforms, 33 coins, seven faster crystal beetles, five crystal hazards, one reachable eight-second fish power-up and an end-of-level legendary treasure. Painted terrain and enemy baselines use measured body/presentation metadata; real 180–200px gaps remain unsupported but inside the tested jump envelope.
+
+Worlds 1–2 expose checkpoint goals and World 3 exposes a treasure goal through the same level contract. Only a player overlap with the actual treasure calls the guarded completion transition. The final overlay reads “Mission Complete / Treasure Discovered” and reports score, coins, remaining time and lives. Guest completion remains in memory for the active adventure; authenticated completion sends only bounded world/coin data to the verified-identity progression route. It does not submit a leaderboard score or claim that client-side scoring is cheat-proof.
 
 ## Acceptance boundaries
 

@@ -165,3 +165,15 @@
 **Decision:** While the World Map is visible, manually prefetch the selected game route and cache the dynamically imported Phaser factory plus that world's four required image resources. `GameScreen` consumes the same cache but still waits for the scene's real `game:ready` event. Hide the loading fallback for the first 250 ms and show a retryable error for genuine failures.
 
 **Reason:** The former button navigation triggered route work, Phaser import and 6–7 MB of image requests only after Play, then displayed an overlay immediately. Selective preloading moves useful work into map viewing time without increasing Splash cost or downloading locked/unselected worlds. Retaining a global Phaser game would risk stale runs and leaked GPU/input state; preloading every world or adding a global store would spend more bandwidth and add lifecycle complexity.
+
+## D027 Remove deprecated `baseUrl` without suppressing TypeScript 6
+
+**Decision:** Remove only `baseUrl` from `jsconfig.json` and keep `"@/*": ["./*"]`.
+
+**Reason:** The installed/VS Code workspace language service is TypeScript 6.0.3 and reports TS5101 because `baseUrl` will stop functioning in TypeScript 7. Relative `paths` targets are resolved from the config file without `baseUrl`, so this removes the cause while preserving imports. `ignoreDeprecations`, a TypeScript migration or extra module-resolution settings would hide or enlarge a one-line fix.
+
+## D028 Represent checkpoints and treasure through one goal contract
+
+**Decision:** Each level supplies `goal: { type, x, y }`. The shared scene creates the corresponding art/body and completes only on its Arcade overlap; `RunState.complete` remains the duplicate guard. World 3 remains configuration plus original assets, not a copied scene.
+
+**Reason:** Checkpoint and treasure differ in meaning/presentation, not physics lifecycle. One narrow data contract keeps collision, timer, combat, cleanup and persistence shared while making the final treasure explicit and testable. A separate final scene would duplicate mechanics; completing from route entry or an x-coordinate would be fake and bypass genuine collection.
