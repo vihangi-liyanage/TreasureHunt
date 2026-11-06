@@ -177,3 +177,15 @@
 **Decision:** Each level supplies `goal: { type, x, y }`. The shared scene creates the corresponding art/body and completes only on its Arcade overlap; `RunState.complete` remains the duplicate guard. World 3 remains configuration plus original assets, not a copied scene.
 
 **Reason:** Checkpoint and treasure differ in meaning/presentation, not physics lifecycle. One narrow data contract keeps collision, timer, combat, cleanup and persistence shared while making the final treasure explicit and testable. A separate final scene would duplicate mechanics; completing from route entry or an x-coordinate would be fake and bypass genuine collection.
+
+## D029 Gate World 1 boot and resume through existing lifecycle commands
+
+**Decision:** Add the World 1 briefing before Phaser construction, and keep Phaser paused throughout a React-rendered 3–2–1–GO countdown. Send the existing resume command only after GO; Escape may pause but cannot bypass that countdown.
+
+**Reason:** Delaying scene construction proves physics and the run timer have not started. Leaving countdown presentation in React keeps accessibility and navigation out of Phaser while one bridge command remains the authoritative resume edge. A second Phaser timer, polling, or a global UI store would create duplicate clocks or unclear ownership.
+
+## D030 Require persistence success before next-world navigation
+
+**Decision:** Treat checkpoint completion, persistence and navigation as three ordered states. Guests update their active in-memory adventure synchronously; authenticated players wait for the verified progress Route Handler. Enable Next World only after success, expose Retry Save on failure, and omit Next World after final treasure.
+
+**Reason:** A local collision proves gameplay completion but not database persistence. This ordering avoids claiming a durable unlock before the server-authorised transaction succeeds, without moving Supabase into Phaser or trusting a client user ID.

@@ -2,6 +2,10 @@ export const COIN_SCORE = 100;
 export const ENEMY_SCORE = 250;
 export const DAMAGE_INVULNERABILITY_MS = 1_200;
 
+export function shouldAdvanceRun({ paused, status }) {
+  return !paused && status === "playing";
+}
+
 export class RunState {
   constructor({ lives, timerSeconds }) {
     this.startingLives = lives;

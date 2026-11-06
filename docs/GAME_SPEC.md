@@ -101,6 +101,12 @@ Crystal Cavern is the real 90-second final configuration consumed by the same `W
 
 Worlds 1–2 expose checkpoint goals and World 3 exposes a treasure goal through the same level contract. Only a player overlap with the actual treasure calls the guarded completion transition. The final overlay reads “Mission Complete / Treasure Discovered” and reports score, coins, remaining time and lives. Guest completion remains in memory for the active adventure; authenticated completion sends only bounded world/coin data to the verified-identity progression route. It does not submit a leaderboard score or claim that client-side scoring is cheat-proof.
 
+## Phase 6 player-experience scope
+
+Selecting World 1 from the World Map opens an accessible field briefing with the implemented keyboard and touch controls. Phaser is not constructed, so physics, enemies, power duration and the 120-second timer cannot advance until Start Adventure. The same factual guide remains available under About → How to Play without interrupting Worlds 2–3 or direct re-entry.
+
+Pause freezes Arcade Physics, the active run clock and fish power. Resume is a React-owned 3–2–1–GO presentation; the bridge sends the existing resume command only after GO. World 1–2 completion keeps Next World disabled until guest progression is updated or the authenticated `/api/progress` request succeeds. World 3 has only replay and map actions. Profile and leaderboard surfaces display only RLS-authorized server data, with explicit empty/sign-in states and no invented achievements or scores.
+
 ## Acceptance boundaries
 
 - World progression and final treasure do not depend on the Fish API.

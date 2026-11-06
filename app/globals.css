@@ -65,7 +65,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .game-overlay-wide { width: min(100%,47rem); }
 .overlay-header { display: flex; min-height: 4.5rem; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,.1); padding: .9rem 1.1rem .9rem 1.4rem; }
 .overlay-header h2 { margin: 0; font-size: 1.8rem; }
-.overlay-body { max-height: calc(100svh - 8rem); overflow: hidden; padding: 1.25rem; }
+.overlay-body { max-height: calc(100svh - 8rem); overflow: auto; overscroll-behavior: contain; padding: 1.25rem; scrollbar-width: thin; scrollbar-color: rgba(244,187,69,.5) transparent; }
 .round-control,.icon-control { display: inline-grid; width: 2.75rem; height: 2.75rem; place-items: center; border: 1px solid rgba(255,255,255,.14); border-radius: 50%; background: rgba(0,0,0,.22); color: #fff9e8; transition: border-color .18s ease,background .18s ease,transform .18s ease; }
 .round-control:hover,.icon-control:hover { border-color: rgba(255,222,125,.58); background: rgba(255,218,111,.12); transform: translateY(-1px); }
 @keyframes fade-in { from { opacity: 0; } }
@@ -80,6 +80,21 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .about-content p,.empty-game-state p { margin: 0; color: rgba(255,247,220,.67); line-height: 1.7; }
 .item-strip { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.1rem; }
 .item-strip span { display: inline-flex; align-items: center; gap: .4rem; border-radius: 999px; background: rgba(255,255,255,.07); padding: .45rem .7rem; font-size: .75rem; font-weight: 750; }
+.how-to-play { display: grid; gap: 1rem; text-align: left; }
+.control-key-grid { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: .5rem; }
+.control-key-grid > span { display: grid; justify-items: center; gap: .35rem; border: 1px solid rgba(255,226,143,.15); border-radius: .8rem; background: rgba(0,0,0,.2); padding: .55rem .35rem; text-align: center; }
+.control-key-grid kbd { display: grid; min-width: 2.5rem; min-height: 2rem; place-items: center; border: 1px solid rgba(255,230,156,.5); border-bottom-width: 3px; border-radius: .45rem; background: linear-gradient(#193d31,#0b251d); padding: .25rem .45rem; color: #fff0b5; font-size: .76rem; font-weight: 900; white-space: nowrap; }
+.control-key-grid small { color: rgba(255,247,220,.7); font-size: .62rem; font-weight: 750; }
+.adventure-rules { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .55rem; }
+.adventure-rules article { display: flex; min-width: 0; gap: .6rem; border-radius: .8rem; background: rgba(255,255,255,.055); padding: .65rem; }
+.adventure-rules article > svg { flex: 0 0 auto; color: var(--gold-light); }
+.adventure-rules strong { display: block; font-size: .78rem; }
+.adventure-rules p { margin: .15rem 0 0; color: rgba(255,247,220,.62); font-size: .67rem; line-height: 1.45; }
+.touch-hint { display: flex; align-items: center; gap: .5rem; margin: 0; color: #a9e9cb; font-size: .72rem; }
+.how-to-play.is-compact { margin-top: .8rem; }
+.how-to-play.is-compact .control-key-grid { grid-template-columns: repeat(3,minmax(0,1fr)); }
+.how-to-play.is-compact .adventure-rules { grid-template-columns: 1fr; }
+.how-to-play.is-compact .adventure-rules article { padding: .5rem; }
 .empty-game-state { display: flex; min-height: 13rem; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
 .empty-game-state > svg { color: var(--gold-light); }
 .leaderboard-signin { display: flex; min-height: 16rem; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
@@ -91,12 +106,27 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .leaderboard-list li > span { color: var(--gold-light); font-weight: 900; }
 .leaderboard-list small { color: rgba(255,247,220,.5); }
 .leaderboard-list b { color: #a3f1c8; }
+.leaderboard-table { min-width: 0; }
+.leaderboard-heading { display: grid; grid-template-columns: 2rem 1fr auto auto; gap: .65rem; padding: 0 .7rem .45rem; color: rgba(255,247,220,.45); font-size: .6rem; font-weight: 850; letter-spacing: .08em; text-transform: uppercase; }
 .profile-panel { display: grid; gap: .9rem; }
 .profile-identity { display: flex; align-items: center; gap: .8rem; border: 1px solid rgba(255,255,255,.09); border-radius: 1rem; background: rgba(0,0,0,.16); padding: .8rem; }
 .profile-identity > span { display: grid; width: 2.8rem; height: 2.8rem; flex: 0 0 auto; place-items: center; border-radius: .85rem; background: rgba(244,187,69,.14); color: var(--gold-light); }
 .profile-identity strong { font-family: Georgia,"Times New Roman",serif; font-size: 1.2rem; }
 .profile-identity p { margin: .15rem 0 0; color: rgba(255,247,220,.55); font-size: .75rem; overflow-wrap: anywhere; }
+.profile-identity small { display: block; margin-top: .15rem; color: rgba(255,226,143,.62); font-size: .6rem; }
 .profile-panel label { display: block; margin-bottom: .35rem; color: rgba(255,247,220,.8); font-size: .75rem; font-weight: 800; }
+.profile-progress-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: .5rem; }
+.profile-progress-grid > span { display: grid; justify-items: center; gap: .18rem; border: 1px solid rgba(255,255,255,.08); border-radius: .8rem; background: rgba(0,0,0,.16); padding: .6rem .35rem; text-align: center; }
+.profile-progress-grid svg { color: var(--gold-light); }
+.profile-progress-grid strong { font-size: 1rem; }
+.profile-progress-grid small { color: rgba(255,247,220,.52); font-size: .58rem; }
+.profile-achievements h3 { margin: 0 0 .45rem; font-family: Georgia,"Times New Roman",serif; font-size: 1rem; }
+.profile-achievements ul { display: grid; gap: .4rem; max-height: 7rem; margin: 0; overflow: auto; padding: 0; list-style: none; }
+.profile-achievements li,.profile-empty { display: flex; align-items: center; gap: .55rem; border: 1px solid rgba(255,255,255,.08); border-radius: .7rem; background: rgba(0,0,0,.14); padding: .55rem; }
+.profile-achievements li > svg,.profile-empty > svg { flex: 0 0 auto; color: var(--gold-light); }
+.profile-achievements li strong { display: block; font-size: .72rem; text-transform: capitalize; }
+.profile-achievements li small { color: rgba(255,247,220,.48); font-size: .58rem; }
+.profile-empty p { margin: 0; color: rgba(255,247,220,.56); font-size: .67rem; line-height: 1.4; }
 .profile-edit-row { display: grid; grid-template-columns: 1fr auto; gap: .5rem; }
 .profile-notice { margin: -.25rem 0 0; color: var(--gold-light); font-size: .72rem; }
 
@@ -302,8 +332,21 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .game-state-panel h1 { margin: .55rem 0; font-family: Georgia,"Times New Roman",serif; font-size: clamp(2rem,7vw,3.25rem); line-height: 1; }
 .game-state-panel p { margin: .6rem 0; color: rgba(255,247,220,.72); }
 .game-state-panel small { display: block; margin: .65rem 0; color: #a8edc7; }
+.game-state-panel small.is-save-error { color: #ffb09d; }
 .state-actions { display: grid; grid-template-columns: repeat(3,1fr); gap: .55rem; margin-top: 1.25rem; }
 .is-victory .state-actions,.is-defeat .state-actions { grid-template-columns: repeat(2,1fr); }
+.game-button:disabled { cursor: not-allowed; filter: grayscale(.4); opacity: .48; }
+.adventure-intro { position: absolute; inset: 0; z-index: 60; display: grid; place-items: center; overflow: hidden; padding: clamp(.6rem,2vw,1.5rem); background: linear-gradient(90deg,rgba(2,18,14,.95),rgba(4,38,29,.78)),url("/art/gameplay/emerald-jungle-panorama.png") center / cover; }
+.adventure-intro-panel { width: min(100%,58rem); max-height: calc(100svh - 1.2rem); overflow: auto; overscroll-behavior: contain; border: 1px solid rgba(255,224,130,.42); border-radius: 1.35rem; background: linear-gradient(145deg,rgba(8,47,34,.97),rgba(2,24,18,.98)); padding: clamp(1rem,3vw,2rem); box-shadow: 0 28px 90px rgba(0,0,0,.62); scrollbar-width: thin; }
+.adventure-intro-panel h1 { margin: .25rem 0; font-family: Georgia,"Times New Roman",serif; font-size: clamp(2rem,5vw,3.4rem); }
+.intro-lead { margin: 0 0 1rem; color: rgba(255,247,220,.7); font-size: .82rem; }
+.intro-actions { display: flex; justify-content: flex-end; gap: .65rem; margin-top: 1rem; }
+.resume-countdown { display: grid; min-height: 15rem; place-items: center; align-content: center; }
+.resume-countdown > span { color: var(--gold-light); font-size: .72rem; font-weight: 900; letter-spacing: .16em; text-transform: uppercase; }
+.resume-countdown > strong { font-family: Georgia,"Times New Roman",serif; font-size: clamp(5rem,18vw,9rem); line-height: .9; text-shadow: 0 0 35px rgba(255,211,92,.55); animation: countdown-pop .45s ease-out both; }
+.resume-countdown > p { margin: .5rem 0 0; }
+.countdown-actions { display: grid; grid-template-columns: repeat(2,1fr); gap: .55rem; margin-top: .7rem; }
+@keyframes countdown-pop { from { opacity: .2; transform: scale(.55); } to { opacity: 1; transform: scale(1); } }
 .mobile-game-controls { position: absolute; z-index: 25; right: max(.8rem,env(safe-area-inset-right)); bottom: max(.8rem,env(safe-area-inset-bottom)); left: max(.8rem,env(safe-area-inset-left)); display: none; align-items: end; justify-content: space-between; pointer-events: none; }
 .movement-pad { display: flex; gap: .5rem; }
 .touch-control { display: grid; width: 4.25rem; height: 4.25rem; place-items: center; border: 1px solid rgba(255,235,178,.38); border-radius: 1.25rem; background: rgba(3,29,21,.68); color: #fff3cb; pointer-events: auto; backdrop-filter: blur(8px); touch-action: none; }
@@ -324,12 +367,29 @@ button, a { -webkit-tap-highlight-color: transparent; }
   .play-world-button { min-width: 4.6rem; min-height: 1.9rem; font-size: .62rem; }
   .state-actions { grid-template-columns: 1fr; }
   .is-victory .state-actions,.is-defeat .state-actions { grid-template-columns: 1fr 1fr; }
+  .control-key-grid { grid-template-columns: repeat(3,minmax(0,1fr)); }
+  .adventure-rules { grid-template-columns: 1fr; }
+  .adventure-intro-panel { max-height: calc(100svh - .8rem); padding: .8rem; }
+  .intro-actions { position: sticky; bottom: -.8rem; margin: .8rem -.8rem -.8rem; background: rgba(2,24,18,.96); padding: .7rem .8rem; }
+  .terminal-actions { grid-template-columns: 1fr; }
 }
 @media (max-height: 500px) {
   .touch-control { width: 3.6rem; height: 3.6rem; }
   .jump-control { width: 4rem; height: 4rem; }
   .game-state-panel { padding: .8rem 1rem; }
   .game-state-panel h1 { font-size: 1.8rem; }
+  .adventure-intro { place-items: stretch center; }
+  .adventure-intro-panel { border-radius: .8rem; }
+  .adventure-rules { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+
+@media (max-width: 380px) {
+  .control-key-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .intro-actions { display: grid; grid-template-columns: 1fr; }
+  .leaderboard-heading { display: none; }
+  .leaderboard-list li { grid-template-columns: 1.5rem 1fr auto; }
+  .leaderboard-list li small { grid-column: 2 / span 2; }
+  .profile-progress-grid { gap: .3rem; }
 }
 
 /* Phase 3B fullscreen gameplay polish */

@@ -2,7 +2,7 @@ import * as Phaser from "phaser";
 import { GAME_COMMANDS, GAME_EVENTS } from "@/game/core/events";
 import { CombatState } from "@/game/core/combat-state";
 import { canLandOnPlatform, isBelowFallBoundary, isStompCollision } from "@/game/core/collision-rules";
-import { RunState } from "@/game/core/run-state";
+import { RunState, shouldAdvanceRun } from "@/game/core/run-state";
 import { RUN_RULES } from "@/game/config/worlds";
 import { loadGameAssets } from "@/game/render/load-assets";
 import { createGameTextures, getTerrainVisualLayout, HUNTER_PRESENTATION } from "@/game/render/create-textures";
@@ -170,14 +170,17 @@ export class WorldScene extends Phaser.Scene {
     this.commandCleanups.push(
       this.bridge.on(GAME_COMMANDS.PAUSE, () => this.setPaused(true)),
       this.bridge.on(GAME_COMMANDS.RESUME, () => this.setPaused(false)),
-      this.bridge.on(GAME_COMMANDS.RESTART, () => this.scene.restart({ world: this.worldConfig, level: this.level, bridge: this.bridge })),
+      this.bridge.on(GAME_COMMANDS.RESTART, () => {
+        if (this.isPaused) this.physics.resume();
+        this.scene.restart({ world: this.worldConfig, level: this.level, bridge: this.bridge });
+      }),
     );
-    this.escapeHandler = () => this.setPaused(!this.isPaused);
+    this.escapeHandler = () => { if (!this.isPaused) this.setPaused(true); };
     this.input.keyboard.on("keydown-ESC", this.escapeHandler);
   }
 
   update(_time, delta) {
-    if (this.isPaused || this.run.status !== "playing") return;
+    if (!shouldAdvanceRun({ paused: this.isPaused, status: this.run.status })) return;
     const activeDelta = Math.min(delta, 100);
     this.runClockMs += activeDelta;
     this.timerAccumulatorMs += activeDelta;

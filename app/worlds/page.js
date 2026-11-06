@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { hasSupabaseConfig } from "@/lib/supabase/config";
 import { getVerifiedIdentity } from "@/lib/auth/session";
-import { getLeaderboard, getPlayerProfile, getPlayerProgress } from "@/lib/data/player-repository";
+import { getLeaderboard, getPlayerAchievements, getPlayerProfile, getPlayerProgress } from "@/lib/data/player-repository";
 
 export default async function WorldsPage({ searchParams }) {
   const query = await searchParams;
@@ -18,11 +18,13 @@ export default async function WorldsPage({ searchParams }) {
   let profile = null;
   let progress = null;
   let leaderboard = [];
+  let achievements = [];
   try {
-    [profile, progress, leaderboard] = await Promise.all([
+    [profile, progress, leaderboard, achievements] = await Promise.all([
       getPlayerProfile(supabase, identity.id),
       getPlayerProgress(supabase, identity.id),
       getLeaderboard(supabase),
+      getPlayerAchievements(supabase, identity.id),
     ]);
   } catch {
     // The authenticated shell remains usable while setup/migrations are being completed.
@@ -38,7 +40,10 @@ export default async function WorldsPage({ searchParams }) {
       worlds={WORLD_CONFIGS}
       completedWorldIds={completedWorldIds}
       leaderboard={leaderboard}
-      profile={{ username: profile?.username || "Explorer", email: identity.email }}
+      profile={{
+        username: profile?.username || "Explorer", email: identity.email, createdAt: profile?.created_at || null,
+        progress: progress || null, achievements,
+      }}
     />
   );
 }

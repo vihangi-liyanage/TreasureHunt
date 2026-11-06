@@ -41,9 +41,12 @@ export function WorldMap({ worlds, mode = "guest", completedWorldIds = [], profi
   }, [router, selectedHref, selectedWorld.id]);
 
   const playWorld = useCallback(() => {
-    const guestQuery = mode === "guest" ? `?mode=guest&attempt=${beginGuestRun()}` : "";
-    router.push(`/game/${selectedWorld.id}${guestQuery}`);
-  }, [mode, router, selectedWorld.id]);
+    const parameters = new URLSearchParams();
+    if (mode === "guest") { parameters.set("mode", "guest"); parameters.set("attempt", String(beginGuestRun())); }
+    if (selectedWorld.number === 1) parameters.set("intro", "1");
+    const query = parameters.size ? `?${parameters.toString()}` : "";
+    router.push(`/game/${selectedWorld.id}${query}`);
+  }, [mode, router, selectedWorld.id, selectedWorld.number]);
 
   return (
     <main className="world-map-screen">
