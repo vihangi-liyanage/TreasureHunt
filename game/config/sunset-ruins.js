@@ -16,9 +16,18 @@ export const SUNSET_RUINS_LEVEL = Object.freeze({
     shade: 0x4b2130,
     foregroundTint: 0xb66c4a,
     terrainPresentation: Object.freeze({
-      ground: Object.freeze({ frame: 0, height: 260, widthPadding: 95, surfaceY: 90 }),
-      ledge: Object.freeze({ frame: 1, height: 180, widthPadding: 55, surfaceY: 120 }),
-      step: Object.freeze({ frame: 2, height: 140, widthPadding: 45, surfaceY: 145 }),
+      ground: Object.freeze({
+        frame: 0, height: 260, surfaceY: 30, surfaceWidthRatio: 381 / 430,
+        crop: Object.freeze({ x: 230, y: 120, width: 430, height: 250 }),
+      }),
+      ledge: Object.freeze({
+        frame: 1, height: 180, surfaceY: 30, surfaceWidthRatio: 421 / 440,
+        crop: Object.freeze({ x: 220, y: 145, width: 440, height: 220 }),
+      }),
+      step: Object.freeze({
+        frame: 2, height: 140, surfaceY: 40, surfaceWidthRatio: 182 / 230,
+        crop: Object.freeze({ x: 335, y: 165, width: 230, height: 200 }),
+      }),
     }),
     enemyPresentation: Object.freeze({
       displaySize: 112,
@@ -36,12 +45,12 @@ export const SUNSET_RUINS_LEVEL = Object.freeze({
     airAcceleration: 1_200,
   }),
   platforms: Object.freeze([
-    platform("ground-1", 350, 640, 700, "ground"),
-    platform("ground-2", 1_080, 640, 600, "ground"),
-    platform("ground-3", 1_730, 640, 580, "ground"),
-    platform("ground-4", 2_410, 640, 620, "ground"),
-    platform("ground-5", 3_115, 640, 630, "ground"),
-    platform("ground-6", 3_840, 640, 640, "ground"),
+    platform("ground-1", 350, 640, 620, "ground"),
+    platform("ground-2", 1_080, 640, 480, "ground"),
+    platform("ground-3", 1_730, 640, 460, "ground"),
+    platform("ground-4", 2_410, 640, 540, "ground"),
+    platform("ground-5", 3_115, 640, 510, "ground"),
+    platform("ground-6", 3_840, 640, 580, "ground"),
     platform("ground-7", 4_955, 640, 1_290, "ground"),
     platform("bridge-1", 625, 500, 245),
     platform("step-1", 930, 395, 190, "step"),
@@ -74,10 +83,10 @@ export const SUNSET_RUINS_LEVEL = Object.freeze({
   ]),
   fishPowerUps: Object.freeze([Object.freeze({ id: "fish-1", x: 1_645, y: 555 })]),
   enemies: Object.freeze([
-    Object.freeze({ id: "scarab-1", x: 735, y: 565, left: 650, right: 780, speed: 68 }),
-    Object.freeze({ id: "scarab-2", x: 1_820, y: 565, left: 1_560, right: 1_970, speed: 94 }),
+    Object.freeze({ id: "scarab-1", x: 590, y: 565, left: 510, right: 630, speed: 68 }),
+    Object.freeze({ id: "scarab-2", x: 1_820, y: 565, left: 1_560, right: 1_930, speed: 94 }),
     Object.freeze({ id: "scarab-3", x: 2_545, y: 565, left: 2_190, right: 2_650, speed: 105 }),
-    Object.freeze({ id: "scarab-4", x: 3_520, y: 565, left: 3_360, right: 3_740, speed: 112 }),
+    Object.freeze({ id: "scarab-4", x: 3_700, y: 565, left: 3_600, right: 4_080, speed: 112 }),
     Object.freeze({ id: "scarab-5", x: 4_660, y: 565, left: 4_430, right: 4_930, speed: 118 }),
   ]),
   hazards: Object.freeze([

@@ -67,7 +67,7 @@ Prompts requested original premium cartoon side-view assets in warm sandstone, t
 
 ## Phase 3A playable scope
 
-Emerald Jungle is playable with Arcade Physics, camera-following traversal, layered parallax, platforms and gaps, coins, hazards, patrolling enemies, stomping, three lives, a 120-second timer, checkpoint completion, pause/resume/restart, keyboard controls, and mobile controls. Completion updates temporary in-memory guest progress or calls the authenticated progression endpoint. Sunset Ruins, Crystal Cavern, audio, and advanced combat remain later-phase work.
+Emerald Jungle is playable with Arcade Physics, camera-following traversal, layered parallax, platforms and gaps, coins, hazards, patrolling enemies, stomping, three lives, a 120-second timer, checkpoint completion, pause/resume/restart, keyboard controls, and mobile controls. Completion updates temporary in-memory guest progress or calls the authenticated progression endpoint. Sunset Ruins is also playable through the shared scene; Crystal Cavern, production audio, and remote Fish challenge gameplay remain later-phase work.
 
 ## Phase 3B polished scope
 
@@ -82,6 +82,8 @@ The local collectible is a deterministic gameplay mechanic and never calls the u
 ## Phase 4 playable scope
 
 Sunset Ruins is a real 105-second World 2 configuration consumed by the same `WorldScene`. It adds a longer golden-hour route, seven ground sections, fourteen elevated bridge/step platforms, 31 coins, five faster scarab enemies, three hazards, one reachable fish power-up and a checkpoint. It reuses the hunter, movement, gravity, stomp/projectile combat, eight-second power rule, pause/restart, mobile input, HUD and progression events. Completion says “World Complete / Checkpoint Reached” and unlocks World 3; it never claims final treasure victory.
+
+The World Map selectively warms the currently selected playable world's route, Phaser runtime and required local artwork. Gameplay is considered ready only after Phaser completes real loading and scene creation. Cached normal launches should not show a loading screen; slow first loads retain a short fallback, and failed runtime/art loads offer Retry or return to the World Map.
 
 ## Acceptance boundaries
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Check, Compass, LockKeyhole, Settings, Trophy, UserRound } from "lucide-react";
@@ -10,6 +10,7 @@ import { useGuestWorldProgress } from "./use-guest-world-progress";
 import { beginGuestRun, deriveWorldStates, getJourneyProgress } from "@/lib/progress/guest-progress";
 import { ProfilePanel } from "@/components/profile/profile-panel";
 import { LeaderboardPanel } from "@/components/leaderboard/leaderboard-panel";
+import { gameplayPreloader } from "@/game/preload-gameplay";
 
 function NodeStatus({ world }) {
   if (world.completed) return <span className="node-status is-completed"><Check size={14} />Completed</span>;
@@ -30,6 +31,15 @@ export function WorldMap({ worlds, mode = "guest", completedWorldIds = [], profi
   }), [worlds, completedWorldIds]);
   const { states, journeyProgress } = mode === "guest" ? guestProgress : authenticatedProgress;
   const selectedWorld = states.find((world) => world.id === selectedId && !world.locked) || states.find((world) => world.current) || states[0];
+  const selectedHref = `/game/${selectedWorld.id}${mode === "guest" ? "?mode=guest" : ""}`;
+
+  useEffect(() => {
+    router.prefetch(selectedHref);
+    gameplayPreloader.preloadWorld(selectedWorld.id).catch(() => {
+      // Speculative preload failures are retried and reported by the gameplay screen.
+    });
+  }, [router, selectedHref, selectedWorld.id]);
+
   const playWorld = useCallback(() => {
     const guestQuery = mode === "guest" ? `?mode=guest&attempt=${beginGuestRun()}` : "";
     router.push(`/game/${selectedWorld.id}${guestQuery}`);

@@ -5,3 +5,9 @@ export function isStompCollision({ playerVelocityY, playerBottom, enemyCenterY }
 export function canLandOnPlatform({ playerVelocityY, previousBottom, platformTop }, tolerance = 12) {
   return playerVelocityY >= 0 && previousBottom <= platformTop + tolerance;
 }
+
+export function isBelowFallBoundary({ bodyTop, levelHeight }, margin = 90) {
+  return Number.isFinite(bodyTop)
+    && Number.isFinite(levelHeight)
+    && bodyTop > levelHeight + margin;
+}

@@ -26,9 +26,9 @@ export const EMERALD_JUNGLE_LEVEL = Object.freeze({
   playerStart: Object.freeze({ x: 150, y: 510 }), checkpoint: Object.freeze({ x: 5_045, y: 520 }),
   motion: EMERALD_JUNGLE_MOTION,
   platforms: Object.freeze([
-    platform("ground-1",400,640,800,"ground"), platform("ground-2",1_210,640,660,"ground"),
-    platform("ground-3",1_990,640,720,"ground"), platform("ground-4",2_790,640,700,"ground"),
-    platform("ground-5",3_590,640,720,"ground"), platform("ground-6",4_690,640,1_300,"ground"),
+    platform("ground-1",400,640,700,"ground"), platform("ground-2",1_210,640,560,"ground"),
+    platform("ground-3",1_990,640,640,"ground"), platform("ground-4",2_790,640,600,"ground"),
+    platform("ground-5",3_590,640,600,"ground"), platform("ground-6",4_690,640,1_200,"ground"),
     platform("ledge-1",610,505,250), platform("ledge-2",905,390,220,"step"),
     platform("ledge-3",1_260,500,240), platform("ledge-4",1_650,445,250),
     platform("ledge-5",2_010,370,230,"step"), platform("ledge-6",2_365,500,260),
@@ -45,9 +45,9 @@ export const EMERALD_JUNGLE_LEVEL = Object.freeze({
   ].map(([x,y], index) => Object.freeze({ id: `coin-${index + 1}`, x, y }))),
   fishPowerUps: Object.freeze([Object.freeze({ id:"fish-1", x:540, y:565 })]),
   enemies: Object.freeze([
-    Object.freeze({ id:"critter-1",x:740,y:570,left:650,right:780,speed:54 }),
+    Object.freeze({ id:"critter-1",x:700,y:570,left:650,right:720,speed:54 }),
     Object.freeze({ id:"critter-2",x:2_620,y:570,left:2_500,right:3_020,speed:84 }),
-    Object.freeze({ id:"critter-3",x:3_710,y:570,left:3_390,right:3_900,speed:92 }),
+    Object.freeze({ id:"critter-3",x:3_710,y:570,left:3_390,right:3_880,speed:92 }),
     Object.freeze({ id:"critter-4",x:4_650,y:570,left:4_480,right:4_900,speed:98 }),
   ]),
   hazards: Object.freeze([

@@ -1,7 +1,7 @@
 import * as Phaser from "phaser";
 import { GAME_COMMANDS, GAME_EVENTS } from "@/game/core/events";
 import { CombatState } from "@/game/core/combat-state";
-import { canLandOnPlatform, isStompCollision } from "@/game/core/collision-rules";
+import { canLandOnPlatform, isBelowFallBoundary, isStompCollision } from "@/game/core/collision-rules";
 import { RunState } from "@/game/core/run-state";
 import { RUN_RULES } from "@/game/config/worlds";
 import { loadGameAssets } from "@/game/render/load-assets";
@@ -23,10 +23,18 @@ export class WorldScene extends Phaser.Scene {
     this.safePosition = { ...level.playerStart };
   }
 
-  preload() { loadGameAssets(this, this.level.art); }
+  preload() {
+    this.assetLoadFailed = false;
+    this.load.once(Phaser.Loader.Events.FILE_LOAD_ERROR, (file) => {
+      this.assetLoadFailed = true;
+      this.bridge.emit(GAME_EVENTS.LOAD_FAILED, { assetKey: file.key });
+    });
+    loadGameAssets(this, this.level.art);
+  }
 
   create() {
-    createGameTextures(this);
+    if (this.assetLoadFailed) return;
+    createGameTextures(this, this.level.art);
     this.run = new RunState({ lives: RUN_RULES.startingLives, timerSeconds: this.worldConfig.timerSeconds });
     this.combat = new CombatState();
     this.runClockMs = 0;
@@ -174,7 +182,7 @@ export class WorldScene extends Phaser.Scene {
     this.enemySystem.update();
     this.projectileSystem.update(this.runClockMs, this.level.width);
     this.player.x = Phaser.Math.Clamp(this.player.x, 25, this.level.width - 25);
-    if (this.player.body.top > this.level.height + 90) this.damagePlayer("fall");
+    if (isBelowFallBoundary({ bodyTop: this.player.body.top, levelHeight: this.level.height })) this.damagePlayer("fall");
     if (this.combat.consumeExpiry(this.runClockMs)) {
       this.bridge.emit(GAME_EVENTS.POWER_EXPIRED, { worldId: this.worldConfig.id });
       this.publishState();
@@ -238,7 +246,7 @@ export class WorldScene extends Phaser.Scene {
     this.bridge.emit(GAME_EVENTS.PLAYER_DAMAGED, { cause, lives: this.run.lives });
     this.publishState();
     if (this.run.status === "game-over") { this.finishRun("lives"); return; }
-    this.player.setPosition(this.safePosition.x, this.safePosition.y).setVelocity(0, 0);
+    this.player.body.reset(this.safePosition.x, this.safePosition.y);
     this.player.body.setAllowGravity(true);
   }
 

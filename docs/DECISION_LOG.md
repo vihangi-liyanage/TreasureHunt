@@ -153,3 +153,15 @@
 **Decision:** After a successful Supabase signup without a session, clear both password values and replace the form with a compact “Check Your Email” state and direct Login action. Let the auth panel scroll internally only when a very short viewport requires it.
 
 **Reason:** Appending a notice preserved sensitive fields and pushed navigation below the viewport. The success state reflects the real server result without pretending confirmation or authentication succeeded.
+
+## D025 Trim painted terrain to its measured walkable bounds
+
+**Decision:** Register cropped Phaser frames from each existing terrain atlas, align crop-relative painted surface rows to configuration-owned collision tops, and size the visible walkable span to the real collider width. Widen ground gaps only where their prior spacing allowed a running body to contact the next platform before falling.
+
+**Reason:** Sunset's stale full-frame measurements placed physics 19–35 pixels above the art and transparent side padding visually hid collider edges. Gravity and the shared one-way collision rule were already valid. Correcting the art/collider contract and level data fixes both worlds without invisible supports, visual-only offsets, a copied scene, or a new physics layer. A tilemap conversion would offer richer contours but is unnecessary disruption for the existing platform model.
+
+## D026 Preload only the selected playable world
+
+**Decision:** While the World Map is visible, manually prefetch the selected game route and cache the dynamically imported Phaser factory plus that world's four required image resources. `GameScreen` consumes the same cache but still waits for the scene's real `game:ready` event. Hide the loading fallback for the first 250 ms and show a retryable error for genuine failures.
+
+**Reason:** The former button navigation triggered route work, Phaser import and 6–7 MB of image requests only after Play, then displayed an overlay immediately. Selective preloading moves useful work into map viewing time without increasing Splash cost or downloading locked/unselected worlds. Retaining a global Phaser game would risk stale runs and leaked GPU/input state; preloading every world or adding a global store would spend more bandwidth and add lifecycle complexity.
