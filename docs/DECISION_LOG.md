@@ -189,3 +189,15 @@
 **Decision:** Treat checkpoint completion, persistence and navigation as three ordered states. Guests update their active in-memory adventure synchronously; authenticated players wait for the verified progress Route Handler. Enable Next World only after success, expose Retry Save on failure, and omit Next World after final treasure.
 
 **Reason:** A local collision proves gameplay completion but not database persistence. This ordering avoids claiming a durable unlock before the server-authorised transaction succeeds, without moving Supabase into Phaser or trusting a client user ID.
+
+## D031 Keep resume presentation over the live canvas and crop backdrops by data
+
+**Decision:** Render 3–2–1–GO as a transparent, input-blocking React layer over the existing canvas/HUD while Phaser remains paused. Use one pure aspect-preserving cover calculation for panoramas, with a configuration-owned 1.12 overscan only for Crystal Cavern's narrower 2:1 artwork.
+
+**Reason:** The previous countdown reused the full pause card and looked like a separate screen. Crystal's apparent gutter was an opaque dark painted edge exposed by its different aspect ratio, not a canvas, camera or physics gap. These focused presentation changes retain one resume edge, preserve accessibility, avoid stretching and do not alter collisions.
+
+## D032 Do not equate saved progress with an eligible ranked run
+
+**Decision:** Keep leaderboard reads on the authorised projection and describe the empty state accurately. Do not create entries until gameplay is connected to the existing server-issued, owned, single-use run lifecycle with an acceptable integrity model.
+
+**Reason:** The live project has saved World 3 progress but no issued or submitted runs. Login and `/api/progress` are identity/progression operations, not score evidence. Automatically copying a client score into the leaderboard would bypass the intended run boundary and overstate integrity; that work belongs in the dedicated leaderboard/security phase.

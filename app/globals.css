@@ -341,11 +341,13 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .adventure-intro-panel h1 { margin: .25rem 0; font-family: Georgia,"Times New Roman",serif; font-size: clamp(2rem,5vw,3.4rem); }
 .intro-lead { margin: 0 0 1rem; color: rgba(255,247,220,.7); font-size: .82rem; }
 .intro-actions { display: flex; justify-content: flex-end; gap: .65rem; margin-top: 1rem; }
-.resume-countdown { display: grid; min-height: 15rem; place-items: center; align-content: center; }
-.resume-countdown > span { color: var(--gold-light); font-size: .72rem; font-weight: 900; letter-spacing: .16em; text-transform: uppercase; }
-.resume-countdown > strong { font-family: Georgia,"Times New Roman",serif; font-size: clamp(5rem,18vw,9rem); line-height: .9; text-shadow: 0 0 35px rgba(255,211,92,.55); animation: countdown-pop .45s ease-out both; }
-.resume-countdown > p { margin: .5rem 0 0; }
-.countdown-actions { display: grid; grid-template-columns: repeat(2,1fr); gap: .55rem; margin-top: .7rem; }
+.resume-canvas-layer { position: absolute; inset: 0; z-index: 50; display: grid; place-items: center; pointer-events: auto; background: radial-gradient(circle at center,rgba(2,18,14,.16),transparent 48%); }
+.resume-canvas-countdown { display: grid; place-items: center; color: #fff8d5; text-align: center; filter: drop-shadow(0 5px 9px rgba(0,0,0,.9)); }
+.resume-canvas-countdown > span { color: var(--gold-light); font-size: .72rem; font-weight: 950; letter-spacing: .2em; text-transform: uppercase; }
+.resume-canvas-countdown > strong { font-family: Georgia,"Times New Roman",serif; font-size: clamp(5rem,18vw,10rem); line-height: .88; text-shadow: 0 0 38px rgba(255,211,92,.72),0 5px 2px rgba(0,0,0,.42); animation: countdown-pop .45s ease-out both; }
+.resume-canvas-countdown > small { margin-top: .65rem; font-size: .72rem; font-weight: 800; letter-spacing: .03em; }
+.resume-canvas-actions { position: absolute; right: max(.75rem,env(safe-area-inset-right)); bottom: max(.75rem,env(safe-area-inset-bottom)); display: flex; gap: .5rem; }
+.resume-canvas-actions .game-button { min-width: 7.5rem; min-height: 2.5rem; padding: .5rem .8rem; font-size: .66rem; }
 @keyframes countdown-pop { from { opacity: .2; transform: scale(.55); } to { opacity: 1; transform: scale(1); } }
 .mobile-game-controls { position: absolute; z-index: 25; right: max(.8rem,env(safe-area-inset-right)); bottom: max(.8rem,env(safe-area-inset-bottom)); left: max(.8rem,env(safe-area-inset-left)); display: none; align-items: end; justify-content: space-between; pointer-events: none; }
 .movement-pad { display: flex; gap: .5rem; }
@@ -372,6 +374,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
   .adventure-intro-panel { max-height: calc(100svh - .8rem); padding: .8rem; }
   .intro-actions { position: sticky; bottom: -.8rem; margin: .8rem -.8rem -.8rem; background: rgba(2,24,18,.96); padding: .7rem .8rem; }
   .terminal-actions { grid-template-columns: 1fr; }
+  .resume-canvas-actions { right: .5rem; bottom: max(6rem,calc(env(safe-area-inset-bottom) + 5.4rem)); left: .5rem; justify-content: center; }
 }
 @media (max-height: 500px) {
   .touch-control { width: 3.6rem; height: 3.6rem; }

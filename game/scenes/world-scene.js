@@ -6,6 +6,7 @@ import { RunState, shouldAdvanceRun } from "@/game/core/run-state";
 import { RUN_RULES } from "@/game/config/worlds";
 import { loadGameAssets } from "@/game/render/load-assets";
 import { createGameTextures, getTerrainVisualLayout, HUNTER_PRESENTATION } from "@/game/render/create-textures";
+import { getBackdropCoverLayout } from "@/game/render/backdrop-layout";
 import { CameraController } from "@/game/systems/camera-controller";
 import { PlayerController } from "@/game/systems/player-controller";
 import { EnemySystem } from "@/game/systems/enemy-system";
@@ -68,11 +69,14 @@ export class WorldScene extends Phaser.Scene {
 
   resizeBackdrop(width, height) {
     const source = this.textures.get("world-panorama").getSourceImage();
-    const sourceRatio = source.width / source.height;
-    const viewRatio = width / height;
-    const displayWidth = viewRatio > sourceRatio ? width : height * sourceRatio;
-    const displayHeight = viewRatio > sourceRatio ? width / sourceRatio : height;
-    this.backdrop.setDisplaySize(displayWidth, displayHeight).setPosition((width - displayWidth) / 2, 0);
+    const layout = getBackdropCoverLayout({
+      sourceWidth: source.width,
+      sourceHeight: source.height,
+      viewportWidth: width,
+      viewportHeight: height,
+      overscan: this.level.art.backdropOverscan,
+    });
+    this.backdrop.setDisplaySize(layout.width, layout.height).setPosition(layout.x, layout.y);
     this.backdropShade.setDisplaySize(width, height);
   }
 

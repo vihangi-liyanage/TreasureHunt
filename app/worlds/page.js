@@ -18,17 +18,19 @@ export default async function WorldsPage({ searchParams }) {
   let profile = null;
   let progress = null;
   let leaderboard = [];
+  let leaderboardStatus = "ready";
   let achievements = [];
-  try {
-    [profile, progress, leaderboard, achievements] = await Promise.all([
-      getPlayerProfile(supabase, identity.id),
-      getPlayerProgress(supabase, identity.id),
-      getLeaderboard(supabase),
-      getPlayerAchievements(supabase, identity.id),
-    ]);
-  } catch {
-    // The authenticated shell remains usable while setup/migrations are being completed.
-  }
+  const [profileResult, progressResult, leaderboardResult, achievementsResult] = await Promise.allSettled([
+    getPlayerProfile(supabase, identity.id),
+    getPlayerProgress(supabase, identity.id),
+    getLeaderboard(supabase),
+    getPlayerAchievements(supabase, identity.id),
+  ]);
+  if (profileResult.status === "fulfilled") profile = profileResult.value;
+  if (progressResult.status === "fulfilled") progress = progressResult.value;
+  if (leaderboardResult.status === "fulfilled") leaderboard = leaderboardResult.value;
+  else leaderboardStatus = "unavailable";
+  if (achievementsResult.status === "fulfilled") achievements = achievementsResult.value;
 
   const completedWorldIds = WORLD_CONFIGS
     .slice(0, progress?.completed_worlds || 0)
@@ -40,6 +42,7 @@ export default async function WorldsPage({ searchParams }) {
       worlds={WORLD_CONFIGS}
       completedWorldIds={completedWorldIds}
       leaderboard={leaderboard}
+      leaderboardStatus={leaderboardStatus}
       profile={{
         username: profile?.username || "Explorer", email: identity.email, createdAt: profile?.created_at || null,
         progress: progress || null, achievements,

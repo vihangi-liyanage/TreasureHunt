@@ -15,6 +15,9 @@ export const CRYSTAL_CAVERN_LEVEL = Object.freeze({
     terrainFrameHeight: 627,
     shade: 0x151047,
     foregroundTint: 0x6a62d8,
+    // The cavern panorama is 2:1 rather than the 3:1 World 1/2 panoramas.
+    // A centred cover crop removes its painted dark edge on wide viewports without stretching it.
+    backdropOverscan: 1.12,
     terrainPresentation: Object.freeze({
       ground: Object.freeze({
         frame: 0, height: 280, surfaceY: 20, surfaceWidthRatio: 557 / 620,

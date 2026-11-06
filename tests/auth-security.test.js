@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getPublicAuthError } from "@/lib/auth/errors";
 import { safeNextPath } from "@/lib/auth/redirects";
 import { getVerifiedIdentity } from "@/lib/auth/session";
-import { getPlayerProgress } from "@/lib/data/player-repository";
+import { getLeaderboard, getPlayerProgress } from "@/lib/data/player-repository";
 import { resetRateLimitsForTests, takeRateLimit } from "@/lib/security/rate-limit";
 
 describe("authentication security boundaries", () => {
@@ -44,5 +44,20 @@ describe("authentication security boundaries", () => {
     await expect(getPlayerProgress(supabase, "account-7")).resolves.toBe(savedProgress);
     expect(supabase.from).toHaveBeenCalledWith("player_progress");
     expect(eq).toHaveBeenCalledWith("user_id", "account-7");
+  });
+
+  it("reads only the public leaderboard projection in ranked order", async () => {
+    const entries = [{ run_id: "run-1", username: "Explorer", score: 900, duration_seconds: 70 }];
+    const limit = vi.fn(async () => ({ data: entries, error: null }));
+    const secondOrder = vi.fn(() => ({ limit }));
+    const firstOrder = vi.fn(() => ({ order: secondOrder }));
+    const select = vi.fn(() => ({ order: firstOrder }));
+    const supabase = { from: vi.fn(() => ({ select })) };
+
+    await expect(getLeaderboard(supabase)).resolves.toEqual(entries);
+    expect(supabase.from).toHaveBeenCalledWith("leaderboard_entries");
+    expect(firstOrder).toHaveBeenCalledWith("score", { ascending: false });
+    expect(secondOrder).toHaveBeenCalledWith("duration_seconds", { ascending: true });
+    expect(limit).toHaveBeenCalledWith(10);
   });
 });

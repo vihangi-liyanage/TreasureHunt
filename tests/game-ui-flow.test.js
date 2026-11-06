@@ -22,6 +22,12 @@ describe("gameplay UI flow", () => {
     expect(shouldAdvanceRun({ paused: true, status: "playing" })).toBe(false);
     expect(shouldAdvanceRun({ paused: false, status: "playing" })).toBe(true);
     expect(shouldAdvanceRun({ paused: false, status: "completed" })).toBe(false);
+    const screen = source("components/game/game-screen.js");
+    const styles = source("app/globals.css");
+    expect(screen).toContain('className="resume-canvas-layer"');
+    expect(screen).toContain("window.clearTimeout(timer)");
+    expect(styles).not.toContain(".resume-countdown");
+    expect(styles).toContain(".resume-canvas-countdown");
   });
 
   it("offers a next world for checkpoints but never after the final treasure", () => {
@@ -45,5 +51,20 @@ describe("identity-backed panels", () => {
     expect(leaderboard).toContain("entry.coins");
     expect(leaderboard).toContain("entry.duration_seconds");
     expect(leaderboard).toContain("cannot submit leaderboard runs");
+    expect(leaderboard).toContain("No eligible ranked runs yet");
+    expect(leaderboard).toContain("Account creation and saved world progress do not create a score");
+    expect(leaderboard).toContain("Rankings unavailable");
+    const worldsPage = source("app/worlds/page.js");
+    expect(worldsPage).toContain("Promise.allSettled");
+    expect(worldsPage).toContain('leaderboardStatus = "unavailable"');
+  });
+
+  it("keeps ranked-run ownership at verified server endpoints", () => {
+    const startRoute = source("app/api/runs/start/route.js");
+    const completeRoute = source("app/api/runs/[runId]/complete/route.js");
+    expect(startRoute).toContain("user_id: identity.id");
+    expect(completeRoute).toContain("p_user_id: identity.id");
+    expect(completeRoute).toContain('admin.rpc("complete_game_run_admin"');
+    expect(completeRoute).not.toContain("values.userId");
   });
 });

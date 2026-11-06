@@ -107,6 +107,8 @@ Selecting World 1 from the World Map opens an accessible field briefing with the
 
 Pause freezes Arcade Physics, the active run clock and fish power. Resume is a React-owned 3–2–1–GO presentation; the bridge sends the existing resume command only after GO. World 1–2 completion keeps Next World disabled until guest progression is updated or the authenticated `/api/progress` request succeeds. World 3 has only replay and map actions. Profile and leaderboard surfaces display only RLS-authorized server data, with explicit empty/sign-in states and no invented achievements or scores.
 
+The resume presentation sits directly over the visible game rather than opening another card. Crystal Cavern uses a centred aspect-preserving cover crop to remove its painted dark edge on wide screens without changing camera or collision geometry. Authenticated World 3 progress is not itself an eligible leaderboard run: rankings require the separate server-issued and accepted run flow, which is not yet connected to gameplay.
+
 ## Acceptance boundaries
 
 - World progression and final treasure do not depend on the Fish API.

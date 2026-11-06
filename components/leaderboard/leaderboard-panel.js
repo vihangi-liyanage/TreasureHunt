@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { LockKeyhole, Medal } from "lucide-react";
 
-export function LeaderboardPanel({ mode, entries = [] }) {
+export function LeaderboardPanel({ mode, entries = [], status = "ready" }) {
   if (mode === "guest") {
     return (
       <div className="leaderboard-signin">
@@ -13,8 +13,12 @@ export function LeaderboardPanel({ mode, entries = [] }) {
     );
   }
 
+  if (status === "unavailable") {
+    return <div className="empty-game-state"><Medal size={34} /><h3>Rankings unavailable</h3><p>Your adventure progress is safe, but verified rankings could not be loaded. Try opening the leaderboard again later.</p></div>;
+  }
+
   if (!entries.length) {
-    return <div className="empty-game-state"><Medal size={34} /><h3>No completed missions yet</h3><p>The leaderboard will fill when authenticated players complete game runs.</p></div>;
+    return <div className="empty-game-state"><Medal size={34} /><h3>No eligible ranked runs yet</h3><p>Rankings require a signed-in World 3 mission issued and securely submitted as a ranked run. Account creation and saved world progress do not create a score.</p></div>;
   }
 
   return (

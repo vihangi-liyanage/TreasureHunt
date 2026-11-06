@@ -19,7 +19,7 @@ function NodeStatus({ world }) {
   return <span className="node-status">Unlocked</span>;
 }
 
-export function WorldMap({ worlds, mode = "guest", completedWorldIds = [], profile = null, leaderboard = [] }) {
+export function WorldMap({ worlds, mode = "guest", completedWorldIds = [], profile = null, leaderboard = [], leaderboardStatus = "ready" }) {
   const router = useRouter();
   const [selectedId, setSelectedId] = useState(null);
   const [overlay, setOverlay] = useState(null);
@@ -98,7 +98,7 @@ export function WorldMap({ worlds, mode = "guest", completedWorldIds = [], profi
 
       <GameOverlay title="Settings" open={overlay === "settings"} onClose={closeOverlay}><SettingsPanel /></GameOverlay>
       <GameOverlay title="Leaderboard" open={overlay === "leaderboard"} onClose={closeOverlay}>
-        <LeaderboardPanel mode={mode} entries={leaderboard} />
+        <LeaderboardPanel mode={mode} entries={leaderboard} status={leaderboardStatus} />
       </GameOverlay>
       <GameOverlay title="Explorer Profile" open={overlay === "profile"} onClose={closeOverlay}>{profile ? <ProfilePanel profile={profile} /> : null}</GameOverlay>
     </main>
