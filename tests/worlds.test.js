@@ -18,7 +18,8 @@ describe("world configuration", () => {
     expect(getLevelConfig("emerald-jungle")?.goal.type).toBe("checkpoint");
     expect(getLevelConfig("sunset-ruins")?.goal.type).toBe("checkpoint");
     expect(getLevelConfig("crystal-cavern")?.goal.type).toBe("treasure");
-    expect(getLevelConfig("sunset-ruins")?.fishPowerUps).toHaveLength(1);
-    expect(getLevelConfig("crystal-cavern")?.fishPowerUps).toHaveLength(1);
+    expect(getLevelConfig("emerald-jungle")?.fishPowerUps).toHaveLength(3);
+    expect(getLevelConfig("sunset-ruins")?.fishPowerUps).toHaveLength(3);
+    expect(getLevelConfig("crystal-cavern")?.fishPowerUps).toHaveLength(3);
   });
 });

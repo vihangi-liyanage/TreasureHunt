@@ -201,3 +201,21 @@
 **Decision:** Keep leaderboard reads on the authorised projection and describe the empty state accurately. Do not create entries until gameplay is connected to the existing server-issued, owned, single-use run lifecycle with an acceptable integrity model.
 
 **Reason:** The live project has saved World 3 progress but no issued or submitted runs. Login and `/api/progress` are identity/progression operations, not score evidence. Automatically copying a client score into the leaderboard would bypass the intended run boundary and overstate integrity; that work belongs in the dedicated leaderboard/security phase.
+
+## D033 Present checkpoints as Compass Shrines without renaming the domain contract
+
+**Decision:** Keep `checkpoint` in world configuration, progression and bridge payloads, but present World 1/2 goals as Compass Shrines and completion as “Shrine Activated / World Complete.” Keep Next World gated on successful progression persistence.
+
+**Reason:** The adventure language improves the player experience and provides a natural future location for an optional Fish challenge. Renaming database/domain values would create migration risk without changing semantics; making a future challenge mandatory would violate the optional-service requirement.
+
+## D034 Balance by explicit level data, not new mechanics
+
+**Decision:** Extend world widths to 6,000/6,300/6,900, raise coin totals to 40/41/45, place three reachable fish in each world, and progress enemy/hazard counts through 6/5, 7/5 and 9/7. Mark only elevated bonus coins as `riskRoute`; retain existing movement, scoring, timers and eight-second refresh/no-stack combat rule.
+
+**Reason:** Deterministic configuration is easy to test, explain and rebalance. Procedural routes or per-world systems would obscure fairness and duplicate the shared scene. The longer routes still leave comfortable time for normal play, while optional scoring choices distinguish leaderboard attempts.
+
+## D035 Keep celebration effects scene-owned and motion-aware
+
+**Decision:** Build shrine/treasure illumination, petals and sparkles from bounded Phaser shapes and existing project utility textures. Track effect objects in `WorldScene`, destroy transient objects after tweens, clear all remaining effects on shutdown, and suppress moving effects/camera flash for reduced-motion users.
+
+**Reason:** Phaser already owns the goal position and scene lifecycle. A React particle package or new asset dependency would split ownership and add weight; unbounded emitters could leak or obscure the HUD.

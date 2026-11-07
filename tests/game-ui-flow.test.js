@@ -35,9 +35,40 @@ describe("gameplay UI flow", () => {
     expect(getNextWorld(WORLD_CONFIGS, "sunset-ruins")?.id).toBe("crystal-cavern");
     expect(getNextWorld(WORLD_CONFIGS, "crystal-cavern")).toBeNull();
   });
+
+  it("presents checkpoint semantics as Compass Shrines without changing the domain contract", () => {
+    const scene = source("game/scenes/world-scene.js");
+    const screen = source("components/game/game-screen.js");
+    expect(WORLD_CONFIGS.slice(0, 2).every((world) => world.completion === "checkpoint")).toBe(true);
+    expect(scene).toContain('"COMPASS SHRINE"');
+    expect(screen).toContain('checkpointComplete ? "Shrine Activated"');
+    expect(screen).toContain("saveState.status !== \"saved\"");
+  });
+
+  it("owns completion effects in the scene and explicitly cleans them up", () => {
+    const scene = source("game/scenes/world-scene.js");
+    expect(scene).toContain("createGoalCelebration");
+    expect(scene).toContain("prefers-reduced-motion: reduce");
+    expect(scene).toContain("this.tweens.killTweensOf(object)");
+    expect(scene).toContain("for (const object of [...this.effectObjects])");
+  });
 });
 
 describe("identity-backed panels", () => {
+  it("keeps authentication forms accessible while preserving real server actions", () => {
+    const login = source("components/auth/login-form.js");
+    const register = source("components/auth/register-form.js");
+    const password = source("components/auth/password-input.js");
+    const shell = source("components/auth/auth-form-shell.js");
+    expect(login).toContain('aria-busy={pending}');
+    expect(login).toContain("Google Login");
+    expect(register).toContain("Check Your Email");
+    expect(register).toContain("Go to Player Login");
+    expect(register).toContain('password: "", confirmPassword: ""');
+    expect(password).toContain("aria-pressed={visible}");
+    expect(shell).toContain('aria-labelledby="auth-title"');
+  });
+
   it("renders real profile progress, empty achievements and Sign Out", () => {
     const profile = source("components/profile/profile-panel.js");
     expect(profile).toContain("completed_worlds");

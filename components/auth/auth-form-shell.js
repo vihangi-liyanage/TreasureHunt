@@ -6,10 +6,14 @@ export function AuthFormShell({ title, children }) {
   return (
     <AdventureShell className="auth-shell">
       <Link className="screen-control auth-back" href="/welcome"><ArrowLeft size={18} />Back to Welcome</Link>
-      <section className="auth-stage">
+      <section className="auth-stage" aria-labelledby="auth-title">
         <div className="game-panel auth-panel">
-          <h1 className="font-display text-center text-4xl text-amber-50 sm:text-5xl">{title}</h1>
-          <div className="gold-rule mx-auto my-5" />{children}
+          <header className="auth-heading">
+            <span>Explorer access</span>
+            <h1 id="auth-title" className="font-display">{title}</h1>
+            <div className="gold-rule" aria-hidden="true" />
+          </header>
+          {children}
         </div>
       </section>
     </AdventureShell>

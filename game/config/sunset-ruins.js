@@ -1,10 +1,10 @@
 import { EMERALD_JUNGLE_MOTION } from "@/game/config/emerald-jungle";
 
 const platform = (id, x, top, width, kind = "ledge") => Object.freeze({ id, x, top, width, kind });
-const coin = (id, x, y) => Object.freeze({ id, x, y });
+const coin = (id, x, y, riskRoute = false) => Object.freeze({ id, x, y, riskRoute });
 
 export const SUNSET_RUINS_LEVEL = Object.freeze({
-  width: 5_600,
+  width: 6_300,
   height: 720,
   art: Object.freeze({
     panorama: "sunset-ruins-panorama.png",
@@ -38,7 +38,7 @@ export const SUNSET_RUINS_LEVEL = Object.freeze({
     }),
   }),
   playerStart: Object.freeze({ x: 145, y: 510 }),
-  goal: Object.freeze({ type: "checkpoint", x: 5_430, y: 520 }),
+  goal: Object.freeze({ type: "checkpoint", x: 6_150, y: 520 }),
   motion: Object.freeze({
     ...EMERALD_JUNGLE_MOTION,
     moveSpeed: 330,
@@ -51,7 +51,9 @@ export const SUNSET_RUINS_LEVEL = Object.freeze({
     platform("ground-4", 2_410, 640, 540, "ground"),
     platform("ground-5", 3_115, 640, 510, "ground"),
     platform("ground-6", 3_840, 640, 580, "ground"),
-    platform("ground-7", 4_955, 640, 1_290, "ground"),
+    platform("ground-7", 4_470, 640, 480, "ground"),
+    platform("ground-8", 5_130, 640, 650, "ground"),
+    platform("ground-9", 5_930, 640, 740, "ground"),
     platform("bridge-1", 625, 500, 245),
     platform("step-1", 930, 395, 190, "step"),
     platform("bridge-2", 1_250, 485, 235),
@@ -66,8 +68,11 @@ export const SUNSET_RUINS_LEVEL = Object.freeze({
     platform("bridge-8", 4_400, 455, 245),
     platform("bridge-9", 4_790, 365, 225),
     platform("bridge-10", 5_150, 480, 245),
+    platform("bridge-11", 5_480, 395, 230),
+    platform("step-5", 5_780, 300, 180, "step"),
+    platform("bridge-12", 6_100, 440, 230),
   ]),
-  mandatoryRoute: Object.freeze(["ground-1", "ground-2", "ground-3", "ground-4", "ground-5", "ground-6", "ground-7"]),
+  mandatoryRoute: Object.freeze(["ground-1", "ground-2", "ground-3", "ground-4", "ground-5", "ground-6", "ground-7", "ground-8", "ground-9"]),
   coins: Object.freeze([
     coin("coin-1", 270, 575), coin("coin-2", 470, 575), coin("coin-3", 580, 435),
     coin("coin-4", 660, 435), coin("coin-5", 900, 330), coin("coin-6", 970, 330),
@@ -80,18 +85,31 @@ export const SUNSET_RUINS_LEVEL = Object.freeze({
     coin("coin-25", 4_355, 390), coin("coin-26", 4_445, 390), coin("coin-27", 4_745, 300),
     coin("coin-28", 4_825, 300), coin("coin-29", 5_105, 415), coin("coin-30", 5_195, 415),
     coin("coin-31", 5_390, 575),
+    coin("coin-32", 5_440, 330, true), coin("coin-33", 5_520, 330, true),
+    coin("coin-34", 5_750, 235, true), coin("coin-35", 5_810, 235, true),
+    coin("coin-36", 6_060, 375, true), coin("coin-37", 6_140, 375, true),
+    coin("coin-38", 5_600, 575), coin("coin-39", 5_820, 575),
+    coin("coin-40", 6_020, 575), coin("coin-41", 6_220, 575),
   ]),
-  fishPowerUps: Object.freeze([Object.freeze({ id: "fish-1", x: 1_645, y: 555 })]),
+  fishPowerUps: Object.freeze([
+    Object.freeze({ id: "fish-1", x: 1_645, y: 555 }),
+    Object.freeze({ id: "fish-2", x: 3_730, y: 315 }),
+    Object.freeze({ id: "fish-3", x: 5_280, y: 555 }),
+  ]),
   enemies: Object.freeze([
     Object.freeze({ id: "scarab-1", x: 590, y: 565, left: 510, right: 630, speed: 68 }),
     Object.freeze({ id: "scarab-2", x: 1_820, y: 565, left: 1_560, right: 1_930, speed: 94 }),
     Object.freeze({ id: "scarab-3", x: 2_545, y: 565, left: 2_190, right: 2_650, speed: 105 }),
     Object.freeze({ id: "scarab-4", x: 3_700, y: 565, left: 3_600, right: 4_080, speed: 112 }),
-    Object.freeze({ id: "scarab-5", x: 4_660, y: 565, left: 4_430, right: 4_930, speed: 118 }),
+    Object.freeze({ id: "scarab-5", x: 4_470, y: 565, left: 4_300, right: 4_640, speed: 118 }),
+    Object.freeze({ id: "scarab-6", x: 5_120, y: 565, left: 4_880, right: 5_360, speed: 122 }),
+    Object.freeze({ id: "scarab-7", x: 5_900, y: 565, left: 5_650, right: 6_150, speed: 126 }),
   ]),
   hazards: Object.freeze([
     Object.freeze({ x: 1_300, top: 588, width: 92 }),
     Object.freeze({ x: 2_925, top: 588, width: 105 }),
+    Object.freeze({ x: 3_900, top: 588, width: 105 }),
     Object.freeze({ x: 4_985, top: 588, width: 112 }),
+    Object.freeze({ x: 5_900, top: 588, width: 118 }),
   ]),
 });

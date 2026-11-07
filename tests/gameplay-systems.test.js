@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { CombatState, PROJECTILE_COOLDOWN_MS } from "@/game/core/combat-state";
 import { canLandOnPlatform, isBelowFallBoundary, isStompCollision } from "@/game/core/collision-rules";
 import { InputState } from "@/game/core/input-state";
+import { COIN_SCORE, ENEMY_SCORE } from "@/game/core/run-state";
 import { EMERALD_JUNGLE_LEVEL, EMERALD_JUNGLE_MOTION } from "@/game/config/emerald-jungle";
 import { SUNSET_RUINS_LEVEL } from "@/game/config/sunset-ruins";
 import { CRYSTAL_CAVERN_LEVEL } from "@/game/config/crystal-cavern";
@@ -70,6 +71,14 @@ function expectEnemyPatrolsSupported(level) {
       const support = ground.find((platform) => x >= platform.x - platform.width / 2 && x <= platform.x + platform.width / 2);
       expect(support, `${enemy.id} patrol at x=${x}`).toBeTruthy();
     }
+  }
+}
+
+function expectHazardsSupported(level) {
+  const ground = groundSections(level);
+  for (const hazard of level.hazards) {
+    const support = ground.find((platform) => hazard.x >= platform.x - platform.width / 2 && hazard.x <= platform.x + platform.width / 2);
+    expect(support, `hazard at x=${hazard.x}`).toBeTruthy();
   }
 }
 
@@ -144,11 +153,11 @@ describe("Sunset Ruins level contract", () => {
 
   it("adds a measured difficulty increase without changing fixed combat rules", () => {
     expect(SUNSET_RUINS_LEVEL.motion.gravity).toBeGreaterThan(0);
-    expect(SUNSET_RUINS_LEVEL.enemies).toHaveLength(5);
+    expect(SUNSET_RUINS_LEVEL.enemies).toHaveLength(7);
     expect(Math.max(...SUNSET_RUINS_LEVEL.enemies.map((enemy) => enemy.speed))).toBeGreaterThan(
       Math.max(...EMERALD_JUNGLE_LEVEL.enemies.map((enemy) => enemy.speed)),
     );
-    expect(SUNSET_RUINS_LEVEL.fishPowerUps).toHaveLength(1);
+    expect(SUNSET_RUINS_LEVEL.fishPowerUps).toHaveLength(3);
   });
 });
 
@@ -185,17 +194,57 @@ describe("Crystal Cavern final-level contract", () => {
       Math.abs(CRYSTAL_CAVERN_LEVEL.goal.x - platform.x) <= platform.width / 2 &&
       CRYSTAL_CAVERN_LEVEL.goal.y < platform.top);
     expect(CRYSTAL_CAVERN_LEVEL.goal.type).toBe("treasure");
-    expect(treasureSupport?.id).toBe("ground-7");
+    expect(treasureSupport?.id).toBe("ground-9");
   });
 
   it("increases enemy pressure without changing the eight-second power rule", () => {
-    expect(CRYSTAL_CAVERN_LEVEL.enemies).toHaveLength(7);
+    expect(CRYSTAL_CAVERN_LEVEL.enemies).toHaveLength(9);
     expect(Math.max(...CRYSTAL_CAVERN_LEVEL.enemies.map((enemy) => enemy.speed))).toBeGreaterThan(
       Math.max(...SUNSET_RUINS_LEVEL.enemies.map((enemy) => enemy.speed)),
     );
     const combat = new CombatState();
     combat.activate(2_000);
     expect(combat.remainingMs(10_000)).toBe(0);
+  });
+});
+
+describe("three-world competitive balance", () => {
+  const levels = [EMERALD_JUNGLE_LEVEL, SUNSET_RUINS_LEVEL, CRYSTAL_CAVERN_LEVEL];
+
+  it("moderately lengthens traversal while preserving the fixed timer contract", () => {
+    expect(levels.map((level) => level.width)).toEqual([6_000, 6_300, 6_900]);
+    const lowerBounds = levels.map((level) => (level.goal.x - level.playerStart.x) / level.motion.moveSpeed);
+    expect(lowerBounds[0]).toBeGreaterThan(17);
+    expect(lowerBounds[1]).toBeGreaterThan(lowerBounds[0]);
+    expect(lowerBounds[2]).toBeGreaterThan(lowerBounds[1]);
+  });
+
+  it("provides more scoring choices and three reachable non-stacking fish pickups per world", () => {
+    expect(levels.map((level) => level.coins.length)).toEqual([40, 41, 45]);
+    expect(levels.map((level) => level.fishPowerUps.length)).toEqual([3, 3, 3]);
+    expect(levels.map((level) => level.coins.filter((coin) => coin.riskRoute).length)).toEqual([8, 6, 8]);
+    for (const level of levels) {
+      expect(new Set(level.coins.map((coin) => coin.id)).size).toBe(level.coins.length);
+      expect(new Set(level.fishPowerUps.map((fish) => fish.id)).size).toBe(level.fishPowerUps.length);
+    }
+  });
+
+  it("increases grounded enemy and hazard pressure across the journey", () => {
+    expect(levels.map((level) => level.enemies.length)).toEqual([6, 7, 9]);
+    expect(levels.map((level) => level.hazards.length)).toEqual([5, 5, 7]);
+    for (const level of levels) {
+      expectEnemyPatrolsSupported(level);
+      expectHazardsSupported(level);
+    }
+    expect(Math.max(...levels[0].enemies.map((enemy) => enemy.speed))).toBeLessThan(Math.max(...levels[1].enemies.map((enemy) => enemy.speed)));
+    expect(Math.max(...levels[1].enemies.map((enemy) => enemy.speed))).toBeLessThan(Math.max(...levels[2].enemies.map((enemy) => enemy.speed)));
+  });
+
+  it("keeps the documented score ceiling deterministic for fair route comparison", () => {
+    const timers = [120, 105, 90];
+    const maximumScores = levels.map((level, index) =>
+      level.coins.length * COIN_SCORE + level.enemies.length * ENEMY_SCORE + timers[index] * 10);
+    expect(maximumScores).toEqual([6_700, 6_900, 7_650]);
   });
 });
 

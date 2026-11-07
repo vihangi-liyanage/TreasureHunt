@@ -44,7 +44,7 @@ export function ProfilePanel({ profile }) {
       <div className="profile-identity"><span><UserRound size={24} /></span><div><strong>{savedUsername}</strong><p>{profile.email}</p>{profile.createdAt ? <small>Explorer since {String(profile.createdAt).slice(0, 10)}</small> : null}</div></div>
       <div className="profile-progress-grid" aria-label="Saved adventure progress">
         <span><Flag size={18} /><strong>{completedWorlds}/3</strong><small>Worlds complete</small></span>
-        <span><CheckCircle2 size={18} /><strong>{completedCheckpoints}/2</strong><small>Checkpoints</small></span>
+        <span><CheckCircle2 size={18} /><strong>{completedCheckpoints}/2</strong><small>Shrines</small></span>
         <span><Award size={18} /><strong>{progress?.total_coins || 0}</strong><small>Saved coins</small></span>
       </div>
       <section className="profile-achievements" aria-labelledby="achievement-title">

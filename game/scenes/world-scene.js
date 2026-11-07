@@ -20,7 +20,9 @@ export class WorldScene extends Phaser.Scene {
     this.level = level;
     this.bridge = bridge;
     this.commandCleanups = [];
+    this.effectObjects = new Set();
     this.isPaused = false;
+    this.reducedMotion = Boolean(globalThis.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches);
     this.safePosition = { ...level.playerStart };
   }
 
@@ -143,13 +145,22 @@ export class WorldScene extends Phaser.Scene {
       .setDisplaySize(isTreasure ? 110 : 76, 135).setVisible(false).refreshBody();
     this.goalArt = this.add.image(x, y - 32, "world-objects", 6)
       .setDisplaySize(isTreasure ? 205 : 190, isTreasure ? 205 : 190).setDepth(4);
-    if (isTreasure) {
-      const glow = this.add.circle(x, y - 42, 72, 0x8dfcff, 0.18).setDepth(3);
+    const glowColor = isTreasure ? 0x8dfcff : 0xffd76a;
+    const glow = this.trackEffect(this.add.circle(x, y - 42, isTreasure ? 78 : 68, glowColor, 0.18)
+      .setBlendMode(Phaser.BlendModes.ADD).setDepth(3));
+    this.trackEffect(this.add.rectangle(x, y - 88, isTreasure ? 84 : 58, 230, glowColor, 0.055)
+      .setBlendMode(Phaser.BlendModes.ADD).setDepth(1));
+    if (!this.reducedMotion) {
       this.tweens.add({ targets: [this.goalArt, glow], y: "-=8", alpha: { from: 0.72, to: 1 }, duration: 900, yoyo: true, repeat: -1, ease: "Sine.inOut" });
+      for (let index = 0; index < 7; index += 1) {
+        const mote = this.trackEffect(this.add.circle(x - 55 + index * 18, y - 20 - (index % 3) * 24, 3 + (index % 2), glowColor, 0.42)
+          .setBlendMode(Phaser.BlendModes.ADD).setDepth(5));
+        this.tweens.add({ targets: mote, y: mote.y - 34, alpha: { from: 0.15, to: 0.72 }, duration: 1_050 + index * 70, delay: index * 90, yoyo: true, repeat: -1, ease: "Sine.inOut" });
+      }
     }
-    this.add.text(x - (isTreasure ? 105 : 96), y - 145, isTreasure ? "LEGENDARY TREASURE" : "CHECKPOINT", {
+    this.add.text(x, y - 145, isTreasure ? "LEGENDARY TREASURE" : "COMPASS SHRINE", {
       fontFamily: "Georgia, serif", fontSize: "18px", fontStyle: "bold", color: "#fff2b5", stroke: "#123b2d", strokeThickness: 6,
-    }).setDepth(6);
+    }).setOrigin(0.5).setDepth(6);
   }
 
   registerCollisions() {
@@ -270,7 +281,8 @@ export class WorldScene extends Phaser.Scene {
     if (!this.run.complete()) return;
     this.physics.pause();
     this.player.anims.stop().setFrame(7);
-    this.cameras.main.flash(600, 255, 225, 116);
+    this.createGoalCelebration(this.level.goal.type === "treasure");
+    if (!this.reducedMotion) this.cameras.main.flash(600, 255, 225, 116);
     const result = { ...this.run.snapshot(), worldId: this.worldConfig.id, completion: this.worldConfig.completion };
     this.publishState();
     this.bridge.emit(GAME_EVENTS.WORLD_COMPLETED, result);
@@ -325,6 +337,62 @@ export class WorldScene extends Phaser.Scene {
     }
   }
 
+  trackEffect(object) {
+    this.effectObjects.add(object);
+    return object;
+  }
+
+  destroyEffect(object) {
+    if (!object) return;
+    this.effectObjects.delete(object);
+    this.tweens.killTweensOf(object);
+    if (object.active) object.destroy();
+  }
+
+  createGoalCelebration(isTreasure) {
+    const { x, y } = this.level.goal;
+    const primary = isTreasure ? 0x8dfcff : 0xffd45c;
+    const light = this.trackEffect(this.add.circle(x, y - 48, isTreasure ? 96 : 82, primary, 0.32)
+      .setBlendMode(Phaser.BlendModes.ADD).setDepth(18));
+    if (this.reducedMotion) return;
+
+    this.tweens.add({
+      targets: light, scale: isTreasure ? 3.6 : 2.8, alpha: 0, duration: isTreasure ? 1_450 : 1_050, ease: "Cubic.out",
+      onComplete: () => this.destroyEffect(light),
+    });
+    const particleCount = isTreasure ? 34 : 22;
+    const petalColors = isTreasure ? [0x8dfcff, 0xc4a2ff, 0xffdd78, 0xff8fc9] : [0xffd45c, 0xfff0aa, 0xff8fa8, 0xffb45f];
+    for (let index = 0; index < particleCount; index += 1) {
+      const angle = (Math.PI * 2 * index) / particleCount;
+      const distance = 95 + (index % 6) * 24;
+      const petal = this.trackEffect(this.add.ellipse(x, y - 55, 11 + (index % 3) * 2, 5 + (index % 2) * 2, petalColors[index % petalColors.length], 0.92)
+        .setAngle(index * 29).setDepth(21));
+      this.tweens.add({
+        targets: petal,
+        x: x + Math.cos(angle) * distance,
+        y: y - 85 + Math.sin(angle) * distance * 0.72 + (index % 4) * 18,
+        angle: petal.angle + 220 + index * 9,
+        alpha: 0,
+        duration: 850 + (index % 7) * 95,
+        delay: (index % 5) * 35,
+        ease: "Cubic.out",
+        onComplete: () => this.destroyEffect(petal),
+      });
+      if (index % 2 === 0) {
+        const sparkle = this.trackEffect(this.add.image(x, y - 55, "gold-spark").setTint(primary).setScale(0.55).setDepth(22));
+        this.tweens.add({
+          targets: sparkle,
+          x: x + Math.cos(angle + 0.2) * distance * 1.15,
+          y: y - 70 + Math.sin(angle + 0.2) * distance,
+          scale: 0.05,
+          alpha: 0,
+          duration: 650 + (index % 6) * 80,
+          onComplete: () => this.destroyEffect(sparkle),
+        });
+      }
+    }
+  }
+
   cleanup() {
     this.playerController?.destroy();
     this.projectileSystem?.destroy();
@@ -333,5 +401,6 @@ export class WorldScene extends Phaser.Scene {
     this.platformCollider?.destroy();
     for (const cleanup of this.commandCleanups) cleanup();
     this.input.keyboard.off("keydown-ESC", this.escapeHandler);
+    for (const object of [...this.effectObjects]) this.destroyEffect(object);
   }
 }

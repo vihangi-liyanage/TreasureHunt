@@ -8,8 +8,8 @@ TreasureHunt is a cinematic single-player 2D web platformer. A charming original
 
 | World | Theme | Timer | Completion |
 | --- | --- | ---: | --- |
-| 1 | Emerald Jungle | 120 seconds | Reach the exit and save the World 2 checkpoint |
-| 2 | Sunset Ruins | 105 seconds | Reach the exit and save the World 3 checkpoint |
+| 1 | Emerald Jungle | 120 seconds | Activate the Compass Shrine and unlock World 2 |
+| 2 | Sunset Ruins | 105 seconds | Activate the Compass Shrine and unlock World 3 |
 | 3 | Crystal Cavern | 90 seconds | Collect the treasure |
 
 - A run starts with 3 lives. Timer expiry or zero lives produces Game Over.
@@ -43,6 +43,7 @@ Phase 1 establishes the cinematic interface with original generated concept artw
 | Asset | Source, license, and intended use |
 | --- | --- |
 | Procedural hunter, jungle critter, coins, platforms, spikes, checkpoint, and parallax layers in `game/render/create-textures.js` | Original shapes drawn at runtime specifically for TreasureHunt. No third-party files or copied character designs are included. These are project-owned temporary gameplay assets and may be replaced by polished, separately licensed sprite sheets later. |
+| Phaser completion petals, sparkles, light beams and shrine glows in `game/scenes/world-scene.js` | Original runtime vector/particle effects built from Phaser graphics and the existing project-owned sparkle texture. They introduce no third-party asset or licence dependency and respect reduced-motion preferences. |
 
 ### Phase 3B gameplay asset register
 
@@ -81,7 +82,7 @@ Emerald Jungle is playable with Arcade Physics, camera-following traversal, laye
 
 ## Phase 3B polished scope
 
-Emerald Jungle now uses the painted gameplay assets above, full-viewport resize behavior, a larger animated hunter, measured jump physics, coyote time, jump buffering, air steering, independent multi-touch controls, reachable upper collectibles, landing/collection/impact feedback, and patrol bounds that keep enemies on terrain. The local fish collectible grants exactly eight seconds of pause-safe magic-orb shooting; F or the mobile Shoot control fires in the facing direction, and projectile overlap defeats an enemy. Repeated pickup rules reset rather than stack the eight-second window. World 1 ends only with “World Complete” and “Checkpoint Reached,” then unlocks World 2 through the existing guest/authenticated progression boundary.
+Emerald Jungle now uses the painted gameplay assets above, full-viewport resize behavior, a larger animated hunter, measured jump physics, coyote time, jump buffering, air steering, independent multi-touch controls, reachable upper collectibles, landing/collection/impact feedback, and patrol bounds that keep enemies on terrain. The local fish collectible grants exactly eight seconds of pause-safe magic-orb shooting; F or the mobile Shoot control fires in the facing direction, and projectile overlap defeats an enemy. Repeated pickups refresh rather than stack the eight-second window. World 1 ends only when the player activates the Compass Shrine; the UI then shows “Shrine Activated / World Complete” and unlocks World 2 through the existing guest/authenticated progression boundary. The internal completion type remains `checkpoint` so persistence and event contracts do not change for a presentation-only redesign.
 
 Painted terrain surfaces and opaque character baselines are measured against their Arcade bodies so standing, patrol and landing frames remain visually grounded. One-way collision accepts the player only while descending from above a platform; leaving an edge restores normal gravity and a gap fall uses the existing damage/respawn rule. Replaying World 1 creates a fresh 3-life, 120-second run with new enemies and collectibles.
 
@@ -91,13 +92,13 @@ The local collectible is a deterministic gameplay mechanic and never calls the u
 
 ## Phase 4 playable scope
 
-Sunset Ruins is a real 105-second World 2 configuration consumed by the same `WorldScene`. It adds a longer golden-hour route, seven ground sections, fourteen elevated bridge/step platforms, 31 coins, five faster scarab enemies, three hazards, one reachable fish power-up and a checkpoint. It reuses the hunter, movement, gravity, stomp/projectile combat, eight-second power rule, pause/restart, mobile input, HUD and progression events. Completion says “World Complete / Checkpoint Reached” and unlocks World 3; it never claims final treasure victory.
+Sunset Ruins is a real 105-second World 2 configuration consumed by the same `WorldScene`. Its balanced golden-hour route has nine ground sections, seventeen elevated bridge/step platforms, 41 coins, seven faster scarab enemies, five hazards and three reachable fish power-ups. It reuses the hunter, movement, gravity, stomp/projectile combat, eight-second refresh rule, pause/restart, mobile input, HUD and progression events. Activating the Compass Shrine shows “Shrine Activated / World Complete” and unlocks World 3; it never claims final treasure victory.
 
 The World Map selectively warms the currently selected playable world's route, Phaser runtime and required local artwork. Gameplay is considered ready only after Phaser completes real loading and scene creation. Cached normal launches should not show a loading screen; slow first loads retain a short fallback, and failed runtime/art loads offer Retry or return to the World Map.
 
 ## Phase 5 playable scope
 
-Crystal Cavern is the real 90-second final configuration consumed by the same `WorldScene`. It provides seven separated ground sections, fifteen elevated crystal platforms, 33 coins, seven faster crystal beetles, five crystal hazards, one reachable eight-second fish power-up and an end-of-level legendary treasure. Painted terrain and enemy baselines use measured body/presentation metadata; real 180–200px gaps remain unsupported but inside the tested jump envelope.
+Crystal Cavern is the real 90-second final configuration consumed by the same `WorldScene`. It provides nine separated ground sections, nineteen elevated crystal platforms, 45 coins, nine faster crystal beetles, seven crystal hazards, three reachable eight-second fish power-ups and an end-of-level legendary treasure. Painted terrain and enemy baselines use measured body/presentation metadata; real gaps remain unsupported but inside the tested jump envelope.
 
 Worlds 1–2 expose checkpoint goals and World 3 exposes a treasure goal through the same level contract. Only a player overlap with the actual treasure calls the guarded completion transition. The final overlay reads “Mission Complete / Treasure Discovered” and reports score, coins, remaining time and lives. Guest completion remains in memory for the active adventure; authenticated completion sends only bounded world/coin data to the verified-identity progression route. It does not submit a leaderboard score or claim that client-side scoring is cheat-proof.
 
@@ -108,6 +109,8 @@ Selecting World 1 from the World Map opens an accessible field briefing with the
 Pause freezes Arcade Physics, the active run clock and fish power. Resume is a React-owned 3–2–1–GO presentation; the bridge sends the existing resume command only after GO. World 1–2 completion keeps Next World disabled until guest progression is updated or the authenticated `/api/progress` request succeeds. World 3 has only replay and map actions. Profile and leaderboard surfaces display only RLS-authorized server data, with explicit empty/sign-in states and no invented achievements or scores.
 
 The resume presentation sits directly over the visible game rather than opening another card. Crystal Cavern uses a centred aspect-preserving cover crop to remove its painted dark edge on wide screens without changing camera or collision geometry. Authenticated World 3 progress is not itself an eligible leaderboard run: rankings require the separate server-issued and accepted run flow, which is not yet connected to gameplay.
+
+The final balance pass moderately extends all three routes while retaining the fixed 120/105/90-second timers. Emerald Jungle now has 40 coins, 6 enemies, 5 hazards and 3 fish pickups across a 6000-unit route; Sunset Ruins has 41/7/5/3 across 6300 units; Crystal Cavern has 45/9/7/3 across 6900 units. Optional elevated coins are marked as risk-route placements in configuration, while required ground and goal chains remain inside the measured movement envelope. A coin is worth 100 points, an enemy 250 and each remaining second 10, so speed, route risk and combat all contribute to score. Stable collectible/enemy identifiers prevent duplicate awards. These are fair local scoring rules, not a claim of authoritative ranking: secure server-issued run completion remains pending.
 
 ## Acceptance boundaries
 

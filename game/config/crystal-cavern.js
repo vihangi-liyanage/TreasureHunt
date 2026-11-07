@@ -1,10 +1,10 @@
 import { EMERALD_JUNGLE_MOTION } from "@/game/config/emerald-jungle";
 
 const platform = (id, x, top, width, kind = "ledge") => Object.freeze({ id, x, top, width, kind });
-const coin = (id, x, y) => Object.freeze({ id, x, y });
+const coin = (id, x, y, riskRoute = false) => Object.freeze({ id, x, y, riskRoute });
 
 export const CRYSTAL_CAVERN_LEVEL = Object.freeze({
-  width: 6_000,
+  width: 6_900,
   height: 720,
   art: Object.freeze({
     panorama: "crystal-cavern-panorama.png",
@@ -41,7 +41,7 @@ export const CRYSTAL_CAVERN_LEVEL = Object.freeze({
     }),
   }),
   playerStart: Object.freeze({ x: 145, y: 510 }),
-  goal: Object.freeze({ type: "treasure", x: 5_820, y: 520 }),
+  goal: Object.freeze({ type: "treasure", x: 6_740, y: 520 }),
   motion: Object.freeze({
     ...EMERALD_JUNGLE_MOTION,
     moveSpeed: 335,
@@ -54,7 +54,9 @@ export const CRYSTAL_CAVERN_LEVEL = Object.freeze({
     platform("ground-4", 2_540, 640, 560, "ground"),
     platform("ground-5", 3_270, 640, 520, "ground"),
     platform("ground-6", 4_030, 640, 600, "ground"),
-    platform("ground-7", 5_260, 640, 1_480, "ground"),
+    platform("ground-7", 4_670, 640, 450, "ground"),
+    platform("ground-8", 5_350, 640, 650, "ground"),
+    platform("ground-9", 6_350, 640, 1_050, "ground"),
     platform("ledge-1", 590, 495, 245),
     platform("step-1", 900, 385, 185, "step"),
     platform("ledge-2", 1_220, 475, 230),
@@ -70,8 +72,12 @@ export const CRYSTAL_CAVERN_LEVEL = Object.freeze({
     platform("ledge-9", 4_800, 350, 220),
     platform("step-5", 5_145, 255, 175, "step"),
     platform("ledge-10", 5_480, 445, 240),
+    platform("ledge-11", 5_750, 430, 235),
+    platform("step-6", 6_060, 330, 180, "step"),
+    platform("ledge-12", 6_390, 440, 235),
+    platform("step-7", 6_660, 330, 180, "step"),
   ]),
-  mandatoryRoute: Object.freeze(["ground-1", "ground-2", "ground-3", "ground-4", "ground-5", "ground-6", "ground-7"]),
+  mandatoryRoute: Object.freeze(["ground-1", "ground-2", "ground-3", "ground-4", "ground-5", "ground-6", "ground-7", "ground-8", "ground-9"]),
   coins: Object.freeze([
     coin("coin-1", 270, 575), coin("coin-2", 470, 575), coin("coin-3", 550, 430),
     coin("coin-4", 630, 430), coin("coin-5", 870, 320), coin("coin-6", 930, 320),
@@ -83,9 +89,19 @@ export const CRYSTAL_CAVERN_LEVEL = Object.freeze({
     coin("coin-22", 3_770, 300), coin("coin-23", 4_050, 200), coin("coin-24", 4_110, 200),
     coin("coin-25", 4_375, 385), coin("coin-26", 4_465, 385), coin("coin-27", 4_765, 285),
     coin("coin-28", 4_840, 285), coin("coin-29", 5_115, 190), coin("coin-30", 5_175, 190),
-    coin("coin-31", 5_435, 380), coin("coin-32", 5_525, 380), coin("coin-33", 5_710, 575),
+    coin("coin-31", 5_435, 380), coin("coin-32", 5_525, 380), coin("coin-33", 5_850, 575),
+    coin("coin-34", 5_710, 365, true), coin("coin-35", 5_790, 365, true),
+    coin("coin-36", 6_030, 265, true), coin("coin-37", 6_090, 265, true),
+    coin("coin-38", 6_350, 375, true), coin("coin-39", 6_430, 375, true),
+    coin("coin-40", 6_630, 265, true), coin("coin-41", 6_690, 265, true),
+    coin("coin-42", 6_050, 575), coin("coin-43", 6_280, 575),
+    coin("coin-44", 6_520, 575), coin("coin-45", 6_760, 575),
   ]),
-  fishPowerUps: Object.freeze([Object.freeze({ id: "fish-1", x: 3_250, y: 555 })]),
+  fishPowerUps: Object.freeze([
+    Object.freeze({ id: "fish-1", x: 1_800, y: 555 }),
+    Object.freeze({ id: "fish-2", x: 3_250, y: 555 }),
+    Object.freeze({ id: "fish-3", x: 6_060, y: 265 }),
+  ]),
   enemies: Object.freeze([
     Object.freeze({ id: "crystal-beetle-1", x: 500, y: 565, left: 420, right: 610, speed: 82 }),
     Object.freeze({ id: "crystal-beetle-2", x: 1_100, y: 565, left: 900, right: 1_300, speed: 102 }),
@@ -93,13 +109,17 @@ export const CRYSTAL_CAVERN_LEVEL = Object.freeze({
     Object.freeze({ id: "crystal-beetle-4", x: 2_540, y: 565, left: 2_320, right: 2_760, speed: 118 }),
     Object.freeze({ id: "crystal-beetle-5", x: 3_270, y: 565, left: 3_060, right: 3_480, speed: 124 }),
     Object.freeze({ id: "crystal-beetle-6", x: 4_030, y: 565, left: 3_780, right: 4_280, speed: 130 }),
-    Object.freeze({ id: "crystal-beetle-7", x: 4_820, y: 565, left: 4_580, right: 5_150, speed: 136 }),
+    Object.freeze({ id: "crystal-beetle-7", x: 5_350, y: 565, left: 5_100, right: 5_570, speed: 136 }),
+    Object.freeze({ id: "crystal-beetle-8", x: 4_670, y: 565, left: 4_510, right: 4_830, speed: 140 }),
+    Object.freeze({ id: "crystal-beetle-9", x: 6_250, y: 565, left: 6_050, right: 6_550, speed: 144 }),
   ]),
   hazards: Object.freeze([
     Object.freeze({ x: 1_205, top: 588, width: 92 }),
     Object.freeze({ x: 2_430, top: 588, width: 105 }),
     Object.freeze({ x: 3_390, top: 588, width: 105 }),
     Object.freeze({ x: 4_150, top: 588, width: 110 }),
+    Object.freeze({ x: 4_670, top: 588, width: 105 }),
     Object.freeze({ x: 5_260, top: 588, width: 118 }),
+    Object.freeze({ x: 6_200, top: 588, width: 118 }),
   ]),
 });
