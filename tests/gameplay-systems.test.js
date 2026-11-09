@@ -6,7 +6,7 @@ import { COIN_SCORE, ENEMY_SCORE } from "@/game/core/run-state";
 import { EMERALD_JUNGLE_LEVEL, EMERALD_JUNGLE_MOTION } from "@/game/config/emerald-jungle";
 import { SUNSET_RUINS_LEVEL } from "@/game/config/sunset-ruins";
 import { CRYSTAL_CAVERN_LEVEL } from "@/game/config/crystal-cavern";
-import { getTerrainVisualLayout } from "@/game/render/create-textures";
+import { getTerrainVisualLayout, HUNTER_PRESENTATION } from "@/game/render/create-textures";
 
 function calculateJumpMetrics({ gravity, jumpVelocity, moveSpeed }) {
   const riseTime = Math.abs(jumpVelocity) / gravity;
@@ -23,6 +23,13 @@ function canReachPlatform(from, to, motion) {
   return verticalRise <= metrics.apexHeight - 24 && horizontalGap <= metrics.maximumRange * 0.72;
 }
 
+function canReachPlatformFromEitherSide(from, to, motion) {
+  const metrics = calculateJumpMetrics(motion);
+  const verticalRise = Math.max(0, from.top - to.top);
+  const horizontalGap = Math.max(0, Math.abs(to.x - from.x) - from.width / 2 - to.width / 2);
+  return verticalRise <= metrics.apexHeight - 12 && horizontalGap <= metrics.maximumRange * 0.74;
+}
+
 function sourceHeightFor(visual, frameHeight) {
   return visual.crop?.height ?? frameHeight;
 }
@@ -36,7 +43,7 @@ function gapBetween(left, right) {
 }
 
 function unsupportedFallDistance(gap, motion) {
-  const hunterBodyWidth = 102 * (160 / 444);
+  const hunterBodyWidth = HUNTER_PRESENTATION.bodyWidth * (HUNTER_PRESENTATION.displaySize / 444);
   const unsupportedDistance = Math.max(0, gap - hunterBodyWidth);
   const unsupportedSeconds = unsupportedDistance / motion.moveSpeed;
   return 0.5 * motion.gravity * unsupportedSeconds * unsupportedSeconds;
@@ -217,6 +224,30 @@ describe("three-world competitive balance", () => {
     expect(lowerBounds[0]).toBeGreaterThan(17);
     expect(lowerBounds[1]).toBeGreaterThan(lowerBounds[0]);
     expect(lowerBounds[2]).toBeGreaterThan(lowerBounds[1]);
+  });
+
+  it("keeps normal elevated routes inside the shared jump envelope", () => {
+    for (const level of levels) {
+      const reachable = new Set([level.platforms[0].id]);
+      let changed = true;
+      while (changed) {
+        changed = false;
+        for (const from of level.platforms.filter((platform) => reachable.has(platform.id))) {
+          for (const to of level.platforms) {
+            if (!reachable.has(to.id) && canReachPlatformFromEitherSide(from, to, level.motion)) {
+              reachable.add(to.id);
+              changed = true;
+            }
+          }
+        }
+      }
+      expect([...reachable].sort(), level.art.panorama).toEqual(level.platforms.map((platform) => platform.id).sort());
+    }
+  });
+
+  it("aligns the hunter collision baseline to the opaque boot line", () => {
+    expect(HUNTER_PRESENTATION.bodyOffsetY + HUNTER_PRESENTATION.bodyHeight).toBe(417);
+    expect(HUNTER_PRESENTATION.bodyWidth).toBeGreaterThan(120);
   });
 
   it("provides more scoring choices and three reachable non-stacking fish pickups per world", () => {

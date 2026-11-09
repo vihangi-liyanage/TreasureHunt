@@ -2,7 +2,7 @@ const platform = (id, x, top, width, kind = "ledge") => Object.freeze({ id, x, t
 
 export const EMERALD_JUNGLE_MOTION = Object.freeze({
   gravity: 1_500,
-  jumpVelocity: 680,
+  jumpVelocity: 750,
   moveSpeed: 320,
   groundAcceleration: 1_900,
   airAcceleration: 1_150,

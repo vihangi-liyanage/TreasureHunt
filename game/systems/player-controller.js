@@ -27,7 +27,7 @@ export class PlayerController {
 
   update(now) {
     const body = this.player.body;
-    const grounded = body.blocked.down;
+    const grounded = body.blocked.down || body.touching.down;
     if (grounded) this.lastGroundedAt = now;
     const left = this.keys.left.isDown || this.keys.a.isDown || this.inputState.isDown("left");
     const right = this.keys.right.isDown || this.keys.d.isDown || this.inputState.isDown("right");

@@ -10,5 +10,5 @@ export default async function LoginPage() {
     const identity = await getVerifiedIdentity(await createClient());
     if (identity) redirect("/worlds");
   }
-  return <AuthFormShell title="Player Login"><LoginForm /></AuthFormShell>;
+  return <AuthFormShell title="Welcome Back" description="Continue your treasure-hunting journey."><LoginForm /></AuthFormShell>;
 }

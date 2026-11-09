@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Check, Compass, LockKeyhole, Settings, Trophy, UserRound } from "lucide-react";
+import { ArrowLeft, Check, Compass, LoaderCircle, LockKeyhole, Settings, Trophy, UserRound } from "lucide-react";
 import { GameOverlay } from "@/components/overlays/game-overlay";
 import { SettingsPanel } from "@/components/settings/settings-panel";
 import { useGuestWorldProgress } from "./use-guest-world-progress";
@@ -23,6 +23,7 @@ export function WorldMap({ worlds, mode = "guest", completedWorldIds = [], profi
   const router = useRouter();
   const [selectedId, setSelectedId] = useState(null);
   const [overlay, setOverlay] = useState(null);
+  const [launchState, setLaunchState] = useState({ worldId: null, status: "idle", message: "" });
   const closeOverlay = useCallback(() => setOverlay(null), []);
   const guestProgress = useGuestWorldProgress(worlds, mode === "guest");
   const authenticatedProgress = useMemo(() => ({
@@ -40,13 +41,23 @@ export function WorldMap({ worlds, mode = "guest", completedWorldIds = [], profi
     });
   }, [router, selectedHref, selectedWorld.id]);
 
-  const playWorld = useCallback(() => {
+  const playWorld = useCallback(async () => {
+    if (launchState.status === "preparing") return;
+    setLaunchState({ worldId: selectedWorld.id, status: "preparing", message: "" });
+    try {
+      await gameplayPreloader.preloadWorld(selectedWorld.id);
+    } catch {
+      setLaunchState({ worldId: selectedWorld.id, status: "error", message: `${selectedWorld.name} could not be prepared. Please try again.` });
+      return;
+    }
     const parameters = new URLSearchParams();
     if (mode === "guest") { parameters.set("mode", "guest"); parameters.set("attempt", String(beginGuestRun())); }
     if (selectedWorld.number === 1) parameters.set("intro", "1");
     const query = parameters.size ? `?${parameters.toString()}` : "";
     router.push(`/game/${selectedWorld.id}${query}`);
-  }, [mode, router, selectedWorld.id, selectedWorld.number]);
+  }, [launchState.status, mode, router, selectedWorld.id, selectedWorld.name, selectedWorld.number]);
+
+  const preparingSelectedWorld = launchState.status === "preparing" && launchState.worldId === selectedWorld.id;
 
   return (
     <main className="world-map-screen">
@@ -74,7 +85,7 @@ export function WorldMap({ worlds, mode = "guest", completedWorldIds = [], profi
             data-completed={world.completed}
             data-current={world.current}
             data-locked={world.locked}
-            disabled={world.locked}
+            disabled={world.locked || launchState.status === "preparing"}
             key={world.id}
             type="button"
             onClick={() => setSelectedId(world.id)}
@@ -92,7 +103,8 @@ export function WorldMap({ worlds, mode = "guest", completedWorldIds = [], profi
         <div><h2 className="font-display">{selectedWorld.name}</h2><p>{selectedWorld.description}</p></div>
         <div className="world-detail-action">
           <strong>{selectedWorld.difficulty}</strong>
-          <button className="play-world-button" type="button" onClick={playWorld}>Play</button>
+          <button className="play-world-button" type="button" onClick={playWorld} disabled={preparingSelectedWorld} aria-busy={preparingSelectedWorld}>{preparingSelectedWorld ? <><LoaderCircle className="button-spinner" size={15} />Preparing</> : "Play"}</button>
+          {launchState.status === "error" && launchState.worldId === selectedWorld.id ? <span className="world-launch-error" role="alert">{launchState.message}</span> : null}
         </div>
       </aside>
 

@@ -10,5 +10,5 @@ export default async function RegisterPage() {
     const identity = await getVerifiedIdentity(await createClient());
     if (identity) redirect("/worlds");
   }
-  return <AuthFormShell title="Create Account"><RegisterForm /></AuthFormShell>;
+  return <AuthFormShell title="Join the Adventure" description="Create your explorer profile and save your progress."><RegisterForm /></AuthFormShell>;
 }

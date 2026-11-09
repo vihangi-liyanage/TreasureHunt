@@ -16,6 +16,8 @@ describe("gameplay backdrop layout", () => {
     expect(layout.width / layout.height).toBeCloseTo(1_774 / 887);
     expect(layout.x).toBeLessThanOrEqual(0);
     expect(layout.y).toBeLessThanOrEqual(0);
+    expect(layout.x).toBeLessThanOrEqual(-1.99);
+    expect(layout.y).toBeLessThanOrEqual(-1.99);
   });
 
   it("uses Crystal Cavern overscan to crop its painted dark edge symmetrically", () => {

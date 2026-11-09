@@ -6,16 +6,19 @@ export class CameraController {
     this.camera = scene.cameras.main;
     this.worldWidth = worldWidth;
     this.worldHeight = worldHeight;
-    this.camera.setBounds(0, 0, worldWidth, worldHeight).startFollow(player, true, 0.09, 0.1).setDeadzone(220, 110);
+    this.camera.setBounds(0, 0, worldWidth, worldHeight).startFollow(player, true, 0.09, 0.1);
     this.resizeHandler = (size) => this.resize(size.width, size.height);
     scene.scale.on(Phaser.Scale.Events.RESIZE, this.resizeHandler);
     this.resize(scene.scale.width, scene.scale.height);
   }
 
   resize(width, height) {
-    const zoom = Phaser.Math.Clamp(height / this.worldHeight, 0.78, 1.25);
+    const zoom = Phaser.Math.Clamp(height / this.worldHeight, 0.72, 2);
     this.camera.setZoom(zoom);
-    this.scene.resizeBackdrop(width / zoom, height / zoom);
+    const viewportWidth = width / zoom;
+    const viewportHeight = height / zoom;
+    this.camera.setDeadzone(Math.min(220, viewportWidth * 0.34), Math.min(110, viewportHeight * 0.18));
+    this.scene.resizeBackdrop(viewportWidth, viewportHeight);
   }
 
   destroy() {

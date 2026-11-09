@@ -167,7 +167,7 @@ export class WorldScene extends Phaser.Scene {
     this.platformCollider = this.physics.add.collider(
       this.player,
       this.platforms,
-      undefined,
+      (player) => this.recordSafePosition(player),
       (player, platform) => canLandOnPlatform({
         playerVelocityY: player.body.velocity.y,
         previousBottom: player.body.prev.y + player.body.height,
@@ -176,7 +176,7 @@ export class WorldScene extends Phaser.Scene {
     );
     this.physics.add.overlap(this.player, this.coins, (_player, coin) => this.collectCoin(coin));
     this.physics.add.overlap(this.player, this.fishPowerUps, (_player, fish) => this.collectFish(fish));
-    this.physics.add.overlap(this.player, this.hazards, () => this.damagePlayer("hazard"));
+    this.physics.add.overlap(this.player, this.hazards, (player, hazard) => this.damagePlayer("hazard", hazard.x));
     this.physics.add.overlap(this.player, this.enemySystem.group, (_player, enemy) => this.touchEnemy(enemy));
     this.physics.add.overlap(this.player, this.goal, () => this.completeWorld());
   }
@@ -250,7 +250,7 @@ export class WorldScene extends Phaser.Scene {
       this.player.setVelocityY(-390);
       return;
     }
-    this.damagePlayer("enemy");
+    this.damagePlayer("enemy", enemy.x);
   }
 
   defeatEnemy(enemy, cause) {
@@ -262,19 +262,49 @@ export class WorldScene extends Phaser.Scene {
     this.publishState();
   }
 
-  damagePlayer(cause) {
+  damagePlayer(cause, sourceX = null) {
     if (this.run.status !== "playing") return;
     const damaged = this.run.damage(this.runClockMs);
-    if (!damaged && cause !== "fall") return;
+    if (!damaged) {
+      if (cause === "fall") this.restoreSafePosition();
+      return;
+    }
     this.cameras.main.shake(180, 0.008);
     this.playerController.showDamage(this.runClockMs);
-    this.player.setTint(0xff9a82).setVelocity(0, -260);
-    this.time.delayedCall(260, () => this.player?.active && this.player.clearTint());
+    this.player.setTint(0xff9a82);
+    this.tweens.add({
+      targets: this.player,
+      alpha: 0.35,
+      duration: 90,
+      yoyo: true,
+      repeat: 5,
+      onComplete: () => this.player?.active && this.player.setAlpha(1).clearTint(),
+    });
     this.bridge.emit(GAME_EVENTS.PLAYER_DAMAGED, { cause, lives: this.run.lives });
     this.publishState();
     if (this.run.status === "game-over") { this.finishRun("lives"); return; }
+    if (cause === "fall") {
+      this.restoreSafePosition();
+      return;
+    }
+    const horizontalKnockback = Number.isFinite(sourceX)
+      ? (this.player.x <= sourceX ? -180 : 180)
+      : this.playerController.facing * -180;
+    this.player.setVelocity(horizontalKnockback, -280);
+  }
+
+  restoreSafePosition() {
     this.player.body.reset(this.safePosition.x, this.safePosition.y);
     this.player.body.setAllowGravity(true);
+  }
+
+  recordSafePosition(player) {
+    if (player.body.velocity.y < 0 || (!player.body.blocked.down && !player.body.touching.down)) return;
+    const halfBodyWidth = player.body.halfWidth;
+    const unsafe = this.level.hazards.some((hazard) =>
+      Math.abs(player.x - hazard.x) <= hazard.width * 0.36 + halfBodyWidth + 12);
+    if (unsafe) return;
+    this.safePosition = { x: player.x, y: player.y };
   }
 
   completeWorld() {

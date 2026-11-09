@@ -61,9 +61,13 @@ describe("identity-backed panels", () => {
     const password = source("components/auth/password-input.js");
     const shell = source("components/auth/auth-form-shell.js");
     expect(login).toContain('aria-busy={pending}');
-    expect(login).toContain("Google Login");
+    expect(login).toContain("Continue with Google");
+    expect(login).toContain("Need an account?");
+    expect(login).toContain("Sign Up");
     expect(register).toContain("Check Your Email");
     expect(register).toContain("Go to Player Login");
+    expect(register).toContain("Already have an account?");
+    expect(register).toContain("Log In");
     expect(register).toContain('password: "", confirmPassword: ""');
     expect(password).toContain("aria-pressed={visible}");
     expect(shell).toContain('aria-labelledby="auth-title"');

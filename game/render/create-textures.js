@@ -17,10 +17,10 @@ export const TERRAIN_PRESENTATION = Object.freeze({
 
 export const HUNTER_PRESENTATION = Object.freeze({
   displaySize: 160,
-  bodyWidth: 102,
-  bodyHeight: 188,
-  bodyOffsetX: 171,
-  bodyOffsetY: 229,
+  bodyWidth: 132,
+  bodyHeight: 214,
+  bodyOffsetX: 156,
+  bodyOffsetY: 203,
 });
 
 export const ENEMY_PRESENTATION = Object.freeze({

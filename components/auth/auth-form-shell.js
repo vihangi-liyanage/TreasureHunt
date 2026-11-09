@@ -2,7 +2,7 @@ import { AdventureShell } from "@/components/ui/adventure-shell";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
-export function AuthFormShell({ title, children }) {
+export function AuthFormShell({ title, description, children }) {
   return (
     <AdventureShell className="auth-shell">
       <Link className="screen-control auth-back" href="/welcome"><ArrowLeft size={18} />Back to Welcome</Link>
@@ -11,6 +11,7 @@ export function AuthFormShell({ title, children }) {
           <header className="auth-heading">
             <span>Explorer access</span>
             <h1 id="auth-title" className="font-display">{title}</h1>
+            {description ? <p>{description}</p> : null}
             <div className="gold-rule" aria-hidden="true" />
           </header>
           {children}

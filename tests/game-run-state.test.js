@@ -15,6 +15,16 @@ describe("Emerald Jungle run state", () => {
     expect(run.damage(1400)).toBe(true); expect(run.damage(2700)).toBe(true);
     expect(run.snapshot().status).toBe("game-over");
   });
+  it("loses one life without resetting score, coins, timer, or progress", () => {
+    const run = new RunState({ lives:3, timerSeconds:120 });
+    run.collectCoin("coin-1");
+    run.stompEnemy("enemy-1");
+    run.tick();
+    expect(run.damage(1_000)).toBe(true);
+    expect(run.snapshot()).toEqual({ score:350, coins:1, lives:2, timeLeft:119, status:"playing" });
+    expect(run.damage(1_100)).toBe(false);
+    expect(run.snapshot().lives).toBe(2);
+  });
   it("ends when the timer expires", () => {
     const run = new RunState({ lives:3, timerSeconds:1 }); run.tick();
     expect(run.snapshot()).toMatchObject({ timeLeft:0, status:"game-over" });
