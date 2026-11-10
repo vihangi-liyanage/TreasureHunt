@@ -238,8 +238,14 @@
 
 **Reason:** Client-only authenticated badges could be replayed or lost, while a second achievement database/service would duplicate identity and ownership. Tying awards to the run event transaction prevents duplicate thresholds and keeps React responsible only for display. Procedural Phaser textures avoid new asset licensing, and configuration-owned placements keep one reusable scene.
 
-## D039 Serialize Next build workers on Windows
+## D039 Keep the default Next build worker configuration
 
-**Decision:** Set Next's installed `experimental.cpus` build option to one worker.
+**Decision:** Do not retain the experimental `cpus` override.
 
-**Reason:** Clean builds repeatedly failed with `EPERM` on `mkdir` while the reported directory had already been created, no Node process survived, and ACLs granted normal modify access. The same build completed when generation was serialized. This is a project-local build-concurrency correction; temporary `.next-phase8-verify` output was confirmed as generated build data and removed rather than committed.
+**Reason:** The Windows `EPERM` failure was isolated to the managed filesystem sandbox; the normal production build completed successfully with Next's default workers outside that sandbox. Keeping an experimental override would slow builds and emit an unnecessary warning.
+
+## D040 Use one browser audio service with original procedural sound
+
+**Decision:** Keep preferences, soundtrack scheduling and the four requested effects in one browser-only Web Audio service. A root controller selects music from the route, while existing Phaser bridge events trigger effects from React.
+
+**Reason:** This preserves the React/Phaser boundary, survives client navigation without overlapping players, and needs no package or licensed recording. Separate music/effect gains and persisted preferences keep the controls independent. Direct Phaser asset playback would couple scene teardown to settings/navigation, while one audio element per screen would overlap during route transitions.

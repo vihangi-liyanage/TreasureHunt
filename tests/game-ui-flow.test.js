@@ -59,6 +59,19 @@ describe("gameplay UI flow", () => {
     expect(screen).toContain("postJsonWithRetry");
   });
 
+  it("keeps settings focused on persistent music and requested sound effects", () => {
+    const settings = source("components/settings/settings-panel.js");
+    const screen = source("components/game/game-screen.js");
+    expect(settings).toContain('label: "Music"');
+    expect(settings).toContain('label: "Sound Effects"');
+    expect(settings).not.toContain('id: "motion"');
+    expect(settings).not.toContain('id: "contrast"');
+    expect(settings).toContain("setAudioPreference");
+    for (const effect of ["coin", "gem", "fish", "gameover"]) {
+      expect(screen).toContain(`audioService.playEffect("${effect}")`);
+    }
+  });
+
   it("owns completion effects in the scene and explicitly cleans them up", () => {
     const scene = source("game/scenes/world-scene.js");
     expect(scene).toContain("createGoalCelebration");

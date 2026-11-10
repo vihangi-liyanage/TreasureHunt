@@ -11,6 +11,7 @@ import { WORLD_CONFIGS } from "@/game/config/worlds";
 import { beginGuestRun, completeGuestWorld, deriveWorldStates, readGuestProgress, recordGuestCollectible } from "@/lib/progress/guest-progress";
 import { getAchievement } from "@/lib/game/achievements";
 import { postJson, postJsonWithRetry } from "@/lib/auth/client-api";
+import { audioService } from "@/lib/audio/audio-service";
 import { gameplayPreloader } from "@/game/preload-gameplay";
 import { MobileControls } from "./mobile-controls";
 import { getNextResumeStep, getNextWorld, RESUME_COUNTDOWN_STEPS, shouldShowWorldIntroduction } from "./game-flow";
@@ -116,14 +117,14 @@ export function GameScreen({ world, mode, showInstructions = false }) {
     const cleanups = [
       bridge.on(GAME_EVENTS.READY, () => { if (!active) return; setShowLoading(false); setLoadError(""); setGameState((state) => ({ ...state, status: "playing" })); }),
       bridge.on(GAME_EVENTS.LOAD_FAILED, () => { if (!active) return; setShowLoading(false); setLoadError("The adventure artwork could not be loaded."); }),
-      bridge.on(GAME_EVENTS.STATE_CHANGED, (state) => active && setGameState(state)),
-      bridge.on(GAME_EVENTS.COIN_COLLECTED, ({ id }) => recordEvidence({ type: "coin", id })),
-      bridge.on(GAME_EVENTS.GEM_COLLECTED, ({ id }) => recordEvidence({ type: "gem", id })),
-      bridge.on(GAME_EVENTS.FISH_COLLECTED, ({ id }) => recordEvidence({ type: "fish", id })),
+      bridge.on(GAME_EVENTS.STATE_CHANGED, (state) => { if (active) { audioService.setGamePaused(state.paused); setGameState(state); } }),
+      bridge.on(GAME_EVENTS.COIN_COLLECTED, ({ id }) => { audioService.playEffect("coin"); recordEvidence({ type: "coin", id }); }),
+      bridge.on(GAME_EVENTS.GEM_COLLECTED, ({ id }) => { audioService.playEffect("gem"); recordEvidence({ type: "gem", id }); }),
+      bridge.on(GAME_EVENTS.FISH_COLLECTED, ({ id }) => { audioService.playEffect("fish"); recordEvidence({ type: "fish", id }); }),
       bridge.on(GAME_EVENTS.ENEMY_STOMPED, ({ id }) => recordEvidence({ type: "enemy", id })),
       bridge.on(GAME_EVENTS.ENEMY_DEFEATED, ({ id }) => recordEvidence({ type: "enemy", id })),
       bridge.on(GAME_EVENTS.OBJECTIVE_COLLECTED, ({ id, objective }) => recordEvidence({ type: "objective", id, objective })),
-      bridge.on(GAME_EVENTS.RUN_ENDED, (result) => { if (active) { setResumeStep(null); setFishChallengeOpen(false); setTerminal({ type: "game-over", result }); } }),
+      bridge.on(GAME_EVENTS.RUN_ENDED, (result) => { if (active) { audioService.setGamePaused(true); audioService.playEffect("gameover"); setResumeStep(null); setFishChallengeOpen(false); setTerminal({ type: "game-over", result }); } }),
       bridge.on(GAME_EVENTS.RUN_REVIVED, () => { if (active) { setFishChallengeOpen(false); setTerminal(null); setResumeStep(RESUME_COUNTDOWN_STEPS[0]); } }),
       bridge.on(GAME_EVENTS.WORLD_COMPLETED, (result) => { if (active) { setResumeStep(null); setTerminal({ type: "completed", result }); persistCompletion(result); } }),
     ];
@@ -155,15 +156,17 @@ export function GameScreen({ world, mode, showInstructions = false }) {
     if (resumeStep === null) return undefined;
     const timer = window.setTimeout(() => {
       const nextStep = getNextResumeStep(resumeStep);
-      if (nextStep === null) { setResumeStep(null); bridge.emit(GAME_COMMANDS.RESUME); }
+      if (nextStep === null) { setResumeStep(null); audioService.setGamePaused(false); bridge.emit(GAME_COMMANDS.RESUME); }
       else setResumeStep(nextStep);
     }, resumeStep === "GO!" ? 450 : 700);
     return () => window.clearTimeout(timer);
   }, [bridge, resumeStep]);
 
-  function startAdventure() { setGameState(initialState(world.timerSeconds)); setStarted(true); }
+  function startAdventure() { audioService.setGamePaused(false); setGameState(initialState(world.timerSeconds)); setStarted(true); }
   function beginResume() { if (resumeStep === null && gameState.paused && !terminal) setResumeStep(RESUME_COUNTDOWN_STEPS[0]); }
+  function pauseGame() { audioService.setGamePaused(true); bridge.emit(GAME_COMMANDS.PAUSE); }
   function restart() {
+    audioService.setGamePaused(false);
     setResumeStep(null); setTerminal(null); setFishChallengeOpen(false); setRunAttemptId(""); objectiveEvidenceRef.current = null; reviveCommandSentRef.current = false; setSaveState({ status: "idle", error: "" });
     setShowLoading(false); setGameState(initialState(world.timerSeconds)); beginVerifiedRun(); bridge.emit(GAME_COMMANDS.RESTART);
   }
@@ -198,7 +201,7 @@ export function GameScreen({ world, mode, showInstructions = false }) {
         <div className="intro-actions"><Link className="game-button game-button-ghost" href={mapHref}><Map size={18} />World Map</Link><button autoFocus className="game-button game-button-primary" type="button" onClick={startAdventure}><Play size={18} />Start Adventure</button></div>
       </div>
     </section> : null}
-    {started ? <header className="game-hud" aria-label="Game status"><div className="hud-world"><span>World {world.number}</span><strong>{world.name}</strong></div><div className="hud-cluster"><div className="hud-stats"><span><Trophy size={18} />{gameState.score.toLocaleString()}</span><span><Coins size={18} />{gameState.coins}</span><span><Gem size={18} />{gameState.gems}</span><span className={gameState.lives <= 1 ? "is-danger" : ""}><Heart size={18} />{gameState.lives}</span><span className={gameState.timeLeft <= 20 ? "is-danger" : ""}><Timer size={18} />{gameState.timeLeft}</span></div>{gameState.powered ? <div className="power-meter" role="status"><Fish size={18} /><div><strong>Magic Shot</strong><span style={{ "--power-progress": `${Math.min(100, (gameState.powerRemainingMs / 8000) * 100)}%` }} /></div><b>{(gameState.powerRemainingMs / 1000).toFixed(1)}s</b></div> : null}</div><button className="hud-pause" type="button" onClick={() => bridge.emit(GAME_COMMANDS.PAUSE)} aria-label="Pause game"><Pause size={20} /></button></header> : null}
+    {started ? <header className="game-hud" aria-label="Game status"><div className="hud-world"><span>World {world.number}</span><strong>{world.name}</strong></div><div className="hud-cluster"><div className="hud-stats"><span><Trophy size={18} />{gameState.score.toLocaleString()}</span><span><Coins size={18} />{gameState.coins}</span><span><Gem size={18} />{gameState.gems}</span><span className={gameState.lives <= 1 ? "is-danger" : ""}><Heart size={18} />{gameState.lives}</span><span className={gameState.timeLeft <= 20 ? "is-danger" : ""}><Timer size={18} />{gameState.timeLeft}</span></div>{gameState.powered ? <div className="power-meter" role="status"><Fish size={18} /><div><strong>Magic Shot</strong><span style={{ "--power-progress": `${Math.min(100, (gameState.powerRemainingMs / 8000) * 100)}%` }} /></div><b>{(gameState.powerRemainingMs / 1000).toFixed(1)}s</b></div> : null}</div><button className="hud-pause" type="button" onClick={pauseGame} aria-label="Pause game"><Pause size={20} /></button></header> : null}
     {achievementQueue.length ? <aside className="achievement-toast" role="status" aria-live="polite"><span><Award size={22} /></span><div><small>Achievement unlocked</small><strong>{getAchievement(achievementQueue[0]).title}</strong><p>{getAchievement(achievementQueue[0]).description}</p></div></aside> : null}
     {showLoading && !loadError ? <div className="game-loading" role="status"><span className="loading-spinner" /><strong>Preparing {world.name}...</strong></div> : null}
     {loadError ? <section className="game-state-overlay" role="alert"><div className="game-state-panel is-defeat"><span className="state-kicker">Loading interrupted</span><h1>Adventure unavailable</h1><p>{loadError}</p><div className="state-actions"><button className="game-button game-button-primary" type="button" onClick={() => window.location.reload()}><RotateCcw size={18} />Retry</button><Link className="game-button game-button-secondary" href={mapHref}><Map size={18} />World Map</Link></div></div></section> : null}

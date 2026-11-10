@@ -88,7 +88,13 @@ Rankings are one best completed World 3 run per registered player. The service-r
 
 The workspace uses TypeScript 6.0.3 as the JavaScript language service. TS5101 reported that `baseUrl` is deprecated for TypeScript 7. The supported configuration removes `baseUrl` and retains `paths: { "@/*": ["./*"] }`; TypeScript 6 resolves those targets relative to `jsconfig.json`. This preserves all aliases without suppressing deprecations, adding a bundler setting, or migrating JavaScript to TypeScript.
 
-On this Windows workspace, parallel Next 16 build workers repeatedly raced while creating the same `.next` directory and surfaced `EPERM` even though no Node process held the path and its ACL was writable. `next.config.mjs` limits build workers to one through the installed `experimental.cpus` option. Runtime architecture and request concurrency are unchanged; only build-time page generation is serialized.
+The observed Windows `.next` `EPERM` failure was caused by the managed filesystem sandbox rather than Next worker concurrency. The project keeps Next's default worker configuration; production verification runs outside that sandbox when required.
+
+## Phase 9 audio boundary
+
+`AudioController` is the single application-lifetime owner for browser audio. It maps the current route to one original procedural soundtrack, installs the user-interaction unlock required by browser autoplay policy, and destroys its context/listeners on unmount. `audio-service.js` owns the Web Audio context, loop scheduling, oscillator cleanup, two independent preference channels, and versioned local persistence. Route changes stop the previous loop before starting another, so screens never create competing players.
+
+Phaser remains audio-independent. Existing serialisable coin, gem, fish and run-ended bridge events let `GameScreen` request the four allowed effects; no physics system imports Web Audio. Pause state crosses through the existing state snapshot and suspends soundtrack scheduling, while the normal resume command restarts it. Reduced-motion media queries and scene checks remain unchanged because motion accessibility is an operating-system concern, not an audio preference.
 
 ## Phase 6 UI orchestration
 
