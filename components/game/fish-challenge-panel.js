@@ -36,6 +36,12 @@ export function FishChallengePanel({ mode, runAttemptId, worldId, onClose, onApp
     return () => { mountedRef.current = false; };
   }, [requestChallenge]);
 
+  useEffect(() => {
+    if (status !== "incorrect") return undefined;
+    const timer = window.setTimeout(onClose, 1_500);
+    return () => window.clearTimeout(timer);
+  }, [onClose, status]);
+
   async function submitAnswer(event) {
     event.preventDefault();
     const numericAnswer = Number(answer);
@@ -46,7 +52,9 @@ export function FishChallengePanel({ mode, runAttemptId, worldId, onClose, onApp
     const response = await postJson(`/api/fish/challenges/${challenge.id}/answer`, { mode, runAttemptId, answer: numericAnswer });
     if (!mountedRef.current) return;
     if (!response.ok || response.revivalGranted !== true) {
-      if (response.code === "incorrect") { onClose(); return; }
+      if (response.code === "incorrect") {
+        setStatus("incorrect"); setMessage("Incorrect answer! Try again."); return;
+      }
       setStatus(response.status === 429 ? "error" : "ready");
       setMessage(response.error || "The answer could not be verified."); return;
     }
@@ -61,15 +69,15 @@ export function FishChallengePanel({ mode, runAttemptId, worldId, onClose, onApp
       <button className="fish-challenge-close" type="button" onClick={onClose} disabled={status === "submitting" || status === "approved"} aria-label="Close Fish challenge"><X size={19} /></button>
       <div className="fish-challenge-heading"><span><Fish size={18} />One revival available</span><h2 id="fish-challenge-title">Count the Fish</h2><p>Solve the genuine Fish Game API puzzle to continue this run with exactly one life.</p></div>
       {status === "loading" ? <div className="fish-challenge-loading" role="status"><LoaderCircle className="button-spinner" size={28} /><strong>Requesting a secure puzzle...</strong></div> : null}
-      {challenge && ["ready", "submitting", "approved"].includes(status) ? <form onSubmit={submitAnswer}>
+      {challenge && ["ready", "submitting", "incorrect", "approved"].includes(status) ? <form onSubmit={submitAnswer}>
         <div className="fish-puzzle-frame">{/* The server returns an opaque base64 PNG data URL without solution fields. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={challenge.imageUrl} alt="Fish Game puzzle. Count every fish shown." />
         </div>
         <label htmlFor="fish-answer">How many fish are shown?</label>
         <input id="fish-answer" className="form-field fish-answer-input" type="number" inputMode="numeric" min="0" max="1000" step="1" autoComplete="off" value={answer} onChange={(event) => setAnswer(event.target.value)} disabled={busy} autoFocus />
-        {message ? <p className={`fish-challenge-message ${status === "approved" ? "is-success" : ""}`} role="status">{status === "approved" ? <ShieldCheck size={17} /> : null}{message}</p> : null}
-        <button className="game-button game-button-primary fish-submit" type="submit" disabled={busy || answer === ""}>{status === "submitting" || status === "approved" ? <><LoaderCircle className="button-spinner" size={17} />Verifying Securely</> : "Submit Fish Count"}</button>
+        {message ? <p className={`fish-challenge-message ${status === "approved" ? "is-success" : status === "incorrect" ? "is-incorrect" : ""}`} role={status === "incorrect" ? "alert" : "status"}>{status === "approved" ? <ShieldCheck size={17} /> : null}{message}</p> : null}
+        <button className="game-button game-button-primary fish-submit" type="submit" disabled={busy || answer === ""}>{status === "submitting" || status === "approved" ? <><LoaderCircle className="button-spinner" size={17} />Verifying Securely</> : status === "incorrect" ? "Returning to Game Over..." : "Submit Fish Count"}</button>
       </form> : null}
       {status === "error" ? <div className="fish-challenge-error" role="alert"><p>{message}</p><button className="game-button game-button-primary" type="button" onClick={requestChallenge}><RefreshCw size={17} />Try Again</button></div> : null}
       <small>The solution is validated on the server and is never sent to this browser.</small>

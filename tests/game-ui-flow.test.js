@@ -57,6 +57,7 @@ describe("gameplay UI flow", () => {
     const screen = source("components/game/game-screen.js");
     const challenge = source("components/game/fish-challenge-panel.js");
     const scene = source("game/scenes/world-scene.js");
+    const styles = source("app/globals.css");
     expect(screen).toContain("Final score");
     expect(screen).toContain("Coins collected");
     expect(screen).toContain("Time elapsed");
@@ -68,6 +69,12 @@ describe("gameplay UI flow", () => {
     expect(challenge).not.toContain("setInterval");
     expect((challenge.match(/postJson\("\/api\/fish\/challenges"/g) || [])).toHaveLength(1);
     expect(challenge).toContain('response.code === "incorrect"');
+    expect(challenge).toContain('setMessage("Incorrect answer! Try again.")');
+    expect(challenge).toContain("window.setTimeout(onClose, 1_500)");
+    expect(challenge).toContain("window.clearTimeout(timer)");
+    expect(styles).toContain(".fish-challenge-panel { position: relative; display: grid;");
+    expect(styles).toContain("overflow: hidden;");
+    expect(styles).toContain("height: clamp(9rem,30svh,13.5rem)");
     expect(screen).toContain("setResumeStep(RESUME_COUNTDOWN_STEPS[0])");
     expect(screen).toContain("bridge.emit(GAME_COMMANDS.REVIVE)");
     expect(scene).toContain("this.run.revive(this.runClockMs)");
