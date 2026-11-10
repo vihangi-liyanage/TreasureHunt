@@ -72,6 +72,10 @@ describe("gameplay UI flow", () => {
     for (const effect of ["coin", "gem", "fish", "gameover"]) {
       expect(screen).toContain(`audioService.playEffect("${effect}")`);
     }
+    expect(screen).toContain('GAME_EVENTS.PLAYER_DAMAGED');
+    expect(screen).toContain('audioService.playEffect("damage")');
+    expect(screen).toContain('audioService.playEffect("extra-life")');
+    expect(screen).toContain('resumeStep === "GO!" ? "countdown-go" : "countdown"');
   });
 
   it("owns completion effects in the scene and explicitly cleans them up", () => {

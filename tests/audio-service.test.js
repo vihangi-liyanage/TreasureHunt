@@ -64,6 +64,8 @@ describe("audio preferences and soundtrack routing", () => {
     expect(oscillators).toHaveLength(13);
     audioService.playEffect("jump");
     expect(oscillators).toHaveLength(13);
+    ["damage", "damage", "extra-life", "countdown", "countdown-go"].forEach((effect) => audioService.playEffect(effect));
+    expect(oscillators).toHaveLength(24);
   });
 
   it("clamps and persists the shared volume percentage", async () => {
@@ -80,5 +82,12 @@ describe("audio preferences and soundtrack routing", () => {
     expect(getAudioPreferences().volume).toBe(0);
     setAudioVolume(63.6);
     expect(JSON.parse(stored.get("treasurehunt.audio.v1")).volume).toBe(64);
+  });
+
+  it("gives the welcome screen a distinct minor treasure-hunt theme", async () => {
+    const { AUDIO_TRACKS } = await import("@/lib/audio/audio-service");
+    expect(AUDIO_TRACKS.welcome.root).toBeLessThan(160);
+    expect(AUDIO_TRACKS.welcome.chords[0]).toEqual([0, 3, 7]);
+    expect(AUDIO_TRACKS.welcome.melody).toContain(6);
   });
 });

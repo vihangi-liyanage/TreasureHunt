@@ -28,6 +28,7 @@ export function GameScreen({ world, mode, showInstructions = false }) {
   const runStartPromiseRef = useRef(Promise.resolve(""));
   const eventQueueRef = useRef(Promise.resolve());
   const objectiveEvidenceRef = useRef(null);
+  const countdownSoundRef = useRef(null);
   const [bridge] = useState(createGameBridge);
   const [started, setStarted] = useState(!needsIntroduction);
   const [gameState, setGameState] = useState(() => initialState(world.timerSeconds, needsIntroduction ? "awaiting-start" : "loading"));
@@ -121,11 +122,12 @@ export function GameScreen({ world, mode, showInstructions = false }) {
       bridge.on(GAME_EVENTS.COIN_COLLECTED, ({ id }) => { audioService.playEffect("coin"); recordEvidence({ type: "coin", id }); }),
       bridge.on(GAME_EVENTS.GEM_COLLECTED, ({ id }) => { audioService.playEffect("gem"); recordEvidence({ type: "gem", id }); }),
       bridge.on(GAME_EVENTS.FISH_COLLECTED, ({ id }) => { audioService.playEffect("fish"); recordEvidence({ type: "fish", id }); }),
+      bridge.on(GAME_EVENTS.PLAYER_DAMAGED, () => audioService.playEffect("damage")),
       bridge.on(GAME_EVENTS.ENEMY_STOMPED, ({ id }) => recordEvidence({ type: "enemy", id })),
       bridge.on(GAME_EVENTS.ENEMY_DEFEATED, ({ id }) => recordEvidence({ type: "enemy", id })),
       bridge.on(GAME_EVENTS.OBJECTIVE_COLLECTED, ({ id, objective }) => recordEvidence({ type: "objective", id, objective })),
       bridge.on(GAME_EVENTS.RUN_ENDED, (result) => { if (active) { audioService.setGamePaused(true); audioService.playEffect("gameover"); setResumeStep(null); setFishChallengeOpen(false); setTerminal({ type: "game-over", result }); } }),
-      bridge.on(GAME_EVENTS.RUN_REVIVED, () => { if (active) { setFishChallengeOpen(false); setTerminal(null); setResumeStep(RESUME_COUNTDOWN_STEPS[0]); } }),
+      bridge.on(GAME_EVENTS.RUN_REVIVED, () => { if (active) { audioService.playEffect("extra-life"); countdownSoundRef.current = null; setFishChallengeOpen(false); setTerminal(null); setResumeStep(RESUME_COUNTDOWN_STEPS[0]); } }),
       bridge.on(GAME_EVENTS.WORLD_COMPLETED, (result) => { if (active) { setResumeStep(null); setTerminal({ type: "completed", result }); persistCompletion(result); } }),
     ];
     async function boot() {
@@ -154,20 +156,24 @@ export function GameScreen({ world, mode, showInstructions = false }) {
 
   useEffect(() => {
     if (resumeStep === null) return undefined;
+    if (countdownSoundRef.current !== resumeStep) {
+      audioService.playEffect(resumeStep === "GO!" ? "countdown-go" : "countdown");
+      countdownSoundRef.current = resumeStep;
+    }
     const timer = window.setTimeout(() => {
       const nextStep = getNextResumeStep(resumeStep);
-      if (nextStep === null) { setResumeStep(null); audioService.setGamePaused(false); bridge.emit(GAME_COMMANDS.RESUME); }
+      if (nextStep === null) { countdownSoundRef.current = null; setResumeStep(null); audioService.setGamePaused(false); bridge.emit(GAME_COMMANDS.RESUME); }
       else setResumeStep(nextStep);
     }, resumeStep === "GO!" ? 450 : 700);
     return () => window.clearTimeout(timer);
   }, [bridge, resumeStep]);
 
   function startAdventure() { audioService.setGamePaused(false); setGameState(initialState(world.timerSeconds)); setStarted(true); }
-  function beginResume() { if (resumeStep === null && gameState.paused && !terminal) setResumeStep(RESUME_COUNTDOWN_STEPS[0]); }
+  function beginResume() { if (resumeStep === null && gameState.paused && !terminal) { countdownSoundRef.current = null; setResumeStep(RESUME_COUNTDOWN_STEPS[0]); } }
   function pauseGame() { audioService.setGamePaused(true); bridge.emit(GAME_COMMANDS.PAUSE); }
   function restart() {
     audioService.setGamePaused(false);
-    setResumeStep(null); setTerminal(null); setFishChallengeOpen(false); setRunAttemptId(""); objectiveEvidenceRef.current = null; reviveCommandSentRef.current = false; setSaveState({ status: "idle", error: "" });
+    countdownSoundRef.current = null; setResumeStep(null); setTerminal(null); setFishChallengeOpen(false); setRunAttemptId(""); objectiveEvidenceRef.current = null; reviveCommandSentRef.current = false; setSaveState({ status: "idle", error: "" });
     setShowLoading(false); setGameState(initialState(world.timerSeconds)); beginVerifiedRun(); bridge.emit(GAME_COMMANDS.RESTART);
   }
   function openFishChallenge() {
