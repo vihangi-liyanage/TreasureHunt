@@ -53,4 +53,10 @@ describe("authentication security boundaries", () => {
     await expect(getLeaderboard(admin, "account-7")).resolves.toEqual(entries);
     expect(admin.rpc).toHaveBeenCalledWith("get_leaderboard_admin", { p_user_id: "account-7" });
   });
+
+  it("supports a read-only guest leaderboard projection", async () => {
+    const admin = { rpc: vi.fn(async () => ({ data: [], error: null })) };
+    await expect(getLeaderboard(admin, null)).resolves.toEqual([]);
+    expect(admin.rpc).toHaveBeenCalledWith("get_leaderboard_admin", { p_user_id: null });
+  });
 });

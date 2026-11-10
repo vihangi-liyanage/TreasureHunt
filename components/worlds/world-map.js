@@ -19,10 +19,10 @@ function NodeStatus({ world }) {
   return <span className="node-status">Unlocked</span>;
 }
 
-export function WorldMap({ worlds, mode = "guest", completedWorldIds = [], profile = null, leaderboard = [], leaderboardStatus = "ready" }) {
+export function WorldMap({ worlds, mode = "guest", completedWorldIds = [], profile = null, leaderboard = [], leaderboardStatus = "ready", initialOverlay = null }) {
   const router = useRouter();
   const [selectedId, setSelectedId] = useState(null);
-  const [overlay, setOverlay] = useState(null);
+  const [overlay, setOverlay] = useState(initialOverlay);
   const [launchState, setLaunchState] = useState({ worldId: null, status: "idle", message: "" });
   const closeOverlay = useCallback(() => setOverlay(null), []);
   const guestProgress = useGuestWorldProgress(worlds, mode === "guest");

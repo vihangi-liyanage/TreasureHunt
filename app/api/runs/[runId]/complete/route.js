@@ -21,7 +21,7 @@ export async function POST(request, { params }) {
     const admin = createAdminClient();
     const [{ data: run, error: runError }, { data: events, error: eventsError }] = await Promise.all([
       admin.from("game_runs")
-        .select("world_number, started_at, submitted_at")
+        .select("id, world_number, started_at, submitted_at, completed, score, coins, world_reached, duration_seconds, completed_at")
         .eq("id", runId)
         .eq("user_id", identity.id)
         .maybeSingle(),
@@ -30,7 +30,13 @@ export async function POST(request, { params }) {
         .eq("run_id", runId)
         .order("id", { ascending: true }),
     ]);
-    if (runError || eventsError || !validateStoredRunCompletion({ run, events, durationSeconds: values.durationSeconds })) {
+    if (runError || eventsError || !run) {
+      return jsonNoStore({ error: "Run evidence did not satisfy completion rules." }, { status: 409 });
+    }
+    if (run.submitted_at && run.completed) {
+      return jsonNoStore({ run, unlockedAchievementKeys: [] });
+    }
+    if (!validateStoredRunCompletion({ run, events, durationSeconds: values.durationSeconds })) {
       return jsonNoStore({ error: "Run evidence did not satisfy completion rules." }, { status: 409 });
     }
     const { data, error } = await admin.rpc("complete_verified_game_run_admin", {
@@ -40,7 +46,8 @@ export async function POST(request, { params }) {
     });
     if (error) throw error;
     return jsonNoStore(data);
-  } catch {
+  } catch (error) {
+    console.error("Verified run completion failed.", { code: error?.code ?? "unknown" });
     return jsonNoStore({ error: "Run result was rejected." }, { status: 409 });
   }
 }

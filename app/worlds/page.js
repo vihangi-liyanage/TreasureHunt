@@ -9,7 +9,17 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 export default async function WorldsPage({ searchParams }) {
   const query = await searchParams;
-  if (query?.mode === "guest") return <WorldMap mode="guest" worlds={WORLD_CONFIGS} />;
+  const initialOverlay = query?.leaderboard === "1" ? "leaderboard" : null;
+  if (query?.mode === "guest") {
+    let guestLeaderboard = [];
+    let guestLeaderboardStatus = "ready";
+    try {
+      guestLeaderboard = await getLeaderboard(createAdminClient(), null);
+    } catch {
+      guestLeaderboardStatus = "unavailable";
+    }
+    return <WorldMap mode="guest" worlds={WORLD_CONFIGS} leaderboard={guestLeaderboard} leaderboardStatus={guestLeaderboardStatus} initialOverlay={initialOverlay} />;
+  }
   if (!hasSupabaseConfig()) redirect("/login");
 
   const supabase = await createClient();
@@ -46,6 +56,7 @@ export default async function WorldsPage({ searchParams }) {
       completedWorldIds={completedWorldIds}
       leaderboard={leaderboard}
       leaderboardStatus={leaderboardStatus}
+      initialOverlay={initialOverlay}
       profile={{
         username: profile?.username || "Explorer", email: identity.email, createdAt: profile?.created_at || null,
         progress: progress || null, achievements, bestRun: playerRanking,

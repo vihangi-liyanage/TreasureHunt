@@ -1,18 +1,6 @@
-import Link from "next/link";
-import { LockKeyhole, Medal } from "lucide-react";
+import { Medal } from "lucide-react";
 
 export function LeaderboardPanel({ mode, entries = [], status = "ready" }) {
-  if (mode === "guest") {
-    return (
-      <div className="leaderboard-signin">
-        <span><LockKeyhole size={28} /></span>
-        <h3>Join the explorers</h3>
-        <p>Sign in to view verified mission rankings. Guest adventures remain separate and cannot submit leaderboard runs.</p>
-        <Link className="game-button game-button-primary" href="/login">Player Login</Link>
-      </div>
-    );
-  }
-
   if (status === "unavailable") {
     return <div className="empty-game-state"><Medal size={34} /><h3>Rankings unavailable</h3><p>Your adventure progress is safe, but verified rankings could not be loaded. Try opening the leaderboard again later.</p></div>;
   }
@@ -38,6 +26,7 @@ export function LeaderboardPanel({ mode, entries = [], status = "ready" }) {
       ))}
       </ol>
       {currentOutsideTop ? <div className="leaderboard-current" aria-label="Your leaderboard position"><small>Your best</small><span>#{currentEntry.rank}</span><strong>{currentEntry.username}</strong><b>{Number(currentEntry.score).toLocaleString()}</b><p>{currentEntry.coins} coins · {currentEntry.duration_seconds}s</p></div> : null}
+      {mode === "guest" ? <p className="leaderboard-guest-note">Guest view only. Sign in to submit a verified World 3 score.</p> : null}
     </div>
   );
 }

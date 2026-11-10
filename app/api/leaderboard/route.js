@@ -6,9 +6,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 export async function GET() {
   const { configured, identity } = await getRouteSession();
   if (!configured) return jsonNoStore({ error: "Leaderboard is not configured." }, { status: 503 });
-  if (!identity) return jsonNoStore({ error: "Sign in to view the leaderboard." }, { status: 401 });
   try {
-    return jsonNoStore({ entries: await getLeaderboard(createAdminClient(), identity.id) });
+    return jsonNoStore({ entries: await getLeaderboard(createAdminClient(), identity?.id ?? null) });
   } catch {
     return jsonNoStore({ error: "Leaderboard could not be loaded." }, { status: 500 });
   }

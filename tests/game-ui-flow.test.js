@@ -36,6 +36,17 @@ describe("gameplay UI flow", () => {
     expect(getNextWorld(WORLD_CONFIGS, "crystal-cavern")).toBeNull();
   });
 
+  it("opens the existing leaderboard from a saved World 3 completion", () => {
+    const screen = source("components/game/game-screen.js");
+    const map = source("components/worlds/world-map.js");
+    expect(screen).toContain('"/worlds?leaderboard=1"');
+    expect(screen).toContain("saveState.status === \"saved\"");
+    expect(screen).toContain("<Trophy size={18} />Leaderboard");
+    expect(screen).toContain('missionComplete ? "mission-actions"');
+    expect(map).toContain("useState(initialOverlay)");
+    expect(map).toContain('<GameOverlay title="Leaderboard"');
+  });
+
   it("presents checkpoint semantics as Compass Shrines without changing the domain contract", () => {
     const scene = source("game/scenes/world-scene.js");
     const screen = source("components/game/game-screen.js");
@@ -43,6 +54,9 @@ describe("gameplay UI flow", () => {
     expect(scene).toContain('"COLLECT THE COMPASS"');
     expect(screen).toContain('checkpointComplete ? "Shrine Activated"');
     expect(screen).toContain("saveState.status !== \"saved\"");
+    expect(screen).not.toContain("Retry Save");
+    expect(screen).not.toContain("Saving...");
+    expect(screen).toContain("postJsonWithRetry");
   });
 
   it("owns completion effects in the scene and explicitly cleans them up", () => {
@@ -113,7 +127,7 @@ describe("identity-backed panels", () => {
     const leaderboard = source("components/leaderboard/leaderboard-panel.js");
     expect(leaderboard).toContain("entry.coins");
     expect(leaderboard).toContain("entry.duration_seconds");
-    expect(leaderboard).toContain("cannot submit leaderboard runs");
+    expect(leaderboard).toContain("Guest view only");
     expect(leaderboard).toContain("No eligible ranked runs yet");
     expect(leaderboard).toContain("Account creation and saved world progress do not create a score");
     expect(leaderboard).toContain("Rankings unavailable");
@@ -129,6 +143,7 @@ describe("identity-backed panels", () => {
     expect(completeRoute).toContain("p_user_id: identity.id");
     expect(completeRoute).toContain('admin.rpc("complete_verified_game_run_admin"');
     expect(completeRoute).toContain("validateStoredRunCompletion");
+    expect(completeRoute).toContain("run.submitted_at && run.completed");
     expect(completeRoute).not.toContain("values.userId");
     expect(completeRoute).not.toContain("values.score");
   });
