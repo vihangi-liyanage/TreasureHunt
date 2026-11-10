@@ -384,6 +384,11 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .is-victory .state-actions,.is-defeat .state-actions { grid-template-columns: repeat(2,1fr); }
 .is-victory .mission-actions { grid-template-columns: repeat(3,minmax(0,1fr)); }
 .leaderboard-guest-note { margin: .8rem 0 0; color: rgba(255,247,220,.58); font-size: .7rem; text-align: center; }
+.settings-volume { display: grid; gap: .7rem; }
+.settings-volume > div { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.settings-volume label { color: #fff6d6; font-size: .85rem; font-weight: 800; }
+.settings-volume output { color: #8df1cf; font-size: .75rem; font-weight: 900; font-variant-numeric: tabular-nums; }
+.settings-volume input { width: 100%; height: 1.3rem; cursor: pointer; accent-color: #28c99b; }
 .game-button:disabled { cursor: not-allowed; filter: grayscale(.4); opacity: .48; }
 .adventure-intro { position: absolute; inset: 0; z-index: 60; display: grid; place-items: center; overflow: hidden; padding: clamp(.6rem,2vw,1.5rem); background: linear-gradient(90deg,rgba(2,18,14,.95),rgba(4,38,29,.78)),url("/art/gameplay/emerald-jungle-panorama.png") center / cover; }
 .adventure-intro-panel { width: min(100%,48rem); max-height: calc(100svh - 1.2rem); overflow: auto; overscroll-behavior: contain; border: 1px solid rgba(255,224,130,.42); border-radius: 1.35rem; background: linear-gradient(145deg,rgba(8,47,34,.97),rgba(2,24,18,.98)); padding: clamp(.9rem,2.2vw,1.45rem); box-shadow: 0 28px 90px rgba(0,0,0,.62); scrollbar-width: thin; }

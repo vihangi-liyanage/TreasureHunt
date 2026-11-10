@@ -29,9 +29,9 @@ describe("audio preferences and soundtrack routing", () => {
 
     hydrateAudioPreferences();
     setAudioPreference("music", false);
-    expect(getAudioPreferences()).toEqual({ music: false, effects: true });
+    expect(getAudioPreferences()).toEqual({ music: false, effects: true, volume: 70 });
     setAudioPreference("effects", false);
-    expect(JSON.parse(stored.get("treasurehunt.audio.v1"))).toEqual({ music: false, effects: false });
+    expect(JSON.parse(stored.get("treasurehunt.audio.v1"))).toEqual({ music: false, effects: false, volume: 70 });
   });
 
   it("synthesizes only the four requested effect cues", async () => {
@@ -39,6 +39,7 @@ describe("audio preferences and soundtrack routing", () => {
     class FakeAudioContext {
       constructor() { this.state = "running"; this.currentTime = 0; this.destination = {}; }
       createGain() { return { gain: { value: 0, setValueAtTime() {}, exponentialRampToValueAtTime() {} }, connect() {} }; }
+      createDynamicsCompressor() { return { threshold: {}, knee: {}, ratio: {}, attack: {}, release: {}, connect() {} }; }
       createOscillator() {
         const oscillator = {
           frequency: { setValueAtTime() {}, exponentialRampToValueAtTime() {} },
@@ -60,8 +61,24 @@ describe("audio preferences and soundtrack routing", () => {
     hydrateAudioPreferences();
     await audioService.unlock();
     ["coin", "gem", "fish", "gameover"].forEach((effect) => audioService.playEffect(effect));
-    expect(oscillators).toHaveLength(11);
+    expect(oscillators).toHaveLength(13);
     audioService.playEffect("jump");
-    expect(oscillators).toHaveLength(11);
+    expect(oscillators).toHaveLength(13);
+  });
+
+  it("clamps and persists the shared volume percentage", async () => {
+    const stored = new Map();
+    const browserWindow = new EventTarget();
+    browserWindow.localStorage = { getItem: (key) => stored.get(key) ?? null, setItem: (key, value) => stored.set(key, value) };
+    vi.stubGlobal("window", browserWindow);
+    vi.stubGlobal("CustomEvent", class extends Event { constructor(type) { super(type); } });
+    const { getAudioPreferences, setAudioVolume } = await import("@/lib/audio/audio-service");
+
+    setAudioVolume(115);
+    expect(getAudioPreferences().volume).toBe(100);
+    setAudioVolume(-5);
+    expect(getAudioPreferences().volume).toBe(0);
+    setAudioVolume(63.6);
+    expect(JSON.parse(stored.get("treasurehunt.audio.v1")).volume).toBe(64);
   });
 });

@@ -92,7 +92,7 @@ The observed Windows `.next` `EPERM` failure was caused by the managed filesyste
 
 ## Phase 9 audio boundary
 
-`AudioController` is the single application-lifetime owner for browser audio. It maps the current route to one original procedural soundtrack, installs the user-interaction unlock required by browser autoplay policy, and destroys its context/listeners on unmount. `audio-service.js` owns the Web Audio context, loop scheduling, oscillator cleanup, two independent preference channels, and versioned local persistence. Route changes stop the previous loop before starting another, so screens never create competing players.
+`AudioController` is the single application-lifetime owner for browser audio. It maps the current route to one original procedural soundtrack, installs the user-interaction unlock required by browser autoplay policy, and destroys its context/listeners on unmount. `audio-service.js` owns the Web Audio context, eight-beat layered loop scheduling, oscillator cleanup, independent music/effect switches, master volume, gentle output compression, and versioned local persistence. Route changes stop the previous loop before starting another, so screens never create competing players.
 
 Phaser remains audio-independent. Existing serialisable coin, gem, fish and run-ended bridge events let `GameScreen` request the four allowed effects; no physics system imports Web Audio. Pause state crosses through the existing state snapshot and suspends soundtrack scheduling, while the normal resume command restarts it. Reduced-motion media queries and scene checks remain unchanged because motion accessibility is an operating-system concern, not an audio preference.
 

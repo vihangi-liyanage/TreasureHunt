@@ -67,6 +67,8 @@ describe("gameplay UI flow", () => {
     expect(settings).not.toContain('id: "motion"');
     expect(settings).not.toContain('id: "contrast"');
     expect(settings).toContain("setAudioPreference");
+    expect(settings).toContain('type="range"');
+    expect(settings).toContain("setAudioVolume");
     for (const effect of ["coin", "gem", "fish", "gameover"]) {
       expect(screen).toContain(`audioService.playEffect("${effect}")`);
     }

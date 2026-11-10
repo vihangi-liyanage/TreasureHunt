@@ -2,7 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import { Music2, Volume2 } from "lucide-react";
-import { getAudioPreferences, getServerAudioPreferences, setAudioPreference, subscribeAudioPreferences } from "@/lib/audio/audio-service";
+import { getAudioPreferences, getServerAudioPreferences, setAudioPreference, setAudioVolume, subscribeAudioPreferences } from "@/lib/audio/audio-service";
 
 const rows = [
   { id: "music", label: "Music", description: "Adventure soundtrack", icon: Music2 },
@@ -20,6 +20,10 @@ export function SettingsPanel() {
           <button type="button" role="switch" aria-checked={enabled[id]} aria-label={`${label}: ${enabled[id] ? "on" : "off"}`} onClick={() => setAudioPreference(id, !enabled[id])} className={`relative h-7 w-12 shrink-0 rounded-full border transition ${enabled[id] ? "border-emerald-300/40 bg-emerald-500" : "border-white/15 bg-black/35"}`}><span className={`absolute top-1 size-[18px] rounded-full bg-white shadow transition ${enabled[id] ? "left-[25px]" : "left-1"}`} /></button>
         </div>
       ))}
+      <div className="settings-volume rounded-2xl border border-white/10 bg-white/[.045] p-4">
+        <div><label htmlFor="game-volume">Volume</label><output htmlFor="game-volume">{enabled.volume}%</output></div>
+        <input id="game-volume" type="range" min="0" max="100" step="1" value={enabled.volume} onChange={(event) => setAudioVolume(event.target.value)} aria-label={`Volume: ${enabled.volume}%`} />
+      </div>
     </div>
   );
 }

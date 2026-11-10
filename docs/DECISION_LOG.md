@@ -249,3 +249,5 @@
 **Decision:** Keep preferences, soundtrack scheduling and the four requested effects in one browser-only Web Audio service. A root controller selects music from the route, while existing Phaser bridge events trigger effects from React.
 
 **Reason:** This preserves the React/Phaser boundary, survives client navigation without overlapping players, and needs no package or licensed recording. Separate music/effect gains and persisted preferences keep the controls independent. Direct Phaser asset playback would couple scene teardown to settings/navigation, while one audio element per screen would overlap during route transitions.
+
+**Volume correction:** The initial lead envelope (`0.18`) was multiplied by a `0.055` music bus, leaving roughly one percent peak amplitude before device volume. The corrected mix uses layered eight-beat arrangements, audible music/effect buses, a persisted 0–100% master gain, and a gentle compressor to control summed peaks without distortion.
