@@ -219,3 +219,9 @@
 **Decision:** Build shrine/treasure illumination, petals and sparkles from bounded Phaser shapes and existing project utility textures. Track effect objects in `WorldScene`, destroy transient objects after tweens, clear all remaining effects on shutdown, and suppress moving effects/camera flash for reduced-motion users.
 
 **Reason:** Phaser already owns the goal position and scene lifecycle. A React particle package or new asset dependency would split ownership and add weight; unbounded emitters could leak or obscure the HUD.
+
+## D036 Bind Fish revival to server state and the existing bridge
+
+**Decision:** Persist short-lived Fish solutions in a service-role-only Supabase table keyed by server-derived virtual owner and an opaque run-attempt UUID. Verify answers in one row-locking SQL function with a partial unique index for one consumed challenge per run. Guests use a signed HttpOnly Fish-only identity cookie; registered players use verified Supabase claims. React may emit `game:revive` only after the answer route grants revival, and `RunState` independently enforces one zero-life revival.
+
+**Reason:** A client answer, clear-text signed token, local storage or Phaser fetch would expose or make the solution replayable. Per-instance memory would lose challenges across Vercel instances. The database transaction handles expiry, retries and concurrency without mixing guest/profile data, while the bridge preserves the React/Phaser lifecycle boundary. Revival remains optional: provider or persistence failure leaves replay and map navigation intact.

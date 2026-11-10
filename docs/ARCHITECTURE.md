@@ -116,6 +116,14 @@ Selected-world preloading remains isolated in `game/preload-gameplay.js`. The Wo
 
 Remote flows are asynchronous events at the application boundary. A checkpoint or Game Over screen requests a challenge from a Route Handler; the server obtains and validates an upstream response, stores the solution server-side with expiry/single-use metadata, and returns only the challenge image and local challenge ID. Answer validation and any bonus/revive mutation happen atomically on the server.
 
+### Phase 7 Fish revival
+
+Fish revival is available only after a zero-life Game Over. `GameScreen` creates one opaque run-attempt UUID, while ownership comes independently from verified Supabase claims (`auth:<uuid>`) or a signed, HttpOnly guest virtual-identity cookie (`guest:<uuid>`). Challenge creation is rate-limited, calls `fish-service.js` on the server, and persists the upstream `fish` solution in `fish_challenges`; the browser receives only the local challenge ID, expiry and validated image source. The five-minute record is bound to owner, run attempt and world. Guest identity never enters profile, progress, run or leaderboard tables.
+
+Answer submission calls the service-role-only `verify_fish_challenge_admin` function. Its row lock, attempt cap, expiry checks, consumed timestamp and partial unique index atomically enforce one successful challenge per owner/run, including concurrent or repeated requests. Both challenge routes also use the existing request limiter. The provider solution is absent from DTOs, React state, bridge events and logs. Provider or database failure leaves Play Again and World Map available and cannot change progression.
+
+After a successful server response, React emits only `game:revive`. `RunState.revive` is the second guard: it accepts only a zero-life terminal state and at most `RUN_RULES.maxFishRevives`. `WorldScene` restores the verified hazard-clear ground position, grants exactly one life, resumes the frozen physics state and publishes `run:revived`; score, collected sets, defeated enemies, timer and combat clock remain in the same scene. The normal scene shutdown still owns every bridge unsubscribe, so remounts cannot retain a revival listener.
+
 ## Fish Game API verification
 
 Verified on 4 November 2026 against the provider documentation and live service:
@@ -158,4 +166,4 @@ The World Map delegates in-memory progress subscription and cleanup to `componen
 
 - **Implemented:** focused App Router screens, compact post-registration email-confirmation UI, real Supabase auth Route Handlers, SSR cookie refresh, PKCE callback, Sign Out/profile controls, pure validation, separate guest/auth progress, RLS migration, trusted progression/run endpoints, Fish response normalization, and React/browser cleanup. Gameplay includes original painted art for all three worlds, measured terrain grounding, tuned movement, source-aware multi-touch, local fish/orb combat, pause-safe timing, a pre-run field guide, countdown resume, persistence-gated checkpoint navigation, fresh replay runs, fullscreen rendering, sequential checkpoints and genuine World 3 treasure completion.
 - **Configuration-dependent:** email delivery, Google consent, live cookie persistence, and deployed RLS behaviour require the owner's Supabase/Google project and are not claimed as locally integrated.
-- **Planned:** production audio, richer frame counts, trusted score evidence, Fish challenge attempt records/routes/UI, and achievement awarding.
+- **Planned:** production audio, richer frame counts, trusted score evidence, checkpoint Fish challenges, and achievement awarding.

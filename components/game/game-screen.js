@@ -14,14 +14,16 @@ import { gameplayPreloader } from "@/game/preload-gameplay";
 import { MobileControls } from "./mobile-controls";
 import { getNextResumeStep, getNextWorld, RESUME_COUNTDOWN_STEPS, shouldShowWorldIntroduction } from "./game-flow";
 import { HowToPlay } from "./how-to-play";
+import { FishChallengePanel } from "./fish-challenge-panel";
 
-const initialState = (timerSeconds, status = "loading") => ({ score: 0, coins: 0, lives: 3, timeLeft: timerSeconds, status, paused: false, powered: false, powerRemainingMs: 0 });
+const initialState = (timerSeconds, status = "loading") => ({ score: 0, coins: 0, lives: 3, timeLeft: timerSeconds, status, paused: false, powered: false, powerRemainingMs: 0, revivesUsed: 0 });
 
 export function GameScreen({ world, mode, alreadyCompleted = false, showInstructions = false }) {
   const router = useRouter();
   const needsIntroduction = shouldShowWorldIntroduction(world, showInstructions);
   const parentRef = useRef(null);
   const completionRef = useRef(null);
+  const reviveCommandSentRef = useRef(false);
   const [bridge] = useState(createGameBridge);
   const [started, setStarted] = useState(!needsIntroduction);
   const [gameState, setGameState] = useState(() => initialState(world.timerSeconds, needsIntroduction ? "awaiting-start" : "loading"));
@@ -30,6 +32,8 @@ export function GameScreen({ world, mode, alreadyCompleted = false, showInstruct
   const [resumeStep, setResumeStep] = useState(null);
   const [showLoading, setShowLoading] = useState(false);
   const [loadError, setLoadError] = useState("");
+  const [fishChallengeOpen, setFishChallengeOpen] = useState(false);
+  const [runAttemptId, setRunAttemptId] = useState("");
   const [warmStart] = useState(() => gameplayPreloader.isWorldPreloaded(world.id));
   const mapHref = mode === "guest" ? "/worlds?mode=guest" : "/worlds";
   const nextWorld = getNextWorld(WORLD_CONFIGS, world.id);
@@ -66,7 +70,8 @@ export function GameScreen({ world, mode, alreadyCompleted = false, showInstruct
       bridge.on(GAME_EVENTS.READY, () => { if (!active) return; setShowLoading(false); setLoadError(""); setGameState((state) => ({ ...state, status: "playing" })); }),
       bridge.on(GAME_EVENTS.LOAD_FAILED, () => { if (!active) return; setShowLoading(false); setLoadError("The adventure artwork could not be loaded."); }),
       bridge.on(GAME_EVENTS.STATE_CHANGED, (state) => active && setGameState(state)),
-      bridge.on(GAME_EVENTS.RUN_ENDED, (result) => { if (active) { setResumeStep(null); setTerminal({ type: "game-over", result }); } }),
+      bridge.on(GAME_EVENTS.RUN_ENDED, (result) => { if (active) { setResumeStep(null); setFishChallengeOpen(false); setTerminal({ type: "game-over", result }); } }),
+      bridge.on(GAME_EVENTS.RUN_REVIVED, () => { if (active) { setFishChallengeOpen(false); setTerminal(null); } }),
       bridge.on(GAME_EVENTS.WORLD_COMPLETED, (result) => { if (active) { setResumeStep(null); setTerminal({ type: "completed", result }); persistCompletion(result); } }),
     ];
     async function boot() {
@@ -105,8 +110,17 @@ export function GameScreen({ world, mode, alreadyCompleted = false, showInstruct
   function startAdventure() { setGameState(initialState(world.timerSeconds)); setStarted(true); }
   function beginResume() { if (resumeStep === null && gameState.paused && !terminal) setResumeStep(RESUME_COUNTDOWN_STEPS[0]); }
   function restart() {
-    setResumeStep(null); setTerminal(null); completionRef.current = null; setSaveState({ status: "idle", message: "" });
+    setResumeStep(null); setTerminal(null); setFishChallengeOpen(false); setRunAttemptId(""); completionRef.current = null; reviveCommandSentRef.current = false; setSaveState({ status: "idle", message: "" });
     setShowLoading(false); setGameState(initialState(world.timerSeconds)); bridge.emit(GAME_COMMANDS.RESTART);
+  }
+  function openFishChallenge() {
+    if (!runAttemptId) setRunAttemptId(globalThis.crypto.randomUUID());
+    setFishChallengeOpen(true);
+  }
+  function applyApprovedRevival() {
+    if (reviveCommandSentRef.current) return;
+    reviveCommandSentRef.current = true;
+    bridge.emit(GAME_COMMANDS.REVIVE);
   }
   function goToNextWorld() {
     if (!nextWorld || saveState.status !== "saved") return;
@@ -116,6 +130,9 @@ export function GameScreen({ world, mode, alreadyCompleted = false, showInstruct
 
   const checkpointComplete = terminal?.type === "completed" && world.completion === "checkpoint";
   const missionComplete = terminal?.type === "completed" && world.completion === "treasure";
+  const gameOver = terminal?.type === "game-over";
+  const canRevive = gameOver && terminal.result.reason === "lives" && terminal.result.revivesUsed < 1;
+  const elapsedSeconds = gameOver ? Math.max(0, world.timerSeconds - terminal.result.timeLeft) : 0;
 
   return <main className={`gameplay-screen ${!started ? "is-awaiting-start" : ""}`} data-game-status={gameState.status} data-powered={gameState.powered ? "true" : "false"}>
     <div ref={parentRef} className="phaser-stage" aria-label={`${world.name} playable game canvas`} />
@@ -133,6 +150,7 @@ export function GameScreen({ world, mode, alreadyCompleted = false, showInstruct
     {started ? <MobileControls bridge={bridge} powered={gameState.powered} /> : null}
     {gameState.paused && !terminal && resumeStep === null ? <section className="game-state-overlay" role="dialog" aria-modal="true" aria-label="Game paused"><div className="game-state-panel pause-panel"><span className="state-kicker">Adventure paused</span><h1>Take a breath, explorer.</h1><p>Your position, lives, timer, enemies and fish power are frozen.</p><div className="state-actions"><button autoFocus className="game-button game-button-primary" type="button" onClick={beginResume}><Play size={18} />Resume</button><button className="game-button game-button-secondary" type="button" onClick={restart}><RotateCcw size={18} />Restart</button><Link className="game-button game-button-ghost" href={mapHref}><Map size={18} />World Map</Link></div></div></section> : null}
     {gameState.paused && !terminal && resumeStep !== null ? <section className="resume-canvas-layer" aria-label="Resuming game"><div className="resume-canvas-countdown" role="status" aria-live="assertive" aria-atomic="true"><span>Get ready</span><strong key={resumeStep}>{resumeStep}</strong><small>Adventure resumes after GO!</small></div><div className="resume-canvas-actions"><button className="game-button game-button-secondary" type="button" onClick={restart}><RotateCcw size={18} />Restart</button><Link className="game-button game-button-ghost" href={mapHref}><Map size={18} />World Map</Link></div></section> : null}
-    {terminal ? <section className={`game-state-overlay terminal-overlay ${terminal.type === "completed" ? "is-victory-overlay" : ""}`} role="dialog" aria-modal="true" aria-label={missionComplete ? "Mission complete" : checkpointComplete ? "World complete" : "Game over"}><div className={`game-state-panel ${terminal.type === "completed" ? "is-victory" : "is-defeat"}`}><span className="state-kicker">{missionComplete ? "Treasure Discovered" : checkpointComplete ? "Shrine Activated" : "The adventure ended"}</span><h1>{missionComplete ? "Mission Complete" : checkpointComplete ? "World Complete" : "Game Over"}</h1><p>{terminal.type === "completed" ? `Score ${terminal.result.score.toLocaleString()} · ${terminal.result.coins} coins · ${terminal.result.timeLeft}s left · ${terminal.result.lives} lives` : terminal.result.reason === "timer" ? `Time ran out before the ${world.completion === "treasure" ? "treasure" : "Compass Shrine"}.` : "Your explorer is out of lives."}</p>{saveState.message ? <small className={saveState.status === "error" ? "is-save-error" : ""} role="status">{saveState.message}</small> : null}<div className="state-actions terminal-actions">{checkpointComplete ? <><button className="game-button game-button-primary" type="button" onClick={goToNextWorld} disabled={saveState.status !== "saved"}><ArrowRight size={18} />{saveState.status === "saving" ? "Saving..." : `Next: ${nextWorld?.name}`}</button>{saveState.status === "error" ? <button className="game-button game-button-secondary" type="button" onClick={() => persistCompletion(completionRef.current)}><RotateCcw size={18} />Retry Save</button> : null}<Link className="game-button game-button-secondary" href={mapHref}><Map size={18} />World Map</Link></> : <><button className="game-button game-button-primary" type="button" onClick={restart}><RotateCcw size={18} />{missionComplete ? "Replay World" : "Play Again"}</button><Link className="game-button game-button-secondary" href={mapHref}><Map size={18} />World Map</Link></>}</div></div></section> : null}
+    {terminal ? <section className={`game-state-overlay terminal-overlay ${terminal.type === "completed" ? "is-victory-overlay" : ""}`} role="dialog" aria-modal="true" aria-label={missionComplete ? "Mission complete" : checkpointComplete ? "World complete" : "Game over"}><div className={`game-state-panel ${terminal.type === "completed" ? "is-victory" : "is-defeat"}`}><span className="state-kicker">{missionComplete ? "Treasure Discovered" : checkpointComplete ? "Shrine Activated" : "The adventure ended"}</span><h1>{missionComplete ? "Mission Complete" : checkpointComplete ? "World Complete" : "Game Over"}</h1>{gameOver ? <><p>{terminal.result.reason === "timer" ? `Time ran out before the ${world.completion === "treasure" ? "treasure" : "Compass Shrine"}.` : "Your explorer is out of lives."}</p><div className="game-over-stats" aria-label="Final run statistics"><span><Trophy size={18} /><small>Final score</small><strong>{terminal.result.score.toLocaleString()}</strong></span><span><Coins size={18} /><small>Coins collected</small><strong>{terminal.result.coins}</strong></span><span><Timer size={18} /><small>Time elapsed</small><strong>{elapsedSeconds}s</strong></span><span><Timer size={18} /><small>Time remaining</small><strong>{terminal.result.timeLeft}s</strong></span></div></> : <p>{`Score ${terminal.result.score.toLocaleString()} · ${terminal.result.coins} coins · ${terminal.result.timeLeft}s left · ${terminal.result.lives} lives`}</p>}{saveState.message ? <small className={saveState.status === "error" ? "is-save-error" : ""} role="status">{saveState.message}</small> : null}<div className="state-actions terminal-actions">{checkpointComplete ? <><button className="game-button game-button-primary" type="button" onClick={goToNextWorld} disabled={saveState.status !== "saved"}><ArrowRight size={18} />{saveState.status === "saving" ? "Saving..." : `Next: ${nextWorld?.name}`}</button>{saveState.status === "error" ? <button className="game-button game-button-secondary" type="button" onClick={() => persistCompletion(completionRef.current)}><RotateCcw size={18} />Retry Save</button> : null}<Link className="game-button game-button-secondary" href={mapHref}><Map size={18} />World Map</Link></> : <>{gameOver ? <button className="game-button fish-revive-button" type="button" onClick={openFishChallenge} disabled={!canRevive}><Fish size={19} />{canRevive ? "Solve a Puzzle to Revive" : terminal.result.revivesUsed >= 1 ? "Revival Already Used" : "Revival Requires Remaining Time"}</button> : null}<button className="game-button game-button-primary" type="button" onClick={restart}><RotateCcw size={18} />{missionComplete ? "Replay World" : "Play Again"}</button><Link className="game-button game-button-secondary" href={mapHref}><Map size={18} />World Map</Link></>}</div></div></section> : null}
+    {fishChallengeOpen && canRevive && runAttemptId ? <FishChallengePanel mode={mode} runAttemptId={runAttemptId} worldId={world.id} onClose={() => setFishChallengeOpen(false)} onApproved={applyApprovedRevival} /> : null}
   </main>;
 }

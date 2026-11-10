@@ -378,6 +378,32 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .intro-lead { margin: 0 0 .75rem; color: rgba(255,247,220,.7); font-size: .78rem; }
 .intro-actions { display: flex; justify-content: flex-end; gap: .65rem; margin-top: .75rem; }
 .terminal-overlay.is-victory-overlay { background: radial-gradient(circle at 50% 44%,rgba(255,218,105,.14),rgba(1,13,10,.46) 58%); backdrop-filter: blur(2px); }
+.game-over-stats { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: .45rem; margin: 1rem 0 .25rem; }
+.game-over-stats > span { display: grid; min-width: 0; justify-items: center; gap: .2rem; border: 1px solid rgba(255,231,166,.15); border-radius: .8rem; background: rgba(0,0,0,.2); padding: .65rem .35rem; }
+.game-over-stats svg { color: var(--gold-light); }
+.game-over-stats small { margin: 0; color: rgba(255,247,220,.56); font-size: .56rem; font-weight: 800; line-height: 1.2; text-transform: uppercase; }
+.game-over-stats strong { color: #fff4cc; font-size: 1rem; font-variant-numeric: tabular-nums; }
+.fish-revive-button { grid-column: 1 / -1; border-color: rgba(102,255,221,.72); background: linear-gradient(135deg,#1cae8c,#55e1bd); color: #06251d; box-shadow: 0 10px 30px rgba(63,224,189,.2); }
+.fish-revive-button:not(:disabled):hover { transform: translateY(-1px); filter: brightness(1.08); }
+.fish-challenge-overlay { position: absolute; inset: 0; z-index: 70; display: grid; place-items: center; overflow: auto; padding: max(.75rem,env(safe-area-inset-top)) max(.75rem,env(safe-area-inset-right)) max(.75rem,env(safe-area-inset-bottom)) max(.75rem,env(safe-area-inset-left)); background: radial-gradient(circle at 50% 34%,rgba(31,166,137,.2),rgba(1,12,9,.88) 62%); backdrop-filter: blur(12px); }
+.fish-challenge-panel { position: relative; width: min(100%,34rem); max-height: calc(100svh - 1.5rem); overflow: auto; border: 1px solid rgba(101,255,222,.48); border-radius: 1.35rem; background: linear-gradient(145deg,rgba(8,57,43,.98),rgba(2,25,19,.99)); padding: clamp(1rem,3vw,1.6rem); box-shadow: 0 30px 100px rgba(0,0,0,.72),0 0 45px rgba(60,224,190,.1); scrollbar-width: thin; }
+.fish-challenge-close { position: absolute; top: .7rem; right: .7rem; display: grid; width: 2.25rem; height: 2.25rem; place-items: center; border-radius: 50%; color: rgba(255,255,255,.7); }
+.fish-challenge-close:hover { background: rgba(255,255,255,.09); color: white; }
+.fish-challenge-heading { padding: 0 2.2rem; text-align: center; }
+.fish-challenge-heading > span { display: inline-flex; align-items: center; gap: .4rem; color: #6dffe0; font-size: .64rem; font-weight: 950; letter-spacing: .12em; text-transform: uppercase; }
+.fish-challenge-heading h2 { margin: .35rem 0; font-family: Georgia,"Times New Roman",serif; color: #fff5d3; font-size: clamp(1.8rem,6vw,2.6rem); }
+.fish-challenge-heading p { margin: 0 auto .9rem; color: rgba(255,247,220,.68); font-size: .76rem; line-height: 1.45; }
+.fish-challenge-panel form { display: grid; gap: .65rem; }
+.fish-puzzle-frame { display: grid; min-height: 12rem; place-items: center; overflow: hidden; border: 1px solid rgba(255,227,145,.24); border-radius: 1rem; background: #f7f0db; padding: .45rem; }
+.fish-puzzle-frame img { display: block; width: 100%; max-height: min(40svh,21rem); object-fit: contain; border-radius: .65rem; }
+.fish-challenge-panel label { color: #fff3ca; font-size: .75rem; font-weight: 850; }
+.fish-answer-input { text-align: center; font-size: 1.05rem; font-weight: 900; font-variant-numeric: tabular-nums; }
+.fish-submit { width: 100%; }
+.fish-challenge-message { display: flex; min-height: 1.2rem; align-items: center; justify-content: center; gap: .35rem; margin: 0; color: #ffb09d; font-size: .72rem; }
+.fish-challenge-message.is-success { color: #86f5cc; }
+.fish-challenge-loading,.fish-challenge-error { display: grid; min-height: 13rem; place-items: center; align-content: center; gap: .8rem; color: #dffdf4; text-align: center; }
+.fish-challenge-error p { margin: 0; color: #ffb7a5; }
+.fish-challenge-panel > small { display: block; margin-top: .75rem; color: rgba(255,247,220,.46); font-size: .61rem; text-align: center; }
 .resume-canvas-layer { position: absolute; inset: 0; z-index: 50; display: grid; place-items: center; pointer-events: auto; background: radial-gradient(circle at center,rgba(2,18,14,.16),transparent 48%); }
 .resume-canvas-countdown { display: grid; place-items: center; color: #fff8d5; text-align: center; filter: drop-shadow(0 5px 9px rgba(0,0,0,.9)); }
 .resume-canvas-countdown > span { color: var(--gold-light); font-size: .72rem; font-weight: 950; letter-spacing: .2em; text-transform: uppercase; }
@@ -413,6 +439,9 @@ button, a { -webkit-tap-highlight-color: transparent; }
   .adventure-intro-panel { max-height: calc(100svh - .8rem); padding: .8rem; }
   .intro-actions { position: sticky; bottom: -.8rem; margin: .8rem -.8rem -.8rem; background: rgba(2,24,18,.96); padding: .7rem .8rem; }
   .terminal-actions { grid-template-columns: 1fr; }
+  .game-over-stats { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .fish-challenge-overlay { place-items: stretch center; }
+  .fish-challenge-panel { align-self: center; }
   .resume-canvas-actions { right: .5rem; bottom: max(6rem,calc(env(safe-area-inset-bottom) + 5.4rem)); left: .5rem; justify-content: center; }
 }
 @media (max-height: 500px) {

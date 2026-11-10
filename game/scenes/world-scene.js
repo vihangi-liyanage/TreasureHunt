@@ -38,7 +38,7 @@ export class WorldScene extends Phaser.Scene {
   create() {
     if (this.assetLoadFailed) return;
     createGameTextures(this, this.level.art);
-    this.run = new RunState({ lives: RUN_RULES.startingLives, timerSeconds: this.worldConfig.timerSeconds });
+    this.run = new RunState({ lives: RUN_RULES.startingLives, timerSeconds: this.worldConfig.timerSeconds, maxRevives: RUN_RULES.maxFishRevives });
     this.combat = new CombatState();
     this.runClockMs = 0;
     this.timerAccumulatorMs = 0;
@@ -189,6 +189,7 @@ export class WorldScene extends Phaser.Scene {
         if (this.isPaused) this.physics.resume();
         this.scene.restart({ world: this.worldConfig, level: this.level, bridge: this.bridge });
       }),
+      this.bridge.on(GAME_COMMANDS.REVIVE, () => this.reviveRun()),
     );
     this.escapeHandler = () => { if (!this.isPaused) this.setPaused(true); };
     this.input.keyboard.on("keydown-ESC", this.escapeHandler);
@@ -296,6 +297,16 @@ export class WorldScene extends Phaser.Scene {
   restoreSafePosition() {
     this.player.body.reset(this.safePosition.x, this.safePosition.y);
     this.player.body.setAllowGravity(true);
+  }
+
+  reviveRun() {
+    if (!this.run.revive(this.runClockMs)) return;
+    this.restoreSafePosition();
+    this.player.setAlpha(1).clearTint().setVelocity(0, 0);
+    this.playerController.showDamage(this.runClockMs);
+    this.physics.resume();
+    this.publishState();
+    this.bridge.emit(GAME_EVENTS.RUN_REVIVED, { ...this.run.snapshot(), worldId: this.worldConfig.id });
   }
 
   recordSafePosition(player) {

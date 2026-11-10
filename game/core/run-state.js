@@ -7,14 +7,15 @@ export function shouldAdvanceRun({ paused, status }) {
 }
 
 export class RunState {
-  constructor({ lives, timerSeconds }) {
+  constructor({ lives, timerSeconds, maxRevives = 1 }) {
     this.startingLives = lives;
     this.startingTimer = timerSeconds;
+    this.maxRevives = maxRevives;
     this.reset();
   }
   reset() {
     this.score = 0; this.coins = 0; this.lives = this.startingLives;
-    this.timeLeft = this.startingTimer; this.status = "playing"; this.invulnerableUntil = 0;
+    this.timeLeft = this.startingTimer; this.status = "playing"; this.invulnerableUntil = 0; this.revivesUsed = 0;
     this.collectedCoins = new Set(); this.stompedEnemies = new Set();
   }
   collectCoin(id) {
@@ -31,6 +32,12 @@ export class RunState {
     if (this.lives <= 0) this.status = "game-over";
     return true;
   }
+  revive(now) {
+    if (this.status !== "game-over" || this.lives > 0 || this.revivesUsed >= this.maxRevives) return false;
+    this.lives = 1; this.revivesUsed += 1; this.status = "playing";
+    this.invulnerableUntil = now + DAMAGE_INVULNERABILITY_MS;
+    return true;
+  }
   tick() {
     if (this.status !== "playing") return false;
     this.timeLeft = Math.max(0, this.timeLeft - 1);
@@ -42,6 +49,6 @@ export class RunState {
     this.status = "completed"; this.score += this.timeLeft * 10; return true;
   }
   snapshot() {
-    return Object.freeze({ score: this.score, coins: this.coins, lives: this.lives, timeLeft: this.timeLeft, status: this.status });
+    return Object.freeze({ score: this.score, coins: this.coins, lives: this.lives, timeLeft: this.timeLeft, status: this.status, revivesUsed: this.revivesUsed });
   }
 }

@@ -52,6 +52,20 @@ describe("gameplay UI flow", () => {
     expect(scene).toContain("this.tweens.killTweensOf(object)");
     expect(scene).toContain("for (const object of [...this.effectObjects])");
   });
+
+  it("shows final Game Over statistics and grants revival only through the bridge", () => {
+    const screen = source("components/game/game-screen.js");
+    const challenge = source("components/game/fish-challenge-panel.js");
+    const scene = source("game/scenes/world-scene.js");
+    expect(screen).toContain("Final score");
+    expect(screen).toContain("Coins collected");
+    expect(screen).toContain("Time elapsed");
+    expect(screen).toContain("Time remaining");
+    expect(screen).toContain("Solve a Puzzle to Revive");
+    expect(challenge).toContain("revivalGranted !== true");
+    expect(screen).toContain("bridge.emit(GAME_COMMANDS.REVIVE)");
+    expect(scene).toContain("this.run.revive(this.runClockMs)");
+  });
 });
 
 describe("identity-backed panels", () => {

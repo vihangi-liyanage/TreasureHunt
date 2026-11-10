@@ -11,6 +11,7 @@ export const GAME_EVENTS = Object.freeze({
   POWER_EXPIRED: "power:expired",
   WORLD_COMPLETED: "world:completed",
   RUN_ENDED: "run:ended",
+  RUN_REVIVED: "run:revived",
   STATE_CHANGED: "state:changed",
 });
 
@@ -20,4 +21,5 @@ export const GAME_COMMANDS = Object.freeze({
   PAUSE: "game:pause",
   RESUME: "game:resume",
   RESTART: "game:restart",
+  REVIVE: "game:revive",
 });
