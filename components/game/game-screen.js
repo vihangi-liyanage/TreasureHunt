@@ -71,7 +71,7 @@ export function GameScreen({ world, mode, alreadyCompleted = false, showInstruct
       bridge.on(GAME_EVENTS.LOAD_FAILED, () => { if (!active) return; setShowLoading(false); setLoadError("The adventure artwork could not be loaded."); }),
       bridge.on(GAME_EVENTS.STATE_CHANGED, (state) => active && setGameState(state)),
       bridge.on(GAME_EVENTS.RUN_ENDED, (result) => { if (active) { setResumeStep(null); setFishChallengeOpen(false); setTerminal({ type: "game-over", result }); } }),
-      bridge.on(GAME_EVENTS.RUN_REVIVED, () => { if (active) { setFishChallengeOpen(false); setTerminal(null); } }),
+      bridge.on(GAME_EVENTS.RUN_REVIVED, () => { if (active) { setFishChallengeOpen(false); setTerminal(null); setResumeStep(RESUME_COUNTDOWN_STEPS[0]); } }),
       bridge.on(GAME_EVENTS.WORLD_COMPLETED, (result) => { if (active) { setResumeStep(null); setTerminal({ type: "completed", result }); persistCompletion(result); } }),
     ];
     async function boot() {

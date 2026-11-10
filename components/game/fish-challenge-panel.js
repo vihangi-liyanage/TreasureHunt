@@ -11,33 +11,30 @@ export function FishChallengePanel({ mode, runAttemptId, worldId, onClose, onApp
   const [message, setMessage] = useState("");
   const approvedRef = useRef(false);
   const mountedRef = useRef(true);
-  const loadRequestRef = useRef(0);
+  const initialRequestStartedRef = useRef(false);
+  const requestInFlightRef = useRef(false);
 
-  const receiveChallenge = useCallback((response, requestId) => {
-    if (!mountedRef.current || requestId !== loadRequestRef.current) return;
+  const requestChallenge = useCallback(async () => {
+    if (requestInFlightRef.current) return;
+    requestInFlightRef.current = true;
+    setStatus("loading"); setMessage(""); setAnswer(""); setChallenge(null);
+    const response = await postJson("/api/fish/challenges", { mode, runAttemptId, worldId });
+    requestInFlightRef.current = false;
+    if (!mountedRef.current) return;
     if (!response.ok || !response.challenge) {
       setStatus("error"); setMessage(response.error || "The Fish puzzle could not be loaded."); return;
     }
     setChallenge(response.challenge); setStatus("ready");
-  }, []);
-
-  const requestChallenge = useCallback(async () => {
-    const requestId = ++loadRequestRef.current;
-    const response = await postJson("/api/fish/challenges", { mode, runAttemptId, worldId });
-    receiveChallenge(response, requestId);
-  }, [mode, receiveChallenge, runAttemptId, worldId]);
+  }, [mode, runAttemptId, worldId]);
 
   useEffect(() => {
     mountedRef.current = true;
-    const requestId = ++loadRequestRef.current;
-    postJson("/api/fish/challenges", { mode, runAttemptId, worldId }).then((response) => receiveChallenge(response, requestId));
-    return () => { mountedRef.current = false; loadRequestRef.current += 1; };
-  }, [mode, receiveChallenge, runAttemptId, worldId]);
-
-  function retryChallenge() {
-    setStatus("loading"); setMessage(""); setAnswer(""); setChallenge(null);
-    requestChallenge();
-  }
+    if (!initialRequestStartedRef.current) {
+      initialRequestStartedRef.current = true;
+      requestChallenge();
+    }
+    return () => { mountedRef.current = false; };
+  }, [requestChallenge]);
 
   async function submitAnswer(event) {
     event.preventDefault();
@@ -49,7 +46,8 @@ export function FishChallengePanel({ mode, runAttemptId, worldId, onClose, onApp
     const response = await postJson(`/api/fish/challenges/${challenge.id}/answer`, { mode, runAttemptId, answer: numericAnswer });
     if (!mountedRef.current) return;
     if (!response.ok || response.revivalGranted !== true) {
-      setStatus(response.status === 410 || response.status === 429 ? "error" : "ready");
+      if (response.code === "incorrect") { onClose(); return; }
+      setStatus(response.status === 429 ? "error" : "ready");
       setMessage(response.error || "The answer could not be verified."); return;
     }
     if (approvedRef.current) return;
@@ -57,14 +55,14 @@ export function FishChallengePanel({ mode, runAttemptId, worldId, onClose, onApp
     onApproved();
   }
 
-  const busy = status === "loading" || status === "submitting" || status === "approved";
+  const busy = status !== "ready";
   return <section className="fish-challenge-overlay" role="dialog" aria-modal="true" aria-labelledby="fish-challenge-title">
     <div className="fish-challenge-panel">
       <button className="fish-challenge-close" type="button" onClick={onClose} disabled={status === "submitting" || status === "approved"} aria-label="Close Fish challenge"><X size={19} /></button>
       <div className="fish-challenge-heading"><span><Fish size={18} />One revival available</span><h2 id="fish-challenge-title">Count the Fish</h2><p>Solve the genuine Fish Game API puzzle to continue this run with exactly one life.</p></div>
       {status === "loading" ? <div className="fish-challenge-loading" role="status"><LoaderCircle className="button-spinner" size={28} /><strong>Requesting a secure puzzle...</strong></div> : null}
-      {challenge ? <form onSubmit={submitAnswer}>
-        <div className="fish-puzzle-frame">{/* The provider URL is runtime data and must not be proxied or configured as a static Next image host. */}
+      {challenge && ["ready", "submitting", "approved"].includes(status) ? <form onSubmit={submitAnswer}>
+        <div className="fish-puzzle-frame">{/* The server returns an opaque base64 PNG data URL without solution fields. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={challenge.imageUrl} alt="Fish Game puzzle. Count every fish shown." />
         </div>
@@ -73,7 +71,7 @@ export function FishChallengePanel({ mode, runAttemptId, worldId, onClose, onApp
         {message ? <p className={`fish-challenge-message ${status === "approved" ? "is-success" : ""}`} role="status">{status === "approved" ? <ShieldCheck size={17} /> : null}{message}</p> : null}
         <button className="game-button game-button-primary fish-submit" type="submit" disabled={busy || answer === ""}>{status === "submitting" || status === "approved" ? <><LoaderCircle className="button-spinner" size={17} />Verifying Securely</> : "Submit Fish Count"}</button>
       </form> : null}
-      {status === "error" ? <div className="fish-challenge-error" role="alert"><p>{message}</p><button className="game-button game-button-primary" type="button" onClick={retryChallenge}><RefreshCw size={17} />Request Another Puzzle</button></div> : null}
+      {status === "error" ? <div className="fish-challenge-error" role="alert"><p>{message}</p><button className="game-button game-button-primary" type="button" onClick={requestChallenge}><RefreshCw size={17} />Try Again</button></div> : null}
       <small>The solution is validated on the server and is never sent to this browser.</small>
     </div>
   </section>;

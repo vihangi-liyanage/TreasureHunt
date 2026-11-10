@@ -11,6 +11,12 @@ describe("Fish API adapter", () => {
     });
   });
 
+  it("accepts a genuine zero-fish solution without substituting the chest count", () => {
+    const challenge = parseFishChallenge({ question: "https://www.sanfoh.com/uob/fish/data/zero.png", fish: 0, chest: 12 });
+    expect(challenge.fish).toBe(0);
+    expect(challenge.chest).toBe(12);
+  });
+
   it("rejects invented or malformed response fields", () => {
     expect(() => parseFishChallenge({ image: "challenge.png", answer: 1 })).toThrow(FishServiceError);
     expect(() => parseFishChallenge({ question: "https://www.sanfoh.com/uob/fish/data/challenge.png", fish: -1, chest: 2 })).toThrow(/non-negative integers/);
@@ -20,12 +26,18 @@ describe("Fish API adapter", () => {
   });
 
   it("parses JSON text even when the upstream content type is inaccurate", async () => {
-    const fetchImpl = async () => new Response(
-      JSON.stringify({ question: "https://www.sanfoh.com/uob/fish/data/challenge.png", fish: 4, chest: 7 }),
-      { status: 200, headers: { "Content-Type": "text/html" } },
-    );
+    let requestedUrl;
+    const fetchImpl = async (url) => {
+      requestedUrl = url;
+      return new Response(
+        JSON.stringify({ question: "iVBORw0KGgoAAAANSUhEUg==", fish: 4, chest: 7 }),
+        { status: 200, headers: { "Content-Type": "text/html" } },
+      );
+    };
 
-    await expect(requestFishChallenge({ fetchImpl })).resolves.toMatchObject({ fish: 4, chest: 7 });
+    await expect(requestFishChallenge({ fetchImpl })).resolves.toMatchObject({ fish: 4, chest: 7, encoding: "base64-png" });
+    expect(requestedUrl.searchParams.get("out")).toBe("json");
+    expect(requestedUrl.searchParams.get("base64")).toBe("yes");
   });
 
   it("maps upstream connectivity failures to an optional-service error", async () => {

@@ -63,8 +63,15 @@ describe("gameplay UI flow", () => {
     expect(screen).toContain("Time remaining");
     expect(screen).toContain("Solve a Puzzle to Revive");
     expect(challenge).toContain("revivalGranted !== true");
+    expect(challenge).not.toContain("Begin 10-Second Puzzle");
+    expect(challenge).not.toContain('role="timer"');
+    expect(challenge).not.toContain("setInterval");
+    expect((challenge.match(/postJson\("\/api\/fish\/challenges"/g) || [])).toHaveLength(1);
+    expect(challenge).toContain('response.code === "incorrect"');
+    expect(screen).toContain("setResumeStep(RESUME_COUNTDOWN_STEPS[0])");
     expect(screen).toContain("bridge.emit(GAME_COMMANDS.REVIVE)");
     expect(scene).toContain("this.run.revive(this.runClockMs)");
+    expect(scene).toContain("this.isPaused = true");
   });
 });
 

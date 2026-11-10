@@ -304,7 +304,9 @@ export class WorldScene extends Phaser.Scene {
     this.restoreSafePosition();
     this.player.setAlpha(1).clearTint().setVelocity(0, 0);
     this.playerController.showDamage(this.runClockMs);
-    this.physics.resume();
+    this.isPaused = true;
+    this.combat.pause(this.runClockMs);
+    this.bridge.emit(GAME_COMMANDS.INPUT_RELEASE_ALL);
     this.publishState();
     this.bridge.emit(GAME_EVENTS.RUN_REVIVED, { ...this.run.snapshot(), worldId: this.worldConfig.id });
   }

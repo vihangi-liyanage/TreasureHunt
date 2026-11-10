@@ -7,8 +7,8 @@ import { jsonNoStore, readJsonObject } from "@/lib/http/responses";
 import { getWorldConfig } from "@/game/config/worlds";
 
 export async function POST(request) {
-  const rate = checkRequestLimit(request, "fish-challenge-create", { limit: 5, windowMs: 10 * 60_000 });
-  if (!rate.allowed) return jsonNoStore({ error: "Too many Fish challenge requests. Please wait and try again." }, { status: 429, headers: { "Retry-After": String(rate.retryAfterSeconds) } });
+  const rate = checkRequestLimit(request, "fish-challenge-create", { limit: 20, windowMs: 5 * 60_000 });
+  if (!rate.allowed) return jsonNoStore({ error: `Too many Fish challenge requests. Try again in ${rate.retryAfterSeconds} seconds.` }, { status: 429, headers: { "Retry-After": String(rate.retryAfterSeconds) } });
   const values = await readJsonObject(request);
   if (!values || !isUuid(values.runAttemptId) || !getWorldConfig(values.worldId)) {
     return jsonNoStore({ error: "Invalid Fish challenge request." }, { status: 400 });
@@ -31,7 +31,7 @@ export async function POST(request) {
       solution: upstream.fish,
     });
     const imageUrl = upstream.encoding === "base64-png" ? `data:image/png;base64,${upstream.question}` : upstream.question;
-    const response = jsonNoStore({ challenge: { id: record.id, imageUrl, expiresAt: record.expiresAt } }, { status: 201 });
+    const response = jsonNoStore({ challenge: { id: record.id, imageUrl } }, { status: 201 });
     if (owner.setCookie) response.headers.append("Set-Cookie", owner.setCookie);
     return response;
   } catch (error) {

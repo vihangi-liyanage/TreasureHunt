@@ -14,8 +14,8 @@ const RESULT_RESPONSES = Object.freeze({
 });
 
 export async function POST(request, { params }) {
-  const rate = checkRequestLimit(request, "fish-challenge-answer", { limit: 12, windowMs: 10 * 60_000 });
-  if (!rate.allowed) return jsonNoStore({ error: "Too many Fish answer attempts. Please wait and try again." }, { status: 429, headers: { "Retry-After": String(rate.retryAfterSeconds) } });
+  const rate = checkRequestLimit(request, "fish-challenge-answer", { limit: 20, windowMs: 5 * 60_000 });
+  if (!rate.allowed) return jsonNoStore({ error: `Too many Fish answer attempts. Try again in ${rate.retryAfterSeconds} seconds.` }, { status: 429, headers: { "Retry-After": String(rate.retryAfterSeconds) } });
   const { challengeId } = await params;
   const values = await readJsonObject(request);
   if (!isUuid(challengeId) || !values || !isUuid(values.runAttemptId) || !Number.isInteger(values.answer) || values.answer < 0 || values.answer > 1_000) {
@@ -33,8 +33,9 @@ export async function POST(request, { params }) {
   try {
     const result = await verifyFishChallenge({ challengeId, ownerKey: owner.ownerKey, runAttemptId: values.runAttemptId, answer: values.answer });
     if (result === "correct") return jsonNoStore({ revivalGranted: true });
-    const failure = RESULT_RESPONSES[result] || RESULT_RESPONSES.invalid;
-    return jsonNoStore({ error: failure.error }, { status: failure.status });
+    const code = RESULT_RESPONSES[result] ? result : "invalid";
+    const failure = RESULT_RESPONSES[code];
+    return jsonNoStore({ code, error: failure.error }, { status: failure.status });
   } catch {
     return jsonNoStore({ error: "The Fish answer could not be verified. Please try again." }, { status: 503 });
   }
