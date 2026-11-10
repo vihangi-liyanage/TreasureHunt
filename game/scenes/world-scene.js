@@ -131,6 +131,12 @@ export class WorldScene extends Phaser.Scene {
         .setCircle(frameSize * 0.28, frameSize * 0.22, frameSize * 0.22).setDepth(9);
       this.tweens.add({ targets: fish, y: definition.y - 12, angle: 5, duration: 900, yoyo: true, repeat: -1, ease: "Sine.inOut" });
     }
+    this.gems = this.physics.add.group({ allowGravity: false, immovable: true });
+    for (const definition of this.level.gems) {
+      const gem = this.gems.create(definition.x, definition.y, "achievement-gem")
+        .setData("gemId", definition.id).setDisplaySize(42, 44).setCircle(20, 4, 4).setDepth(9);
+      this.tweens.add({ targets: gem, y: definition.y - 10, angle: 7, duration: 820, yoyo: true, repeat: -1, ease: "Sine.inOut" });
+    }
   }
 
   createEnemies() {
@@ -145,6 +151,10 @@ export class WorldScene extends Phaser.Scene {
       .setDisplaySize(isTreasure ? 110 : 76, 135).setVisible(false).refreshBody();
     this.goalArt = this.add.image(x, y - 32, "world-objects", 6)
       .setDisplaySize(isTreasure ? 205 : 190, isTreasure ? 205 : 190).setDepth(4);
+    if (!isTreasure) {
+      this.goalToken = this.add.image(x, y - 78, "compass-token").setDisplaySize(64, 64).setDepth(7);
+      if (!this.reducedMotion) this.tweens.add({ targets: this.goalToken, y: "-=10", angle: 6, duration: 760, yoyo: true, repeat: -1, ease: "Sine.inOut" });
+    }
     const glowColor = isTreasure ? 0x8dfcff : 0xffd76a;
     const glow = this.trackEffect(this.add.circle(x, y - 42, isTreasure ? 78 : 68, glowColor, 0.18)
       .setBlendMode(Phaser.BlendModes.ADD).setDepth(3));
@@ -158,7 +168,7 @@ export class WorldScene extends Phaser.Scene {
         this.tweens.add({ targets: mote, y: mote.y - 34, alpha: { from: 0.15, to: 0.72 }, duration: 1_050 + index * 70, delay: index * 90, yoyo: true, repeat: -1, ease: "Sine.inOut" });
       }
     }
-    this.add.text(x, y - 145, isTreasure ? "LEGENDARY TREASURE" : "COMPASS SHRINE", {
+    this.add.text(x, y - 155, isTreasure ? "DISCOVER THE TREASURE" : "COLLECT THE COMPASS", {
       fontFamily: "Georgia, serif", fontSize: "18px", fontStyle: "bold", color: "#fff2b5", stroke: "#123b2d", strokeThickness: 6,
     }).setOrigin(0.5).setDepth(6);
   }
@@ -175,6 +185,7 @@ export class WorldScene extends Phaser.Scene {
       }),
     );
     this.physics.add.overlap(this.player, this.coins, (_player, coin) => this.collectCoin(coin));
+    this.physics.add.overlap(this.player, this.gems, (_player, gem) => this.collectGem(gem));
     this.physics.add.overlap(this.player, this.fishPowerUps, (_player, fish) => this.collectFish(fish));
     this.physics.add.overlap(this.player, this.hazards, (player, hazard) => this.damagePlayer("hazard", hazard.x));
     this.physics.add.overlap(this.player, this.enemySystem.group, (_player, enemy) => this.touchEnemy(enemy));
@@ -232,9 +243,19 @@ export class WorldScene extends Phaser.Scene {
     this.publishState();
   }
 
+  collectGem(gem) {
+    const id = gem.getData("gemId");
+    if (!this.run.collectGem(id)) return;
+    this.createImpact(gem.x, gem.y, 0x8dfcff);
+    gem.disableBody(true, true);
+    this.bridge.emit(GAME_EVENTS.GEM_COLLECTED, { id, gems: this.run.gems, score: this.run.score });
+    this.publishState();
+  }
+
   collectFish(fish) {
     if (!fish.active) return;
     const id = fish.getData("powerId");
+    if (!this.run.collectFish(id)) return;
     fish.disableBody(true, true);
     this.combat.activate(this.runClockMs);
     this.createImpact(fish.x, fish.y, 0x5fffe1);
@@ -327,6 +348,11 @@ export class WorldScene extends Phaser.Scene {
     this.createGoalCelebration(this.level.goal.type === "treasure");
     if (!this.reducedMotion) this.cameras.main.flash(600, 255, 225, 116);
     const result = { ...this.run.snapshot(), worldId: this.worldConfig.id, completion: this.worldConfig.completion };
+    this.bridge.emit(GAME_EVENTS.OBJECTIVE_COLLECTED, {
+      id: this.worldConfig.id,
+      objective: this.level.goal.type === "treasure" ? "treasure" : "compass",
+      worldId: this.worldConfig.id,
+    });
     this.publishState();
     this.bridge.emit(GAME_EVENTS.WORLD_COMPLETED, result);
   }

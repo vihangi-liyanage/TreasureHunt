@@ -105,10 +105,16 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .leaderboard-signin p { max-width: 24rem; margin: 0 0 1rem; color: rgba(255,247,220,.65); font-size: .82rem; line-height: 1.55; }
 .leaderboard-list { display: grid; gap: .5rem; margin: 0; padding: 0; list-style: none; }
 .leaderboard-list li { display: grid; min-height: 3.2rem; grid-template-columns: 2rem 1fr auto auto; align-items: center; gap: .65rem; border: 1px solid rgba(255,255,255,.09); border-radius: .8rem; background: rgba(0,0,0,.16); padding: .5rem .7rem; }
+.leaderboard-list li.is-current-player { border-color: rgba(255,219,112,.55); background: rgba(244,187,69,.12); box-shadow: inset 3px 0 #f4bb45; }
 .leaderboard-list li > span { color: var(--gold-light); font-weight: 900; }
 .leaderboard-list small { color: rgba(255,247,220,.5); }
 .leaderboard-list b { color: #a3f1c8; }
 .leaderboard-table { min-width: 0; }
+.leaderboard-current { display: grid; grid-template-columns: auto auto 1fr auto; align-items: center; gap: .35rem .65rem; margin-top: .7rem; border: 1px solid rgba(255,219,112,.45); border-radius: .8rem; background: rgba(244,187,69,.1); padding: .65rem .75rem; }
+.leaderboard-current small { grid-column: 1 / -1; color: var(--gold-light); font-size: .6rem; font-weight: 850; letter-spacing: .08em; text-transform: uppercase; }
+.leaderboard-current span { color: var(--gold-light); font-weight: 900; }
+.leaderboard-current b { color: #a3f1c8; }
+.leaderboard-current p { grid-column: 3 / -1; margin: 0; color: rgba(255,247,220,.52); font-size: .65rem; }
 .leaderboard-heading { display: grid; grid-template-columns: 2rem 1fr auto auto; gap: .65rem; padding: 0 .7rem .45rem; color: rgba(255,247,220,.45); font-size: .6rem; font-weight: 850; letter-spacing: .08em; text-transform: uppercase; }
 .profile-panel { display: grid; gap: .9rem; }
 .profile-identity { display: flex; align-items: center; gap: .8rem; border: 1px solid rgba(255,255,255,.09); border-radius: 1rem; background: rgba(0,0,0,.16); padding: .8rem; }
@@ -117,7 +123,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .profile-identity p { margin: .15rem 0 0; color: rgba(255,247,220,.55); font-size: .75rem; overflow-wrap: anywhere; }
 .profile-identity small { display: block; margin-top: .15rem; color: rgba(255,226,143,.62); font-size: .6rem; }
 .profile-panel label { display: block; margin-bottom: .35rem; color: rgba(255,247,220,.8); font-size: .75rem; font-weight: 800; }
-.profile-progress-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: .5rem; }
+.profile-progress-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: .4rem; }
 .profile-progress-grid > span { display: grid; justify-items: center; gap: .18rem; border: 1px solid rgba(255,255,255,.08); border-radius: .8rem; background: rgba(0,0,0,.16); padding: .6rem .35rem; text-align: center; }
 .profile-progress-grid svg { color: var(--gold-light); }
 .profile-progress-grid strong { font-size: 1rem; }
@@ -129,6 +135,10 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .profile-achievements li strong { display: block; font-size: .72rem; text-transform: capitalize; }
 .profile-achievements li small { color: rgba(255,247,220,.48); font-size: .58rem; }
 .profile-empty p { margin: 0; color: rgba(255,247,220,.56); font-size: .67rem; line-height: 1.4; }
+.profile-best-run { display: flex; align-items: center; gap: .65rem; border: 1px solid rgba(163,241,200,.18); border-radius: .75rem; background: rgba(40,139,96,.1); padding: .65rem .75rem; }
+.profile-best-run > svg { flex: 0 0 auto; color: #a3f1c8; }
+.profile-best-run small { display: block; color: rgba(255,247,220,.52); font-size: .6rem; }
+.profile-best-run strong { display: block; margin-top: .12rem; font-size: .75rem; }
 .profile-edit-row { display: grid; grid-template-columns: 1fr auto; gap: .5rem; }
 .profile-notice { margin: -.25rem 0 0; color: var(--gold-light); font-size: .72rem; }
 
@@ -356,6 +366,12 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .hud-stats span { display: inline-flex; min-width: 4.2rem; height: 2.1rem; align-items: center; justify-content: center; gap: .35rem; border-radius: 999px; background: rgba(255,255,255,.07); font-size: .78rem; font-weight: 900; font-variant-numeric: tabular-nums; }
 .hud-stats svg { color: #f5c94c; }
 .hud-stats .is-danger { color: #ffc1ae; background: rgba(184,48,35,.36); }
+.achievement-toast { position: absolute; z-index: 34; top: 5.25rem; right: 1rem; display: flex; width: min(22rem,calc(100% - 2rem)); align-items: center; gap: .75rem; border: 1px solid rgba(255,226,143,.58); border-radius: 1rem; background: linear-gradient(135deg,rgba(12,61,43,.96),rgba(5,28,21,.96)); padding: .75rem .9rem; box-shadow: 0 18px 44px rgba(0,0,0,.4),inset 0 1px rgba(255,255,255,.08); animation: achievement-enter .28s cubic-bezier(.2,.8,.2,1) both; pointer-events: none; }
+.achievement-toast > span { display: grid; width: 2.7rem; height: 2.7rem; flex: 0 0 auto; place-items: center; border-radius: .8rem; background: rgba(244,187,69,.16); color: var(--gold-light); }
+.achievement-toast small { display: block; color: var(--gold-light); font-size: .58rem; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
+.achievement-toast strong { display: block; margin-top: .1rem; font-family: Georgia,"Times New Roman",serif; font-size: 1rem; }
+.achievement-toast p { margin: .08rem 0 0; color: rgba(255,247,220,.62); font-size: .68rem; }
+@keyframes achievement-enter { from { opacity: 0; transform: translateX(18px) scale(.96); } }
 .hud-pause { justify-self: end; display: grid; width: 3rem; height: 3rem; place-items: center; border: 1px solid rgba(255,232,168,.34); border-radius: 50%; background: rgba(3,26,20,.82); color: #fff3c9; pointer-events: auto; backdrop-filter: blur(10px); }
 .game-loading { position: absolute; inset: 0; z-index: 18; display: flex; align-items: center; justify-content: center; gap: .75rem; background: #09271f; color: #fff1bd; }
 .loading-spinner { width: 1.45rem; height: 1.45rem; border: 3px solid rgba(255,255,255,.18); border-top-color: #f4c95a; border-radius: 50%; animation: game-spin .7s linear infinite; }
@@ -455,6 +471,8 @@ button, a { -webkit-tap-highlight-color: transparent; }
   .fish-submit { min-height: 2.65rem; padding: .55rem .75rem; }
   .fish-challenge-panel > small { margin-top: .4rem; font-size: .55rem; }
   .resume-canvas-actions { right: .5rem; bottom: max(6rem,calc(env(safe-area-inset-bottom) + 5.4rem)); left: .5rem; justify-content: center; }
+  .achievement-toast { top: 5.7rem; right: .5rem; width: min(21rem,calc(100% - 1rem)); }
+  .profile-progress-grid { grid-template-columns: repeat(3,1fr); }
 }
 @media (max-height: 500px) {
   .touch-control { width: 3.6rem; height: 3.6rem; }
@@ -474,6 +492,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
   .leaderboard-list li { grid-template-columns: 1.5rem 1fr auto; }
   .leaderboard-list li small { grid-column: 2 / span 2; }
   .profile-progress-grid { gap: .3rem; }
+  .achievement-toast { top: 5.35rem; padding: .6rem .7rem; }
 }
 
 /* Phase 3B fullscreen gameplay polish */

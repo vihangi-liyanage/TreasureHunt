@@ -40,7 +40,7 @@ describe("gameplay UI flow", () => {
     const scene = source("game/scenes/world-scene.js");
     const screen = source("components/game/game-screen.js");
     expect(WORLD_CONFIGS.slice(0, 2).every((world) => world.completion === "checkpoint")).toBe(true);
-    expect(scene).toContain('"COMPASS SHRINE"');
+    expect(scene).toContain('"COLLECT THE COMPASS"');
     expect(screen).toContain('checkpointComplete ? "Shrine Activated"');
     expect(screen).toContain("saveState.status !== \"saved\"");
   });
@@ -104,7 +104,7 @@ describe("identity-backed panels", () => {
   it("renders real profile progress, empty achievements and Sign Out", () => {
     const profile = source("components/profile/profile-panel.js");
     expect(profile).toContain("completed_worlds");
-    expect(profile).toContain("No achievements earned yet");
+    expect(profile).toContain("No achievement badges yet");
     expect(profile).toContain("Sign Out");
     expect(profile).not.toContain(">Logout<");
   });
@@ -125,9 +125,11 @@ describe("identity-backed panels", () => {
   it("keeps ranked-run ownership at verified server endpoints", () => {
     const startRoute = source("app/api/runs/start/route.js");
     const completeRoute = source("app/api/runs/[runId]/complete/route.js");
-    expect(startRoute).toContain("user_id: identity.id");
+    expect(startRoute).toContain("p_user_id: identity.id");
     expect(completeRoute).toContain("p_user_id: identity.id");
-    expect(completeRoute).toContain('admin.rpc("complete_game_run_admin"');
+    expect(completeRoute).toContain('admin.rpc("complete_verified_game_run_admin"');
+    expect(completeRoute).toContain("validateStoredRunCompletion");
     expect(completeRoute).not.toContain("values.userId");
+    expect(completeRoute).not.toContain("values.score");
   });
 });

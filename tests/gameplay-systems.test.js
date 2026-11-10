@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { CombatState, PROJECTILE_COOLDOWN_MS } from "@/game/core/combat-state";
 import { canLandOnPlatform, isBelowFallBoundary, isStompCollision } from "@/game/core/collision-rules";
 import { InputState } from "@/game/core/input-state";
-import { COIN_SCORE, ENEMY_SCORE } from "@/game/core/run-state";
+import { COIN_SCORE, ENEMY_SCORE, GEM_SCORE } from "@/game/core/run-state";
 import { EMERALD_JUNGLE_LEVEL, EMERALD_JUNGLE_MOTION } from "@/game/config/emerald-jungle";
 import { SUNSET_RUINS_LEVEL } from "@/game/config/sunset-ruins";
 import { CRYSTAL_CAVERN_LEVEL } from "@/game/config/crystal-cavern";
@@ -106,7 +106,7 @@ describe("Emerald Jungle movement model", () => {
   });
 
   it("places every coin and fish over a reachable collision surface", () => {
-    const collectibles = [...EMERALD_JUNGLE_LEVEL.coins, ...EMERALD_JUNGLE_LEVEL.fishPowerUps];
+    const collectibles = [...EMERALD_JUNGLE_LEVEL.coins, ...EMERALD_JUNGLE_LEVEL.fishPowerUps, ...EMERALD_JUNGLE_LEVEL.gems];
     for (const collectible of collectibles) {
       const supportingPlatform = EMERALD_JUNGLE_LEVEL.platforms.find((platform) =>
         Math.abs(collectible.x - platform.x) <= platform.width / 2 + 35 &&
@@ -134,7 +134,7 @@ describe("Sunset Ruins level contract", () => {
   });
 
   it("places its required collectibles above real collision surfaces", () => {
-    for (const collectible of [...SUNSET_RUINS_LEVEL.coins, ...SUNSET_RUINS_LEVEL.fishPowerUps]) {
+    for (const collectible of [...SUNSET_RUINS_LEVEL.coins, ...SUNSET_RUINS_LEVEL.fishPowerUps, ...SUNSET_RUINS_LEVEL.gems]) {
       const supportingPlatform = SUNSET_RUINS_LEVEL.platforms.find((platform) =>
         Math.abs(collectible.x - platform.x) <= platform.width / 2 + 35 &&
         platform.top - collectible.y >= 35 && platform.top - collectible.y <= 175);
@@ -191,7 +191,7 @@ describe("Crystal Cavern final-level contract", () => {
   });
 
   it("places every collectible and the final treasure over real terrain", () => {
-    for (const collectible of [...CRYSTAL_CAVERN_LEVEL.coins, ...CRYSTAL_CAVERN_LEVEL.fishPowerUps]) {
+    for (const collectible of [...CRYSTAL_CAVERN_LEVEL.coins, ...CRYSTAL_CAVERN_LEVEL.fishPowerUps, ...CRYSTAL_CAVERN_LEVEL.gems]) {
       const support = CRYSTAL_CAVERN_LEVEL.platforms.find((platform) =>
         Math.abs(collectible.x - platform.x) <= platform.width / 2 + 35 &&
         platform.top - collectible.y >= 35 && platform.top - collectible.y <= 175);
@@ -253,10 +253,12 @@ describe("three-world competitive balance", () => {
   it("provides more scoring choices and three reachable non-stacking fish pickups per world", () => {
     expect(levels.map((level) => level.coins.length)).toEqual([40, 41, 45]);
     expect(levels.map((level) => level.fishPowerUps.length)).toEqual([3, 3, 3]);
+    expect(levels.map((level) => level.gems.length)).toEqual([3, 3, 3]);
     expect(levels.map((level) => level.coins.filter((coin) => coin.riskRoute).length)).toEqual([8, 6, 8]);
     for (const level of levels) {
       expect(new Set(level.coins.map((coin) => coin.id)).size).toBe(level.coins.length);
       expect(new Set(level.fishPowerUps.map((fish) => fish.id)).size).toBe(level.fishPowerUps.length);
+      expect(new Set(level.gems.map((gem) => gem.id)).size).toBe(level.gems.length);
     }
   });
 
@@ -274,8 +276,8 @@ describe("three-world competitive balance", () => {
   it("keeps the documented score ceiling deterministic for fair route comparison", () => {
     const timers = [120, 105, 90];
     const maximumScores = levels.map((level, index) =>
-      level.coins.length * COIN_SCORE + level.enemies.length * ENEMY_SCORE + timers[index] * 10);
-    expect(maximumScores).toEqual([6_700, 6_900, 7_650]);
+      level.coins.length * COIN_SCORE + level.gems.length * GEM_SCORE + level.enemies.length * ENEMY_SCORE + timers[index] * 10);
+    expect(maximumScores).toEqual([7_300, 7_500, 8_250]);
   });
 });
 

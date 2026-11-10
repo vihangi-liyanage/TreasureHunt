@@ -225,3 +225,21 @@
 **Decision:** Persist Fish solutions in a service-role-only Supabase table keyed by server-derived virtual owner and an opaque run-attempt UUID. Verify answers in one row-locking SQL function with a partial unique index for one consumed challenge per run. Guests use a signed HttpOnly Fish-only identity cookie; registered players use verified Supabase claims. A challenge has no player-facing answer deadline; an incorrect answer returns to Game Over and a later click creates a fresh challenge. React may emit `game:revive` only after the answer route grants revival, and `RunState` independently enforces one zero-life revival.
 
 **Reason:** A client answer, clear-text signed token, local storage or Phaser fetch would expose or make the solution replayable. Per-instance memory would lose challenges across Vercel instances. The database transaction handles retries, single-use consumption and concurrency without mixing guest/profile data, while the bridge preserves the React/Phaser lifecycle boundary. Revival remains optional: provider or persistence failure leaves replay and map navigation intact.
+
+## D037 Derive ranked totals from a whitelisted gameplay event stream
+
+**Decision:** Issue one owned server run for every authenticated world, record unique configured collision events through a verified Route Handler, and let PostgreSQL derive coins and score when the collected compass or treasure completes the run. Insert a leaderboard entry only for a completed World 3 run, rank each player's best run, and return the top ten plus the requesting player.
+
+**Reason:** The former completion endpoint accepted browser-supplied score, coins, world, and completion state and gameplay never called it. Identity and bounds alone did not make those totals authoritative. Server-side event validation removes arbitrary numeric score submission while preserving Phaser ownership of real-time physics. Completion additionally reloads the ordered stream, requires the objective last, checks configured entity IDs, timing, freshness, ownership, and single use. A full authoritative simulation or replay protocol would be stronger against a modified client but would duplicate Phaser and substantially exceed this game's architecture; trusting the old aggregate payload or inserting on `/api/progress` was rejected. Rankings are therefore integrity-checked, not described as cheat-proof.
+
+## D038 Keep achievement authority transactional and guest rewards temporary
+
+**Decision:** Add gem/fish aggregates to registered progression, unique badge rows to the existing achievements table, and award thresholds inside the same locked SQL transaction that records a run event. Keep the badge catalogue as a pure shared module. Guests use only the existing in-memory adventure snapshot and receive the same notifications without database writes.
+
+**Reason:** Client-only authenticated badges could be replayed or lost, while a second achievement database/service would duplicate identity and ownership. Tying awards to the run event transaction prevents duplicate thresholds and keeps React responsible only for display. Procedural Phaser textures avoid new asset licensing, and configuration-owned placements keep one reusable scene.
+
+## D039 Serialize Next build workers on Windows
+
+**Decision:** Set Next's installed `experimental.cpus` build option to one worker.
+
+**Reason:** Clean builds repeatedly failed with `EPERM` on `mkdir` while the reported directory had already been created, no Node process survived, and ACLs granted normal modify access. The same build completed when generation was serialized. This is a project-local build-concurrency correction; temporary `.next-phase8-verify` output was confirmed as generated build data and removed rather than committed.

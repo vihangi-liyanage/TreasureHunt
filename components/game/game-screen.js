@@ -3,12 +3,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Coins, Fish, Heart, Map, Pause, Play, RotateCcw, Timer, Trophy } from "lucide-react";
+import { ArrowRight, Award, Coins, Fish, Gem, Heart, Map, Pause, Play, RotateCcw, Timer, Trophy } from "lucide-react";
 import { createGameBridge } from "@/game/core/game-bridge";
 import { GAME_COMMANDS, GAME_EVENTS } from "@/game/core/events";
 import { getLevelConfig } from "@/game/config/levels";
 import { WORLD_CONFIGS } from "@/game/config/worlds";
-import { beginGuestRun, completeGuestWorld, deriveWorldStates, readGuestProgress } from "@/lib/progress/guest-progress";
+import { beginGuestRun, completeGuestWorld, deriveWorldStates, readGuestProgress, recordGuestCollectible } from "@/lib/progress/guest-progress";
+import { getAchievement } from "@/lib/game/achievements";
 import { postJson } from "@/lib/auth/client-api";
 import { gameplayPreloader } from "@/game/preload-gameplay";
 import { MobileControls } from "./mobile-controls";
@@ -16,7 +17,7 @@ import { getNextResumeStep, getNextWorld, RESUME_COUNTDOWN_STEPS, shouldShowWorl
 import { HowToPlay } from "./how-to-play";
 import { FishChallengePanel } from "./fish-challenge-panel";
 
-const initialState = (timerSeconds, status = "loading") => ({ score: 0, coins: 0, lives: 3, timeLeft: timerSeconds, status, paused: false, powered: false, powerRemainingMs: 0, revivesUsed: 0 });
+const initialState = (timerSeconds, status = "loading") => ({ score: 0, coins: 0, gems: 0, fishPowerUps: 0, lives: 3, timeLeft: timerSeconds, status, paused: false, powered: false, powerRemainingMs: 0, revivesUsed: 0 });
 
 export function GameScreen({ world, mode, alreadyCompleted = false, showInstructions = false }) {
   const router = useRouter();
@@ -24,6 +25,9 @@ export function GameScreen({ world, mode, alreadyCompleted = false, showInstruct
   const parentRef = useRef(null);
   const completionRef = useRef(null);
   const reviveCommandSentRef = useRef(false);
+  const runStartPromiseRef = useRef(Promise.resolve(""));
+  const eventQueueRef = useRef(Promise.resolve());
+  const objectiveEvidenceRef = useRef(null);
   const [bridge] = useState(createGameBridge);
   const [started, setStarted] = useState(!needsIntroduction);
   const [gameState, setGameState] = useState(() => initialState(world.timerSeconds, needsIntroduction ? "awaiting-start" : "loading"));
@@ -34,9 +38,48 @@ export function GameScreen({ world, mode, alreadyCompleted = false, showInstruct
   const [loadError, setLoadError] = useState("");
   const [fishChallengeOpen, setFishChallengeOpen] = useState(false);
   const [runAttemptId, setRunAttemptId] = useState("");
+  const [achievementQueue, setAchievementQueue] = useState([]);
   const [warmStart] = useState(() => gameplayPreloader.isWorldPreloaded(world.id));
   const mapHref = mode === "guest" ? "/worlds?mode=guest" : "/worlds";
   const nextWorld = getNextWorld(WORLD_CONFIGS, world.id);
+
+  const announceAchievements = useCallback((keys = []) => {
+    const valid = keys.filter((key) => getAchievement(key));
+    if (valid.length) setAchievementQueue((queue) => [...queue, ...valid.filter((key) => !queue.includes(key))]);
+  }, []);
+
+  const beginVerifiedRun = useCallback(() => {
+    eventQueueRef.current = Promise.resolve();
+    if (mode === "guest") {
+      runStartPromiseRef.current = Promise.resolve("");
+      return runStartPromiseRef.current;
+    }
+    runStartPromiseRef.current = postJson("/api/runs/start", { worldId: world.id })
+      .then((response) => response.ok ? response.run.id : "");
+    return runStartPromiseRef.current;
+  }, [mode, world.id]);
+
+  const recordEvidence = useCallback((event) => {
+    if (event.type === "objective") objectiveEvidenceRef.current = event;
+    if (mode === "guest") {
+      if (event.type === "gem" || event.type === "fish") {
+        announceAchievements(recordGuestCollectible(event.type).unlockedAchievementKeys);
+      }
+      return;
+    }
+    eventQueueRef.current = eventQueueRef.current.then(async () => {
+      const runId = await runStartPromiseRef.current;
+      if (!runId) return;
+      const response = await postJson(`/api/runs/${runId}/events`, { ...event, worldId: world.id });
+      if (response.ok) announceAchievements(response.unlockedAchievementKeys);
+    }).catch(() => undefined);
+  }, [announceAchievements, mode, world.id]);
+
+  useEffect(() => {
+    if (!achievementQueue.length) return undefined;
+    const timer = window.setTimeout(() => setAchievementQueue((queue) => queue.slice(1)), 2_800);
+    return () => window.clearTimeout(timer);
+  }, [achievementQueue]);
 
   useEffect(() => {
     if (!started || warmStart || gameState.status !== "loading" || loadError) return undefined;
@@ -47,21 +90,27 @@ export function GameScreen({ world, mode, alreadyCompleted = false, showInstruct
   const persistCompletion = useCallback(async (result) => {
     completionRef.current = result;
     const finalMission = world.completion === "treasure";
-    if (alreadyCompleted) {
-      setSaveState({ status: "saved", message: `World ${world.number} was already saved.` });
-      return;
-    }
     if (mode === "guest") {
-      completeGuestWorld(WORLD_CONFIGS, world.id);
-      setSaveState({ status: "saved", message: finalMission ? "Legendary treasure secured for this guest adventure." : "Compass Shrine activated. The next world is unlocked for this adventure." });
+      const progress = completeGuestWorld(WORLD_CONFIGS, world.id);
+      announceAchievements(progress.unlockedAchievementKeys);
+      setSaveState({ status: "saved", message: alreadyCompleted ? `World ${world.number} was already complete for this adventure.` : finalMission ? "Legendary treasure secured for this guest adventure." : "Compass collected. The next world is unlocked for this adventure." });
       return;
     }
-    setSaveState({ status: "saving", message: finalMission ? "Saving mission..." : "Saving shrine progress..." });
-    const response = await postJson("/api/progress", { world: world.number, coins: result.coins }, "PATCH");
+    setSaveState({ status: "saving", message: finalMission ? "Verifying mission..." : "Saving compass progress..." });
+    await eventQueueRef.current;
+    const runId = await runStartPromiseRef.current;
+    let response = { ok: false, error: "This gameplay run could not be verified." };
+    if (runId && objectiveEvidenceRef.current) {
+      const objectiveResponse = await postJson(`/api/runs/${runId}/events`, { ...objectiveEvidenceRef.current, worldId: world.id });
+      if (objectiveResponse.ok) {
+        response = await postJson(`/api/runs/${runId}/complete`, { durationSeconds: Math.max(1, world.timerSeconds - result.timeLeft) });
+      } else response = { ok: false, error: objectiveResponse.error || "The collected objective could not be verified." };
+    }
+    if (response.ok) announceAchievements(response.unlockedAchievementKeys);
     setSaveState(response.ok
-      ? { status: "saved", message: finalMission ? "Mission saved to your explorer profile." : "Shrine progress saved. The next world is unlocked." }
-      : { status: "error", message: response.error || (finalMission ? "Mission could not be saved." : "Shrine progress could not be saved. Retry before continuing.") });
-  }, [alreadyCompleted, mode, world]);
+      ? { status: "saved", message: finalMission ? "Verified mission ranked and saved." : "Compass collected. The next world is unlocked." }
+      : { status: "error", message: response.error || (finalMission ? "Mission could not be verified." : "Compass progress could not be saved. Retry before continuing.") });
+  }, [alreadyCompleted, announceAchievements, mode, world]);
 
   useEffect(() => {
     if (!started) return undefined;
@@ -70,6 +119,12 @@ export function GameScreen({ world, mode, alreadyCompleted = false, showInstruct
       bridge.on(GAME_EVENTS.READY, () => { if (!active) return; setShowLoading(false); setLoadError(""); setGameState((state) => ({ ...state, status: "playing" })); }),
       bridge.on(GAME_EVENTS.LOAD_FAILED, () => { if (!active) return; setShowLoading(false); setLoadError("The adventure artwork could not be loaded."); }),
       bridge.on(GAME_EVENTS.STATE_CHANGED, (state) => active && setGameState(state)),
+      bridge.on(GAME_EVENTS.COIN_COLLECTED, ({ id }) => recordEvidence({ type: "coin", id })),
+      bridge.on(GAME_EVENTS.GEM_COLLECTED, ({ id }) => recordEvidence({ type: "gem", id })),
+      bridge.on(GAME_EVENTS.FISH_COLLECTED, ({ id }) => recordEvidence({ type: "fish", id })),
+      bridge.on(GAME_EVENTS.ENEMY_STOMPED, ({ id }) => recordEvidence({ type: "enemy", id })),
+      bridge.on(GAME_EVENTS.ENEMY_DEFEATED, ({ id }) => recordEvidence({ type: "enemy", id })),
+      bridge.on(GAME_EVENTS.OBJECTIVE_COLLECTED, ({ id, objective }) => recordEvidence({ type: "objective", id, objective })),
       bridge.on(GAME_EVENTS.RUN_ENDED, (result) => { if (active) { setResumeStep(null); setFishChallengeOpen(false); setTerminal({ type: "game-over", result }); } }),
       bridge.on(GAME_EVENTS.RUN_REVIVED, () => { if (active) { setFishChallengeOpen(false); setTerminal(null); setResumeStep(RESUME_COUNTDOWN_STEPS[0]); } }),
       bridge.on(GAME_EVENTS.WORLD_COMPLETED, (result) => { if (active) { setResumeStep(null); setTerminal({ type: "completed", result }); persistCompletion(result); } }),
@@ -82,6 +137,7 @@ export function GameScreen({ world, mode, alreadyCompleted = false, showInstruct
       const level = getLevelConfig(world.id);
       if (!level) { router.replace(mapHref); return; }
       try {
+        beginVerifiedRun();
         const { createTreasureHuntGame } = await gameplayPreloader.preloadWorld(world.id);
         if (active && parentRef.current) game = createTreasureHuntGame(parentRef.current, { world, level, bridge });
       } catch {
@@ -95,7 +151,7 @@ export function GameScreen({ world, mode, alreadyCompleted = false, showInstruct
       active = false; window.removeEventListener("pointerup", release); window.removeEventListener("blur", release);
       cleanups.forEach((cleanup) => cleanup()); game?.destroy(true); bridge.destroy();
     };
-  }, [bridge, mapHref, mode, persistCompletion, router, started, world]);
+  }, [beginVerifiedRun, bridge, mapHref, mode, persistCompletion, recordEvidence, router, started, world]);
 
   useEffect(() => {
     if (resumeStep === null) return undefined;
@@ -110,8 +166,8 @@ export function GameScreen({ world, mode, alreadyCompleted = false, showInstruct
   function startAdventure() { setGameState(initialState(world.timerSeconds)); setStarted(true); }
   function beginResume() { if (resumeStep === null && gameState.paused && !terminal) setResumeStep(RESUME_COUNTDOWN_STEPS[0]); }
   function restart() {
-    setResumeStep(null); setTerminal(null); setFishChallengeOpen(false); setRunAttemptId(""); completionRef.current = null; reviveCommandSentRef.current = false; setSaveState({ status: "idle", message: "" });
-    setShowLoading(false); setGameState(initialState(world.timerSeconds)); bridge.emit(GAME_COMMANDS.RESTART);
+    setResumeStep(null); setTerminal(null); setFishChallengeOpen(false); setRunAttemptId(""); completionRef.current = null; objectiveEvidenceRef.current = null; reviveCommandSentRef.current = false; setSaveState({ status: "idle", message: "" });
+    setShowLoading(false); setGameState(initialState(world.timerSeconds)); beginVerifiedRun(); bridge.emit(GAME_COMMANDS.RESTART);
   }
   function openFishChallenge() {
     if (!runAttemptId) setRunAttemptId(globalThis.crypto.randomUUID());
@@ -144,7 +200,8 @@ export function GameScreen({ world, mode, alreadyCompleted = false, showInstruct
         <div className="intro-actions"><Link className="game-button game-button-ghost" href={mapHref}><Map size={18} />World Map</Link><button autoFocus className="game-button game-button-primary" type="button" onClick={startAdventure}><Play size={18} />Start Adventure</button></div>
       </div>
     </section> : null}
-    {started ? <header className="game-hud" aria-label="Game status"><div className="hud-world"><span>World {world.number}</span><strong>{world.name}</strong></div><div className="hud-cluster"><div className="hud-stats"><span><Trophy size={18} />{gameState.score.toLocaleString()}</span><span><Coins size={18} />{gameState.coins}</span><span className={gameState.lives <= 1 ? "is-danger" : ""}><Heart size={18} />{gameState.lives}</span><span className={gameState.timeLeft <= 20 ? "is-danger" : ""}><Timer size={18} />{gameState.timeLeft}</span></div>{gameState.powered ? <div className="power-meter" role="status"><Fish size={18} /><div><strong>Magic Shot</strong><span style={{ "--power-progress": `${Math.min(100, (gameState.powerRemainingMs / 8000) * 100)}%` }} /></div><b>{(gameState.powerRemainingMs / 1000).toFixed(1)}s</b></div> : null}</div><button className="hud-pause" type="button" onClick={() => bridge.emit(GAME_COMMANDS.PAUSE)} aria-label="Pause game"><Pause size={20} /></button></header> : null}
+    {started ? <header className="game-hud" aria-label="Game status"><div className="hud-world"><span>World {world.number}</span><strong>{world.name}</strong></div><div className="hud-cluster"><div className="hud-stats"><span><Trophy size={18} />{gameState.score.toLocaleString()}</span><span><Coins size={18} />{gameState.coins}</span><span><Gem size={18} />{gameState.gems}</span><span className={gameState.lives <= 1 ? "is-danger" : ""}><Heart size={18} />{gameState.lives}</span><span className={gameState.timeLeft <= 20 ? "is-danger" : ""}><Timer size={18} />{gameState.timeLeft}</span></div>{gameState.powered ? <div className="power-meter" role="status"><Fish size={18} /><div><strong>Magic Shot</strong><span style={{ "--power-progress": `${Math.min(100, (gameState.powerRemainingMs / 8000) * 100)}%` }} /></div><b>{(gameState.powerRemainingMs / 1000).toFixed(1)}s</b></div> : null}</div><button className="hud-pause" type="button" onClick={() => bridge.emit(GAME_COMMANDS.PAUSE)} aria-label="Pause game"><Pause size={20} /></button></header> : null}
+    {achievementQueue.length ? <aside className="achievement-toast" role="status" aria-live="polite"><span><Award size={22} /></span><div><small>Achievement unlocked</small><strong>{getAchievement(achievementQueue[0]).title}</strong><p>{getAchievement(achievementQueue[0]).description}</p></div></aside> : null}
     {showLoading && !loadError ? <div className="game-loading" role="status"><span className="loading-spinner" /><strong>Preparing {world.name}...</strong></div> : null}
     {loadError ? <section className="game-state-overlay" role="alert"><div className="game-state-panel is-defeat"><span className="state-kicker">Loading interrupted</span><h1>Adventure unavailable</h1><p>{loadError}</p><div className="state-actions"><button className="game-button game-button-primary" type="button" onClick={() => window.location.reload()}><RotateCcw size={18} />Retry</button><Link className="game-button game-button-secondary" href={mapHref}><Map size={18} />World Map</Link></div></div></section> : null}
     {started ? <MobileControls bridge={bridge} powered={gameState.powered} /> : null}

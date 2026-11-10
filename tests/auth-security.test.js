@@ -46,18 +46,11 @@ describe("authentication security boundaries", () => {
     expect(eq).toHaveBeenCalledWith("user_id", "account-7");
   });
 
-  it("reads only the public leaderboard projection in ranked order", async () => {
+  it("reads the server-ranked projection without exposing player ids", async () => {
     const entries = [{ run_id: "run-1", username: "Explorer", score: 900, duration_seconds: 70 }];
-    const limit = vi.fn(async () => ({ data: entries, error: null }));
-    const secondOrder = vi.fn(() => ({ limit }));
-    const firstOrder = vi.fn(() => ({ order: secondOrder }));
-    const select = vi.fn(() => ({ order: firstOrder }));
-    const supabase = { from: vi.fn(() => ({ select })) };
+    const admin = { rpc: vi.fn(async () => ({ data: entries, error: null })) };
 
-    await expect(getLeaderboard(supabase)).resolves.toEqual(entries);
-    expect(supabase.from).toHaveBeenCalledWith("leaderboard_entries");
-    expect(firstOrder).toHaveBeenCalledWith("score", { ascending: false });
-    expect(secondOrder).toHaveBeenCalledWith("duration_seconds", { ascending: true });
-    expect(limit).toHaveBeenCalledWith(10);
+    await expect(getLeaderboard(admin, "account-7")).resolves.toEqual(entries);
+    expect(admin.rpc).toHaveBeenCalledWith("get_leaderboard_admin", { p_user_id: "account-7" });
   });
 });

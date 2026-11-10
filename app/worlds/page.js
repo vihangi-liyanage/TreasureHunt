@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { hasSupabaseConfig } from "@/lib/supabase/config";
 import { getVerifiedIdentity } from "@/lib/auth/session";
 import { getLeaderboard, getPlayerAchievements, getPlayerProfile, getPlayerProgress } from "@/lib/data/player-repository";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export default async function WorldsPage({ searchParams }) {
   const query = await searchParams;
@@ -20,10 +21,11 @@ export default async function WorldsPage({ searchParams }) {
   let leaderboard = [];
   let leaderboardStatus = "ready";
   let achievements = [];
+  const admin = createAdminClient();
   const [profileResult, progressResult, leaderboardResult, achievementsResult] = await Promise.allSettled([
     getPlayerProfile(supabase, identity.id),
     getPlayerProgress(supabase, identity.id),
-    getLeaderboard(supabase),
+    getLeaderboard(admin, identity.id),
     getPlayerAchievements(supabase, identity.id),
   ]);
   if (profileResult.status === "fulfilled") profile = profileResult.value;
@@ -36,6 +38,7 @@ export default async function WorldsPage({ searchParams }) {
     .slice(0, progress?.completed_worlds || 0)
     .map((world) => world.id);
 
+  const playerRanking = leaderboard.find((entry) => entry.is_current) || null;
   return (
     <WorldMap
       mode="authenticated"
@@ -45,7 +48,7 @@ export default async function WorldsPage({ searchParams }) {
       leaderboardStatus={leaderboardStatus}
       profile={{
         username: profile?.username || "Explorer", email: identity.email, createdAt: profile?.created_at || null,
-        progress: progress || null, achievements,
+        progress: progress || null, achievements, bestRun: playerRanking,
       }}
     />
   );

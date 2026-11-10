@@ -96,6 +96,11 @@ export const SUNSET_RUINS_LEVEL = Object.freeze({
     Object.freeze({ id: "fish-2", x: 3_730, y: 315 }),
     Object.freeze({ id: "fish-3", x: 5_280, y: 555 }),
   ]),
+  gems: Object.freeze([
+    Object.freeze({ id: "gem-1", x: 930, y: 330 }),
+    Object.freeze({ id: "gem-2", x: 4_080, y: 225 }),
+    Object.freeze({ id: "gem-3", x: 5_780, y: 235 }),
+  ]),
   enemies: Object.freeze([
     Object.freeze({ id: "scarab-1", x: 590, y: 565, left: 510, right: 630, speed: 68 }),
     Object.freeze({ id: "scarab-2", x: 1_820, y: 565, left: 1_560, right: 1_930, speed: 94 }),

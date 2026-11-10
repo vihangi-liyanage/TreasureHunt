@@ -102,6 +102,11 @@ export const CRYSTAL_CAVERN_LEVEL = Object.freeze({
     Object.freeze({ id: "fish-2", x: 3_250, y: 555 }),
     Object.freeze({ id: "fish-3", x: 6_060, y: 265 }),
   ]),
+  gems: Object.freeze([
+    Object.freeze({ id: "gem-1", x: 900, y: 320 }),
+    Object.freeze({ id: "gem-2", x: 4_080, y: 200 }),
+    Object.freeze({ id: "gem-3", x: 6_660, y: 265 }),
+  ]),
   enemies: Object.freeze([
     Object.freeze({ id: "crystal-beetle-1", x: 500, y: 565, left: 420, right: 610, speed: 82 }),
     Object.freeze({ id: "crystal-beetle-2", x: 1_100, y: 565, left: 900, right: 1_300, speed: 102 }),

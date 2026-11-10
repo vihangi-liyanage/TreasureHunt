@@ -54,6 +54,11 @@ export const EMERALD_JUNGLE_LEVEL = Object.freeze({
     Object.freeze({ id:"fish-2", x:2_760, y:350 }),
     Object.freeze({ id:"fish-3", x:5_160, y:255 }),
   ]),
+  gems: Object.freeze([
+    Object.freeze({ id:"gem-1", x:905, y:325 }),
+    Object.freeze({ id:"gem-2", x:3_125, y:440 }),
+    Object.freeze({ id:"gem-3", x:5_510, y:365 }),
+  ]),
   enemies: Object.freeze([
     Object.freeze({ id:"critter-1",x:700,y:570,left:650,right:720,speed:54 }),
     Object.freeze({ id:"critter-2",x:2_620,y:570,left:2_500,right:3_020,speed:84 }),

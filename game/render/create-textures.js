@@ -70,6 +70,15 @@ function createUtilityTextures(scene) {
   graphics.clear().fillStyle(0xffd75e, 1).fillCircle(8, 8, 7).generateTexture("gold-spark", 16, 16);
   graphics.clear().fillStyle(0xd9fff0, 0.85).fillCircle(6, 6, 5).generateTexture("mist-particle", 12, 12);
   graphics.clear().fillStyle(0x9f6a3d, 0.7).fillCircle(5, 5, 4).generateTexture("dust-particle", 10, 10);
+  graphics.clear();
+  graphics.fillStyle(0x8dfcff, 1).fillTriangle(24, 2, 44, 18, 24, 48).fillTriangle(24, 2, 4, 18, 24, 48);
+  graphics.lineStyle(3, 0xe8ffff, 0.9).strokeTriangle(24, 2, 44, 18, 24, 48).strokeTriangle(24, 2, 4, 18, 24, 48);
+  graphics.generateTexture("achievement-gem", 48, 50);
+  graphics.clear();
+  graphics.fillStyle(0xffd75e, 1).fillCircle(28, 28, 22);
+  graphics.lineStyle(4, 0xfff2ad, 1).strokeCircle(28, 28, 22);
+  graphics.fillStyle(0x153d31, 1).fillTriangle(28, 8, 34, 31, 28, 27).fillTriangle(28, 48, 22, 25, 28, 29);
+  graphics.generateTexture("compass-token", 56, 56);
   graphics.destroy();
 }
 

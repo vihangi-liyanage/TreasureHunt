@@ -7,7 +7,7 @@ describe("Emerald Jungle run state", () => {
     const run = new RunState({ lives: 3, timerSeconds: 120 });
     expect(run.collectCoin("coin-1")).toBe(true); expect(run.collectCoin("coin-1")).toBe(false);
     expect(run.stompEnemy("enemy-1")).toBe(true); run.tick(); expect(run.complete()).toBe(true);
-    expect(run.snapshot()).toEqual({ score:1540, coins:1, lives:3, timeLeft:119, status:"completed", revivesUsed:0 });
+    expect(run.snapshot()).toEqual({ score:1540, coins:1, gems:0, fishPowerUps:0, lives:3, timeLeft:119, status:"completed", revivesUsed:0 });
   });
   it("guards damage with invulnerability and ends at zero lives", () => {
     const run = new RunState({ lives:3, timerSeconds:120 });
@@ -21,7 +21,7 @@ describe("Emerald Jungle run state", () => {
     run.stompEnemy("enemy-1");
     run.tick();
     expect(run.damage(1_000)).toBe(true);
-    expect(run.snapshot()).toEqual({ score:350, coins:1, lives:2, timeLeft:119, status:"playing", revivesUsed:0 });
+    expect(run.snapshot()).toEqual({ score:350, coins:1, gems:0, fishPowerUps:0, lives:2, timeLeft:119, status:"playing", revivesUsed:0 });
     expect(run.damage(1_100)).toBe(false);
     expect(run.snapshot().lives).toBe(2);
   });
@@ -33,7 +33,7 @@ describe("Emerald Jungle run state", () => {
     const firstRun = new RunState({ lives:3, timerSeconds:120 });
     firstRun.collectCoin("coin-1"); firstRun.damage(0); firstRun.complete();
     const replay = new RunState({ lives:3, timerSeconds:120 });
-    expect(replay.snapshot()).toEqual({ score:0, coins:0, lives:3, timeLeft:120, status:"playing", revivesUsed:0 });
+    expect(replay.snapshot()).toEqual({ score:0, coins:0, gems:0, fishPowerUps:0, lives:3, timeLeft:120, status:"playing", revivesUsed:0 });
     expect(replay.collectCoin("coin-1")).toBe(true);
     expect(replay.stompEnemy("enemy-1")).toBe(true);
   });
@@ -50,7 +50,7 @@ describe("Emerald Jungle run state", () => {
     const run = new RunState({ lives:1, timerSeconds:120, maxRevives:1 });
     run.collectCoin("coin-1"); run.tick(); run.damage(1_000);
     expect(run.revive(2_000)).toBe(true);
-    expect(run.snapshot()).toEqual({ score:100, coins:1, lives:1, timeLeft:119, status:"playing", revivesUsed:1 });
+    expect(run.snapshot()).toEqual({ score:100, coins:1, gems:0, fishPowerUps:0, lives:1, timeLeft:119, status:"playing", revivesUsed:1 });
     expect(run.damage(2_100)).toBe(false);
     expect(run.damage(3_300)).toBe(true);
     expect(run.revive(4_600)).toBe(false);
@@ -60,6 +60,14 @@ describe("Emerald Jungle run state", () => {
     run.tick();
     expect(run.revive(2_000)).toBe(false);
     expect(run.snapshot()).toMatchObject({ lives:3, timeLeft:0, status:"game-over", revivesUsed:0 });
+  });
+  it("collects each gem and fish power-up once", () => {
+    const run = new RunState({ lives:3, timerSeconds:120 });
+    expect(run.collectGem("gem-1")).toBe(true);
+    expect(run.collectGem("gem-1")).toBe(false);
+    expect(run.collectFish("fish-1")).toBe(true);
+    expect(run.collectFish("fish-1")).toBe(false);
+    expect(run.snapshot()).toMatchObject({ score:200, gems:1, fishPowerUps:1 });
   });
 });
 

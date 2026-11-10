@@ -21,5 +21,6 @@ describe("world configuration", () => {
     expect(getLevelConfig("emerald-jungle")?.fishPowerUps).toHaveLength(3);
     expect(getLevelConfig("sunset-ruins")?.fishPowerUps).toHaveLength(3);
     expect(getLevelConfig("crystal-cavern")?.fishPowerUps).toHaveLength(3);
+    expect(WORLD_CONFIGS.map((world) => getLevelConfig(world.id)?.gems.length)).toEqual([3, 3, 3]);
   });
 });

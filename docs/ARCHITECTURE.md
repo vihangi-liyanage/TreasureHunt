@@ -72,9 +72,23 @@ Treasure ordering is overlap -> `RunState.complete()` -> physics pause and celeb
 
 The browser remains non-authoritative for numeric score. Authenticated treasure completion calls `/api/progress` with world and bounded coins only; the Route Handler derives identity from SSR claims and the service-role-only SQL function enforces sequential World 3 completion under RLS. No leaderboard run is automatically submitted. A server-replay/event-proof system could strengthen score authority but would add substantial protocol/storage complexity and is explicitly future work.
 
+## Phase 8 achievements and verified rankings
+
+Each authenticated world launch now requests one owned `game_runs` row through the verified SSR identity boundary. Phaser remains unaware of persistence: collision callbacks update `RunState` and emit narrow `coin`, `gem`, `fish`, `enemy`, and `objective` events. `GameScreen` serialises those events to the run Route Handler; the server validates the world and entity ID against the same immutable level configuration before a service-role-only SQL function records it once. Guest events instead update the existing in-memory adventure snapshot, which is reset on a new guest entry and never crosses into Supabase.
+
+Completion ordering is objective overlap → terminal `RunState` transition → objective event → queued evidence flush → owned single-use run completion. Before the transaction, the Route Handler reloads the owned run and ordered event rows, rejects unknown configured IDs or duplicates, requires the world objective to be the final event, enforces the configured timer and a conservative configuration-derived traversal minimum, and rejects stale/future runs. PostgreSQL then derives coins and score from unique recorded events plus the bounded world duration; the browser no longer submits score, coin totals, completion flags, world reached, or a user ID. The transaction advances sequential progression, awards the relevant compass/treasure badge, and inserts a leaderboard row only for World 3. A modified client can still fabricate a plausible sequence of valid collision IDs because this is a browser game, so rankings are integrity-checked rather than cheat-proof. It cannot submit arbitrary numeric totals, duplicate one entity within a run, complete a locked world, reuse a submitted run, or write tables directly. Server simulation or signed deterministic replay was considered stronger but disproportionate to the current Arcade Physics client.
+
+The former `/api/progress` PATCH was removed after this transaction became the sole authenticated completion path; `/api/progress` remains a read-only projection. This avoids retaining a second client-declared world-completion route beside verified runs.
+
+Achievement state has one source for authenticated players: `player_progress` owns aggregate gem/fish counts and `achievements` owns unique badges. Event insertion and threshold award happen in the same row-locked transaction, so React notifications are presentation of newly returned keys rather than reward authority. `lib/game/achievements.js` contains display metadata and the equivalent temporary guest thresholds; it has no Supabase or Phaser dependency. Procedural gem and compass textures stay in the render boundary, while coordinates remain level configuration.
+
+Rankings are one best completed World 3 run per registered player. The service-role-only ranking function uses deterministic score, duration, and completion-time ordering, returns the top ten plus the requesting player's row, and never exposes user IDs. The profile and leaderboard remain server-loaded DTOs; sign out continues through the existing auth Route Handler. Fish revival is unchanged and can pause/resume the same issued run without entering achievement or ranking modules.
+
 ## JavaScript project resolution
 
 The workspace uses TypeScript 6.0.3 as the JavaScript language service. TS5101 reported that `baseUrl` is deprecated for TypeScript 7. The supported configuration removes `baseUrl` and retains `paths: { "@/*": ["./*"] }`; TypeScript 6 resolves those targets relative to `jsconfig.json`. This preserves all aliases without suppressing deprecations, adding a bundler setting, or migrating JavaScript to TypeScript.
+
+On this Windows workspace, parallel Next 16 build workers repeatedly raced while creating the same `.next` directory and surfaced `EPERM` even though no Node process held the path and its ACL was writable. `next.config.mjs` limits build workers to one through the installed `experimental.cpus` option. Runtime architecture and request concurrency are unchanged; only build-time page generation is serialized.
 
 ## Phase 6 UI orchestration
 

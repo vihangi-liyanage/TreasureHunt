@@ -1,5 +1,6 @@
 export const COIN_SCORE = 100;
 export const ENEMY_SCORE = 250;
+export const GEM_SCORE = 200;
 export const DAMAGE_INVULNERABILITY_MS = 1_200;
 
 export function shouldAdvanceRun({ paused, status }) {
@@ -14,13 +15,21 @@ export class RunState {
     this.reset();
   }
   reset() {
-    this.score = 0; this.coins = 0; this.lives = this.startingLives;
+    this.score = 0; this.coins = 0; this.gems = 0; this.fishPowerUps = 0; this.lives = this.startingLives;
     this.timeLeft = this.startingTimer; this.status = "playing"; this.invulnerableUntil = 0; this.revivesUsed = 0;
-    this.collectedCoins = new Set(); this.stompedEnemies = new Set();
+    this.collectedCoins = new Set(); this.collectedGems = new Set(); this.collectedFish = new Set(); this.stompedEnemies = new Set();
   }
   collectCoin(id) {
     if (this.status !== "playing" || this.collectedCoins.has(id)) return false;
     this.collectedCoins.add(id); this.coins += 1; this.score += COIN_SCORE; return true;
+  }
+  collectGem(id) {
+    if (this.status !== "playing" || this.collectedGems.has(id)) return false;
+    this.collectedGems.add(id); this.gems += 1; this.score += GEM_SCORE; return true;
+  }
+  collectFish(id) {
+    if (this.status !== "playing" || this.collectedFish.has(id)) return false;
+    this.collectedFish.add(id); this.fishPowerUps += 1; return true;
   }
   stompEnemy(id) {
     if (this.status !== "playing" || this.stompedEnemies.has(id)) return false;
@@ -49,6 +58,6 @@ export class RunState {
     this.status = "completed"; this.score += this.timeLeft * 10; return true;
   }
   snapshot() {
-    return Object.freeze({ score: this.score, coins: this.coins, lives: this.lives, timeLeft: this.timeLeft, status: this.status, revivesUsed: this.revivesUsed });
+    return Object.freeze({ score: this.score, coins: this.coins, gems: this.gems, fishPowerUps: this.fishPowerUps, lives: this.lives, timeLeft: this.timeLeft, status: this.status, revivesUsed: this.revivesUsed });
   }
 }

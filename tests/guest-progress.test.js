@@ -6,6 +6,7 @@ import {
   getJourneyProgress,
   GUEST_PROGRESS_KEY,
   readGuestProgress,
+  recordGuestCollectible,
   startGuestAdventure,
 } from "@/lib/progress/guest-progress";
 
@@ -27,7 +28,7 @@ describe("guest adventure progression", () => {
       "unrelated.preference": "keep-me",
     });
 
-    expect(startGuestAdventure(storage)).toEqual({ completedWorldIds: [] });
+    expect(startGuestAdventure(storage)).toEqual({ completedWorldIds: [], gems: 0, fishPowerUps: 0, achievementKeys: [] });
     expect(storage.removeItem).toHaveBeenCalledWith(GUEST_PROGRESS_KEY);
     expect(storage.snapshot()).toEqual({ "unrelated.preference": "keep-me" });
     expect(deriveWorldStates(WORLD_CONFIGS, readGuestProgress().completedWorldIds).map(({ locked, current }) => ({ locked, current }))).toEqual([
@@ -63,5 +64,15 @@ describe("guest adventure progression", () => {
     expect(readGuestProgress().completedWorldIds).toEqual([]);
     expect(deriveWorldStates(WORLD_CONFIGS, registeredCompletedWorldIds)[2]).toMatchObject({ current: true, locked: false });
     expect(registeredCompletedWorldIds).toEqual(["emerald-jungle", "sunset-ruins"]);
+  });
+
+  it("keeps guest achievement stats temporary and awards thresholds once", () => {
+    expect(recordGuestCollectible("gem").unlockedAchievementKeys).toEqual(["first_gem"]);
+    recordGuestCollectible("gem"); recordGuestCollectible("gem"); recordGuestCollectible("gem");
+    expect(recordGuestCollectible("gem").unlockedAchievementKeys).toEqual(["five_gems"]);
+    expect(recordGuestCollectible("fish").unlockedAchievementKeys).toEqual(["first_fish_power"]);
+    expect(recordGuestCollectible("fish").unlockedAchievementKeys).toEqual([]);
+    startGuestAdventure(createMemoryStorage());
+    expect(readGuestProgress()).toMatchObject({ gems: 0, fishPowerUps: 0, achievementKeys: [] });
   });
 });
