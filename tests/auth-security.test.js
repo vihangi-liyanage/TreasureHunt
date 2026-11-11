@@ -1,19 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getPublicAuthError } from "@/lib/auth/errors";
-import { safeNextPath } from "@/lib/auth/redirects";
 import { getVerifiedIdentity } from "@/lib/auth/session";
 import { getLeaderboard, getPlayerProgress } from "@/lib/data/player-repository";
 import { resetRateLimitsForTests, takeRateLimit } from "@/lib/security/rate-limit";
 
 describe("authentication security boundaries", () => {
   beforeEach(() => resetRateLimitsForTests());
-
-  it("allows local return paths and rejects external or protocol-relative redirects", () => {
-    expect(safeNextPath("/worlds?from=login")).toBe("/worlds?from=login");
-    expect(safeNextPath("https://evil.test/steal")).toBe("/worlds");
-    expect(safeNextPath("//evil.test/steal")).toBe("/worlds");
-    expect(safeNextPath("/\\evil.test")).toBe("/worlds");
-  });
 
   it("returns safe public messages rather than upstream details", () => {
     expect(getPublicAuthError({ code: "invalid_credentials" })).toMatch(/incorrect/i);

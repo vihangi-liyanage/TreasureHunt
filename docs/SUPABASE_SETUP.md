@@ -1,6 +1,6 @@
 # Supabase setup
 
-Complete these steps in order. Do not paste a database password, Google client secret, or Supabase secret key into chat. Store application values only in the ignored `.env.local` file.
+Complete these steps in order. Do not paste a database password or Supabase secret key into chat. Store application values only in the ignored `.env.local` file.
 
 ## 1. Create the project
 
@@ -17,19 +17,13 @@ Complete these steps in order. Do not paste a database password, Google client s
 
 Do not run files in `supabase/tests/` against production. They create temporary test identities and are intended for a disposable local Supabase database.
 
-## 3. Configure application URLs and email
+## 3. Configure email/password authentication
 
-1. Open **Authentication** > **URL Configuration**.
-2. Set **Site URL** to `http://localhost:3000` during local development.
-3. Add `http://localhost:3000/auth/callback` to **Redirect URLs**. Later add `https://YOUR-VERCEL-DOMAIN/auth/callback` before deployment.
-4. Open **Authentication** > **Providers** > **Email**. Keep Email enabled and keep **Confirm email** enabled for production-style testing.
-5. Open **Authentication** > **Email Templates** > **Confirm signup**. Change the link target to:
-
-```html
-<a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email&next=/worlds">Confirm email address</a>
-```
-
-6. Supabase's default mail service is suitable only for limited testing; configure custom SMTP before production.
+1. Open **Authentication** > **Sign In / Providers** > **Email**.
+2. Keep the Email provider enabled.
+3. Enable new-user signup.
+4. Disable **Confirm email** so `signUp()` immediately returns the authenticated session used by the assignment flow.
+5. Disable the Google provider if it was previously enabled. The application exposes no OAuth route or button.
 
 ## 4. Add local environment values
 
@@ -40,25 +34,15 @@ Do not run files in `supabase/tests/` against production. They create temporary 
 ```text
 NEXT_PUBLIC_SUPABASE_URL=https://YOUR-PROJECT-REF.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=YOUR-PUBLISHABLE-KEY
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
 SUPABASE_SECRET_KEY=YOUR-SERVER-SECRET-KEY
 ```
 
 The secret key must never use a `NEXT_PUBLIC_` name, enter a client component, or be committed. Restart `npm run dev` after changing environment variables.
 
-## 5. Configure Google OAuth
-
-1. Open [Google Cloud Console](https://console.cloud.google.com/), create or select a project, then open **Google Auth Platform**.
-2. Configure **Branding** and **Audience**. For an External testing app, add your Google account as a test user.
-3. Open **Clients** > **Create client** > **Web application**.
-4. Add `https://YOUR-PROJECT-REF.supabase.co/auth/v1/callback` as an **Authorized redirect URI**. This is Google's callback to Supabase, not the Next.js callback.
-5. Copy the Google client ID and client secret into **Supabase Dashboard** > **Authentication** > **Providers** > **Google**, enable the provider, and save. Do not put the Google secret in `.env.local`.
-6. Supabase then returns the browser to the allowed Next.js `/auth/callback`, where the application exchanges the PKCE code for the cookie session.
-
-## 6. Configure limits and verify
+## 5. Configure limits and verify
 
 1. Open **Authentication** > **Rate Limits** and review email, token refresh, verification, and anonymous sign-in limits for the expected assessment traffic.
-2. Run `npm run dev` and verify: registration email confirmation, invalid password, email login, Google login, refresh persistence, profile rename, logout, guest map access, and the guest leaderboard sign-in prompt.
+2. Run `npm run dev` and verify: immediate registration, invalid password, email/password login, refresh persistence, profile rename, logout, guest map access, and the guest leaderboard sign-in prompt.
 3. Use two confirmed accounts to verify one account cannot read/update the other's private rows. For automated RLS tests, install the Supabase CLI and run the SQL tests only against a disposable local database.
 
-Official references: [Supabase SSR client setup](https://supabase.com/docs/guides/auth/server-side/creating-a-client?framework=nextjs&queryGroups=framework), [Google OAuth with PKCE](https://supabase.com/docs/guides/auth/social-login/auth-google?environment=server&platform=web), [Row Level Security](https://supabase.com/docs/guides/database/postgres/row-level-security), and [Auth rate limits](https://supabase.com/docs/guides/auth/rate-limits).
+Official references: [Supabase SSR client setup](https://supabase.com/docs/guides/auth/server-side/creating-a-client?framework=nextjs&queryGroups=framework), [password authentication](https://supabase.com/docs/guides/auth/passwords), [Row Level Security](https://supabase.com/docs/guides/database/postgres/row-level-security), and [Auth rate limits](https://supabase.com/docs/guides/auth/rate-limits).

@@ -2,7 +2,6 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { hasSupabaseConfig } from "@/lib/supabase/config";
 import { getPublicAuthError } from "@/lib/auth/errors";
-import { getSiteOrigin } from "@/lib/auth/redirects";
 import { checkRequestLimit } from "@/lib/auth/request-guard";
 import { jsonNoStore, readJsonObject } from "@/lib/http/responses";
 import { validateRegister } from "@/lib/validation/auth";
@@ -40,15 +39,12 @@ export async function POST(request) {
     password: values.password,
     options: {
       data: { username: values.username.trim() },
-      emailRedirectTo: `${getSiteOrigin(request)}/auth/callback?next=/worlds`,
     },
   });
   if (error) return jsonNoStore({ error: getPublicAuthError(error) }, { status: error.status === 429 ? 429 : 400 });
+  if (!data.session) {
+    return jsonNoStore({ error: "Disable Confirm email in Supabase to allow immediate registration." }, { status: 409 });
+  }
 
-  return jsonNoStore({
-    ok: true,
-    authenticated: Boolean(data.session),
-    requiresEmailConfirmation: !data.session,
-    redirectTo: data.session ? "/worlds" : null,
-  });
+  return jsonNoStore({ ok: true, redirectTo: "/worlds" });
 }

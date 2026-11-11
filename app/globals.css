@@ -155,12 +155,6 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .form-field[aria-invalid="true"] { border-color: #ff9c84; box-shadow: 0 0 0 3px rgba(255,117,88,.1); }
 .form-field:disabled { cursor: wait; opacity: .68; }
 .field-help:empty { display: none; }
-.google-button,.create-account-link { display: flex; width: 100%; min-height: 2.9rem; align-items: center; justify-content: center; gap: .65rem; border-radius: .8rem; font-weight: 800; }
-.google-button { border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.08); color: white; transition: transform .18s ease,border-color .18s ease,background .18s ease; }
-.google-button:hover { transform: translateY(-1px); border-color: rgba(255,225,139,.5); background: rgba(255,255,255,.12); }
-.google-mark { display: grid; width: 1.35rem; height: 1.35rem; place-items: center; border-radius: 50%; background: white; color: #2d5fce; font-size: .8rem; font-weight: 950; }
-.create-account-link { color: var(--gold-light); text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 4px; }
-.create-account-link:hover { text-decoration-color: currentColor; }
 
 /* Auth */
 .auth-shell { height: 100svh; min-height: 34rem; overflow: hidden; background-position: 62% center; }
@@ -184,20 +178,12 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .password-visibility:disabled { cursor: wait; opacity: .45; }
 .auth-notice { display: flex; gap: .6rem; align-items: flex-start; border: 1px solid rgba(255,171,145,.3); border-radius: .75rem; background: rgba(126,36,24,.2); padding: .65rem .75rem; color: #ffe5dc; font-size: .72rem; line-height: 1.4; }
 .auth-notice svg { flex: 0 0 auto; margin-top: .08rem; color: #ffc37a; }
-.auth-divider { display: flex; align-items: center; gap: .65rem; color: rgba(255,247,220,.38); font-size: .62rem; text-transform: uppercase; }
-.auth-divider::before,.auth-divider::after { height: 1px; flex: 1; background: rgba(255,255,255,.1); content: ""; }
 .auth-switch-link { margin: 0; padding-top: .1rem; color: rgba(255,247,220,.62); font-size: .76rem; text-align: center; }
 .auth-switch-link a { color: var(--gold-light); font-weight: 850; text-underline-offset: 4px; }
 .auth-switch-link a:hover { text-decoration: underline; }
 .auth-submit { position: relative; overflow: hidden; }
 .auth-submit:not(:disabled)::after { position: absolute; inset: 0; background: linear-gradient(110deg,transparent 25%,rgba(255,255,255,.26) 48%,transparent 70%); content: ""; transform: translateX(-120%); transition: transform .55s ease; }
 .auth-submit:hover::after { transform: translateX(120%); }
-.auth-confirmation { display: grid; justify-items: center; gap: 1rem; padding: .5rem 0 .15rem; text-align: center; }
-.auth-confirmation-icon { display: grid; width: 4rem; height: 4rem; place-items: center; border: 1px solid rgba(255,226,154,.42); border-radius: 1.2rem; background: rgba(244,187,69,.14); color: var(--gold-light); box-shadow: 0 12px 30px rgba(0,0,0,.24); }
-.auth-confirmation h2 { margin: 0 0 .45rem; font-family: Georgia,"Times New Roman",serif; font-size: clamp(1.6rem,5vw,2.1rem); color: #fff7dc; }
-.auth-confirmation p { margin: 0; color: rgba(255,247,220,.7); font-size: .85rem; line-height: 1.55; overflow-wrap: anywhere; }
-.auth-confirmation p strong { color: var(--gold-light); }
-.auth-confirmation .auth-confirmation-help { color: rgba(255,247,220,.5); font-size: .7rem; }
 
 /* World map */
 .world-map-screen { position: relative; isolation: isolate; width: 100%; height: 100svh; min-height: 34rem; overflow: hidden; background: #061814 url("/art/worlds-atlas.png") center / cover; }
@@ -304,11 +290,9 @@ button, a { -webkit-tap-highlight-color: transparent; }
   .auth-field-group .form-field { min-height: 2.3rem; padding: .38rem .65rem; }
   .auth-field-group .field-help { min-height: 0; margin-top: .1rem; font-size: .65rem; line-height: .9rem; }
   .auth-field-group .relative > button { width: 2.25rem; height: 2.25rem; }
-  .auth-form .game-button,.auth-form .google-button,.auth-form .create-account-link { min-height: 2.35rem; }
+  .auth-form .game-button { min-height: 2.35rem; }
   .auth-notice { padding: .55rem; font-size: .7rem; line-height: 1rem; }
   .auth-switch-link { font-size: .72rem; line-height: 1rem; }
-  .auth-confirmation { gap: .65rem; padding: .2rem 0; }
-  .auth-confirmation-icon { width: 3.2rem; height: 3.2rem; }
 }
 
 @media (max-height: 600px) {
@@ -329,14 +313,9 @@ button, a { -webkit-tap-highlight-color: transparent; }
   .auth-field-group .form-field { min-height: 2rem; padding: .25rem .6rem; }
   .auth-field-group .field-help { margin-top: .05rem; font-size: .62rem; line-height: .75rem; }
   .auth-field-group .relative > button { width: 2rem; height: 2rem; }
-  .auth-form .game-button,.auth-form .google-button,.auth-form .create-account-link { min-height: 2.15rem; }
+  .auth-form .game-button { min-height: 2.15rem; }
   .auth-notice { padding: .4rem; font-size: .65rem; line-height: .85rem; }
   .auth-switch-link { font-size: .65rem; line-height: .8rem; }
-  .auth-confirmation { gap: .45rem; }
-  .auth-confirmation-icon { width: 2.75rem; height: 2.75rem; }
-  .auth-confirmation-icon svg { width: 26px; height: 26px; }
-  .auth-confirmation h2 { font-size: 1.45rem; }
-  .auth-confirmation p { font-size: .72rem; line-height: 1.3; }
 }
 
 @media (prefers-reduced-motion: reduce) {

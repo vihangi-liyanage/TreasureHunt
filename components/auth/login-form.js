@@ -45,8 +45,6 @@ export function LoginForm() {
       <FormField id="password" label="Password" error={errors.password}><PasswordInput id="password" name="password" autoComplete="current-password" placeholder="Enter your password" value={values.password} onChange={(event) => update("password", event.target.value)} onBlur={() => validateField("password")} describedBy="password-help" invalid={Boolean(errors.password)} disabled={pending} required /></FormField>
       {notice ? <div className="auth-notice" role="alert"><ShieldCheck aria-hidden="true" size={18} />{notice}</div> : null}
       <GameButton className="w-full auth-submit" type="submit" disabled={pending}><LogIn size={18} />{pending ? "Signing in..." : "Log In"}</GameButton>
-      <div className="auth-divider" aria-hidden="true"><span>or</span></div>
-      <a className="google-button" href="/api/auth/google?next=/worlds"><span className="google-mark" aria-hidden="true">G</span>Continue with Google</a>
       <p className="auth-switch-link">Need an account? <Link href="/register">Sign Up</Link></p>
     </form>
   );

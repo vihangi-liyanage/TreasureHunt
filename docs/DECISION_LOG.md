@@ -253,3 +253,9 @@
 **Volume correction:** The initial lead envelope (`0.18`) was multiplied by a `0.055` music bus, leaving roughly one percent peak amplitude before device volume. The corrected mix uses layered eight-beat arrangements, audible music/effect buses, a persisted 0–100% master gain, and a gentle compressor to control summed peaks without distortion.
 
 **Final cue mapping:** Use the existing `player:damaged` event for one shared enemy/thorn/fall sound, `run:revived` for the Fish-approved extra-life flourish, and React's guarded countdown state for synchronized 3→2→1→GO pulses. This keeps cause-specific physics and Fish authorization out of the audio service and prevents duplicate cues under React development effect replay.
+
+## D041 Use basic Supabase email/password identity for the assignment
+
+**Decision:** Register with username, email and password through Supabase Auth, require `signUp()` to return a session, and redirect directly to the World Map. Do not expose email confirmation, OTP or OAuth flows in the assignment build.
+
+**Reason:** Supabase continues to own password storage, sessions and verified claims while the assessment UI remains focused on one virtual-identity path. Profile provisioning, RLS, guest isolation, progress, achievements, rankings and Fish ownership remain independent of the login provider.
