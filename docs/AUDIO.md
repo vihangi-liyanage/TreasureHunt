@@ -4,7 +4,6 @@ TreasureHunt Phase 9 uses no third-party audio files.
 
 All music and sound effects are original procedural Web Audio compositions implemented in `lib/audio/audio-service.js` for this project:
 
-- Welcome: exciting minor-key treasure-hunt theme with mysterious diminished colour, low bass and rising melodic tension at 88 BPM.
 - Emerald Jungle: lively syncopated triangle lead, bright harmony and bass at 112 BPM.
 - Sunset Ruins: ancient modal melody with restrained reed-like saw lead at 96 BPM.
 - Crystal Cavern: slow suspended harmony with bell-like sine echoes at 72 BPM.

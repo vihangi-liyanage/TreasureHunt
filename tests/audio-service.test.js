@@ -6,14 +6,14 @@ afterEach(() => {
 });
 
 describe("audio preferences and soundtrack routing", () => {
-  it("selects four distinct project-original soundtracks", async () => {
+  it("selects distinct soundtracks only for the three game worlds", async () => {
     const { AUDIO_TRACKS, getTrackForPath } = await import("@/lib/audio/audio-service");
-    expect(getTrackForPath("/welcome")).toBe("welcome");
+    expect(getTrackForPath("/welcome")).toBeNull();
     expect(getTrackForPath("/game/emerald-jungle")).toBe("emerald-jungle");
     expect(getTrackForPath("/game/sunset-ruins?mode=guest")).toBe("sunset-ruins");
     expect(getTrackForPath("/game/crystal-cavern")).toBe("crystal-cavern");
     expect(getTrackForPath("/worlds")).toBeNull();
-    expect(new Set(Object.values(AUDIO_TRACKS).map((track) => track.bpm)).size).toBe(4);
+    expect(new Set(Object.values(AUDIO_TRACKS).map((track) => track.bpm)).size).toBe(3);
   });
 
   it("persists music and effects independently", async () => {
@@ -84,16 +84,10 @@ describe("audio preferences and soundtrack routing", () => {
     expect(JSON.parse(stored.get("treasurehunt.audio.v1")).volume).toBe(64);
   });
 
-  it("gives the welcome screen a distinct minor treasure-hunt theme", async () => {
-    const { AUDIO_TRACKS } = await import("@/lib/audio/audio-service");
-    expect(AUDIO_TRACKS.welcome.root).toBeLessThan(160);
-    expect(AUDIO_TRACKS.welcome.chords[0]).toEqual([0, 3, 7]);
-    expect(AUDIO_TRACKS.welcome.melody).toContain(6);
-  });
-
-  it("starts welcome music as soon as Web Audio is available without duplicating it", async () => {
+  it("stops world music when navigating to the silent welcome screen", async () => {
     vi.useFakeTimers();
     const starts = [];
+    const stops = [];
     class FakeAudioContext {
       constructor() { this.state = "running"; this.currentTime = 4; this.destination = {}; }
       createGain() { return { gain: { value: 0, setValueAtTime() {}, exponentialRampToValueAtTime() {}, setTargetAtTime() {} }, connect() {} }; }
@@ -101,7 +95,7 @@ describe("audio preferences and soundtrack routing", () => {
       createOscillator() {
         return {
           frequency: { setValueAtTime() {}, exponentialRampToValueAtTime() {} },
-          connect() {}, start: (time) => starts.push(time), stop() {}, addEventListener() {},
+          connect() {}, start: (time) => starts.push(time), stop: () => stops.push(true), addEventListener() {},
         };
       }
       resume() { return Promise.resolve(); }
@@ -117,13 +111,15 @@ describe("audio preferences and soundtrack routing", () => {
     const { audioService, hydrateAudioPreferences } = await import("@/lib/audio/audio-service");
 
     hydrateAudioPreferences();
-    audioService.setMusic("welcome");
+    audioService.setMusic("emerald-jungle");
     await audioService.unlock();
     expect(starts).toHaveLength(40);
     expect(starts[0]).toBe(4);
+    const scheduledStops = stops.length;
 
-    audioService.setMusic("welcome");
-    await audioService.unlock();
+    audioService.setMusic(null);
+    expect(stops).toHaveLength(scheduledStops + 40);
+    vi.advanceTimersByTime(10_000);
     expect(starts).toHaveLength(40);
     audioService.destroy();
     vi.useRealTimers();
