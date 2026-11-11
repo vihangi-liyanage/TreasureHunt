@@ -90,4 +90,42 @@ describe("audio preferences and soundtrack routing", () => {
     expect(AUDIO_TRACKS.welcome.chords[0]).toEqual([0, 3, 7]);
     expect(AUDIO_TRACKS.welcome.melody).toContain(6);
   });
+
+  it("starts welcome music as soon as Web Audio is available without duplicating it", async () => {
+    vi.useFakeTimers();
+    const starts = [];
+    class FakeAudioContext {
+      constructor() { this.state = "running"; this.currentTime = 4; this.destination = {}; }
+      createGain() { return { gain: { value: 0, setValueAtTime() {}, exponentialRampToValueAtTime() {}, setTargetAtTime() {} }, connect() {} }; }
+      createDynamicsCompressor() { return { threshold: {}, knee: {}, ratio: {}, attack: {}, release: {}, connect() {} }; }
+      createOscillator() {
+        return {
+          frequency: { setValueAtTime() {}, exponentialRampToValueAtTime() {} },
+          connect() {}, start: (time) => starts.push(time), stop() {}, addEventListener() {},
+        };
+      }
+      resume() { return Promise.resolve(); }
+      close() { return Promise.resolve(); }
+    }
+    const browserWindow = new EventTarget();
+    browserWindow.AudioContext = FakeAudioContext;
+    browserWindow.localStorage = { getItem: () => null, setItem() {} };
+    browserWindow.setTimeout = setTimeout;
+    browserWindow.clearTimeout = clearTimeout;
+    vi.stubGlobal("window", browserWindow);
+    vi.stubGlobal("CustomEvent", class extends Event { constructor(type) { super(type); } });
+    const { audioService, hydrateAudioPreferences } = await import("@/lib/audio/audio-service");
+
+    hydrateAudioPreferences();
+    audioService.setMusic("welcome");
+    await audioService.unlock();
+    expect(starts).toHaveLength(40);
+    expect(starts[0]).toBe(4);
+
+    audioService.setMusic("welcome");
+    await audioService.unlock();
+    expect(starts).toHaveLength(40);
+    audioService.destroy();
+    vi.useRealTimers();
+  });
 });

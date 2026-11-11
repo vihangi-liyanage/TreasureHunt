@@ -9,10 +9,11 @@ export function AudioController() {
 
   useEffect(() => {
     hydrateAudioPreferences();
-    const unlock = () => audioService.unlock();
+    const unlock = () => void audioService.unlock();
     window.addEventListener("pointerdown", unlock, { passive: true });
     window.addEventListener("keydown", unlock);
     const unsubscribe = subscribeAudioPreferences(() => audioService.applyPreferences());
+    unlock();
     return () => {
       unsubscribe();
       window.removeEventListener("pointerdown", unlock);
