@@ -41,8 +41,8 @@ export function LoginForm() {
   }
   return (
     <form noValidate onSubmit={submit} className="auth-form" aria-busy={pending}>
-      <FormField id="email" label="Email address" error={errors.email}><input className="form-field" id="email" name="email" type="email" inputMode="email" autoComplete="email" placeholder="explorer@example.com" value={values.email} onChange={(event) => update("email", event.target.value)} onBlur={() => validateField("email")} aria-describedby="email-help" aria-invalid={Boolean(errors.email)} disabled={pending} required /></FormField>
-      <FormField id="password" label="Password" error={errors.password}><PasswordInput id="password" name="password" autoComplete="current-password" placeholder="Enter your password" value={values.password} onChange={(event) => update("password", event.target.value)} onBlur={() => validateField("password")} describedBy="password-help" invalid={Boolean(errors.password)} disabled={pending} required /></FormField>
+      <FormField id="email" label="Email address" error={errors.email}><input className="form-field" id="email" name="email" type="email" inputMode="email" autoComplete="email" value={values.email} onChange={(event) => update("email", event.target.value)} onBlur={() => validateField("email")} aria-describedby="email-help" aria-invalid={Boolean(errors.email)} disabled={pending} required /></FormField>
+      <FormField id="password" label="Password" error={errors.password}><PasswordInput id="password" name="password" autoComplete="current-password" value={values.password} onChange={(event) => update("password", event.target.value)} onBlur={() => validateField("password")} describedBy="password-help" invalid={Boolean(errors.password)} disabled={pending} required /></FormField>
       {notice ? <div className="auth-notice" role="alert"><ShieldCheck aria-hidden="true" size={18} />{notice}</div> : null}
       <GameButton className="w-full auth-submit" type="submit" disabled={pending}><LogIn size={18} />{pending ? "Signing in..." : "Log In"}</GameButton>
       <p className="auth-switch-link">Need an account? <Link href="/register">Sign Up</Link></p>
