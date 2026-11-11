@@ -133,10 +133,13 @@ describe("identity-backed panels", () => {
     expect(shell).toContain('aria-labelledby="auth-title"');
   });
 
-  it("renders real profile progress, empty achievements and Sign Out", () => {
+  it("renders real profile progress, all achievement badges and Sign Out", () => {
     const profile = source("components/profile/profile-panel.js");
     expect(profile).toContain("completed_worlds");
-    expect(profile).toContain("No achievement badges yet");
+    expect(profile).toContain("Object.keys(ACHIEVEMENTS)");
+    expect(profile).toContain("selectedEarned.earned_at");
+    expect(profile).toContain('role="tablist"');
+    expect(profile).toContain('aria-expanded={active}');
     expect(profile).toContain("Sign Out");
     expect(profile).not.toContain(">Logout<");
   });
@@ -149,6 +152,8 @@ describe("identity-backed panels", () => {
     expect(leaderboard).toContain("No eligible ranked runs yet");
     expect(leaderboard).toContain("Account creation and saved world progress do not create a score");
     expect(leaderboard).toContain("Rankings unavailable");
+    expect(leaderboard).toContain("RankMark");
+    expect(leaderboard).toContain("entry.is_current");
     const worldsPage = source("app/worlds/page.js");
     expect(worldsPage).toContain("Promise.allSettled");
     expect(worldsPage).toContain('leaderboardStatus = "unavailable"');

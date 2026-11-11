@@ -109,10 +109,10 @@ export function WorldMap({ worlds, mode = "guest", completedWorldIds = [], profi
       </aside>
 
       <GameOverlay title="Settings" open={overlay === "settings"} onClose={closeOverlay}><SettingsPanel /></GameOverlay>
-      <GameOverlay title="Leaderboard" open={overlay === "leaderboard"} onClose={closeOverlay}>
+      <GameOverlay title="Leaderboard" open={overlay === "leaderboard"} onClose={closeOverlay} size="wide">
         <LeaderboardPanel mode={mode} entries={leaderboard} status={leaderboardStatus} />
       </GameOverlay>
-      <GameOverlay title="Explorer Profile" open={overlay === "profile"} onClose={closeOverlay}>{profile ? <ProfilePanel profile={profile} /> : null}</GameOverlay>
+      <GameOverlay title="Explorer Profile" open={overlay === "profile"} onClose={closeOverlay} size="wide">{profile ? <ProfilePanel profile={profile} /> : null}</GameOverlay>
     </main>
   );
 }
