@@ -12,7 +12,7 @@ import { postJson } from "@/lib/auth/client-api";
 
 export function RegisterForm() {
   const router = useRouter();
-  const [values, setValues] = useState({ username: "", email: "", password: "" });
+  const [values, setValues] = useState({ username: "", email: "", password: "", confirmPassword: "" });
   const [errors, setErrors] = useState({});
   const [notice, setNotice] = useState("");
   const [pending, setPending] = useState(false);
@@ -23,6 +23,7 @@ export function RegisterForm() {
   }
   async function submit(event) {
     event.preventDefault();
+    if (pending) return;
     const nextErrors = validateRegister(values);
     setErrors(nextErrors);
     setNotice("");
@@ -43,7 +44,10 @@ export function RegisterForm() {
     <form noValidate onSubmit={submit} className="auth-form" aria-busy={pending}>
       <FormField id="username" label="Username" error={errors.username} hint="3–24 characters"><input className="form-field" id="username" name="username" autoComplete="username" value={values.username} onChange={(event) => update("username", event.target.value)} onBlur={() => validateField("username")} aria-describedby="username-help" aria-invalid={Boolean(errors.username)} disabled={pending} required /></FormField>
       <FormField id="email" label="Email address" error={errors.email}><input className="form-field" id="email" name="email" type="email" inputMode="email" autoComplete="email" value={values.email} onChange={(event) => update("email", event.target.value)} onBlur={() => validateField("email")} aria-describedby="email-help" aria-invalid={Boolean(errors.email)} disabled={pending} required /></FormField>
-      <FormField id="password" label="Password" error={errors.password} hint="8+ characters, letter and number"><PasswordInput id="password" name="password" autoComplete="new-password" value={values.password} onChange={(event) => update("password", event.target.value)} onBlur={() => validateField("password")} describedBy="password-help" invalid={Boolean(errors.password)} disabled={pending} required /></FormField>
+      <div className="grid gap-3">
+        <FormField id="password" label="Password" error={errors.password} hint="8+ characters, letter and number"><PasswordInput id="password" name="password" autoComplete="new-password" value={values.password} onChange={(event) => update("password", event.target.value)} onBlur={() => validateField("password")} describedBy="password-help" invalid={Boolean(errors.password)} disabled={pending} required /></FormField>
+        <FormField id="confirmPassword" label="Confirm Password" error={errors.confirmPassword}><PasswordInput id="confirmPassword" name="confirmPassword" autoComplete="new-password" value={values.confirmPassword} onChange={(event) => update("confirmPassword", event.target.value)} onBlur={() => validateField("confirmPassword")} describedBy="confirmPassword-help" invalid={Boolean(errors.confirmPassword)} disabled={pending} required /></FormField>
+      </div>
       {notice ? <div className="auth-notice" role="alert"><ShieldCheck aria-hidden="true" size={18} />{notice}</div> : null}
       <GameButton className="w-full auth-submit" type="submit" disabled={pending}><UserPlus size={18} />{pending ? "Creating account..." : "Create Account"}</GameButton>
       <p className="auth-switch-link">Already have an account? <Link href="/login">Log In</Link></p>

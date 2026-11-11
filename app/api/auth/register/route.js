@@ -45,6 +45,8 @@ export async function POST(request) {
   if (!data.session) {
     return jsonNoStore({ error: "Disable Confirm email in Supabase to allow immediate registration." }, { status: 409 });
   }
+  const { error: signOutError } = await supabase.auth.signOut({ scope: "local" });
+  if (signOutError) return jsonNoStore({ error: "Account created, but the temporary session could not be cleared." }, { status: 500 });
 
-  return jsonNoStore({ ok: true, redirectTo: "/worlds" });
+  return jsonNoStore({ ok: true, redirectTo: "/login?registered=1" });
 }

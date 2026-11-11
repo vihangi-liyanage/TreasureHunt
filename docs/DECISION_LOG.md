@@ -256,6 +256,6 @@
 
 ## D041 Use basic Supabase email/password identity for the assignment
 
-**Decision:** Register with username, email and password through Supabase Auth, require `signUp()` to return a session, and redirect directly to the World Map. Do not expose email confirmation, OTP or OAuth flows in the assignment build.
+**Decision:** Register with username, email, password and a client/server-validated confirmation field through Supabase Auth. Require `signUp()` to return a session, immediately clear that temporary session, then redirect to Login with a one-time success notice. Do not expose email confirmation, OTP or OAuth flows in the assignment build.
 
-**Reason:** Supabase continues to own password storage, sessions and verified claims while the assessment UI remains focused on one virtual-identity path. Profile provisioning, RLS, guest isolation, progress, achievements, rankings and Fish ownership remain independent of the login provider.
+**Reason:** Supabase continues to own password storage, sessions and verified claims while explicit post-registration login makes the assessment flow easy to demonstrate. Confirm Password is never sent to Supabase metadata or persistence. Profile provisioning, RLS, guest isolation, progress, achievements, rankings and Fish ownership remain independent of the login form.

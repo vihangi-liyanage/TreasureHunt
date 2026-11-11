@@ -5,7 +5,8 @@ describe("authentication form validation", () => {
   it("validates conventional email addresses", () => { expect(isValidEmail("explorer@example.com")).toBe(true); expect(isValidEmail("not-an-email")).toBe(false); });
   it("reports login fields without authenticating", () => { expect(validateLogin({ email: "bad", password: "tiny" })).toEqual({ email: "Enter a valid email address.", password: "Password must be at least 8 characters." }); });
   it("accepts a valid login shape", () => { expect(validateLogin({ email: "explorer@example.com", password: "trailpass9" })).toEqual({}); });
-  it("requires a valid username and mixed password for registration", () => { expect(validateRegister({ username: "Ex", email: "explorer@example.com", password: "allletters" })).toMatchObject({ username: expect.any(String), password: expect.any(String) }); });
-  it("rejects usernames that cannot be stored safely", () => { expect(validateRegister({ username: "bad name!", email: "explorer@example.com", password: "trailpass9" })).toMatchObject({ username: expect.any(String) }); });
-  it("accepts a valid registration shape", () => { expect(validateRegister({ username: "JungleFox", email: "explorer@example.com", password: "trailpass9" })).toEqual({}); });
+  it("requires a valid username and mixed password for registration", () => { expect(validateRegister({ username: "Ex", email: "explorer@example.com", password: "allletters", confirmPassword: "allletters" })).toMatchObject({ username: expect.any(String), password: expect.any(String) }); });
+  it("rejects usernames that cannot be stored safely", () => { expect(validateRegister({ username: "bad name!", email: "explorer@example.com", password: "trailpass9", confirmPassword: "trailpass9" })).toMatchObject({ username: expect.any(String) }); });
+  it("rejects a mismatched confirmation password", () => { expect(validateRegister({ username: "JungleFox", email: "explorer@example.com", password: "trailpass9", confirmPassword: "different9" })).toMatchObject({ confirmPassword: "Passwords do not match." }); });
+  it("accepts a valid registration shape", () => { expect(validateRegister({ username: "JungleFox", email: "explorer@example.com", password: "trailpass9", confirmPassword: "trailpass9" })).toEqual({}); });
 });

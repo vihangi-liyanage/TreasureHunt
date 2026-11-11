@@ -55,18 +55,20 @@ describe("basic email/password authentication routes", () => {
   it("registers through Supabase Auth and requires the returned session", async () => {
     adminRpc.mockResolvedValue({ data: false, error: null });
     auth.signUp.mockResolvedValue({ data: { session: { access_token: "session" } }, error: null });
+    auth.signOut.mockResolvedValue({ error: null });
 
     const response = await register(jsonRequest("/api/auth/register", {
-      username: "JungleFox", email: "explorer@example.com", password: "trailpass9",
+      username: "JungleFox", email: "explorer@example.com", password: "trailpass9", confirmPassword: "trailpass9",
     }));
 
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toEqual({ ok: true, redirectTo: "/worlds" });
+    await expect(response.json()).resolves.toEqual({ ok: true, redirectTo: "/login?registered=1" });
     expect(auth.signUp).toHaveBeenCalledWith({
       email: "explorer@example.com",
       password: "trailpass9",
       options: { data: { username: "JungleFox" } },
     });
+    expect(auth.signOut).toHaveBeenCalledWith({ scope: "local" });
   });
 
   it("rejects a signup when Supabase email confirmation prevents a session", async () => {
@@ -74,7 +76,7 @@ describe("basic email/password authentication routes", () => {
     auth.signUp.mockResolvedValue({ data: { session: null }, error: null });
 
     const response = await register(jsonRequest("/api/auth/register", {
-      username: "JungleFox", email: "explorer@example.com", password: "trailpass9",
+      username: "JungleFox", email: "explorer@example.com", password: "trailpass9", confirmPassword: "trailpass9",
     }));
 
     expect(response.status).toBe(409);

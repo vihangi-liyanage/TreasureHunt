@@ -5,10 +5,11 @@ import { createClient } from "@/lib/supabase/server";
 import { hasSupabaseConfig } from "@/lib/supabase/config";
 import { getVerifiedIdentity } from "@/lib/auth/session";
 
-export default async function LoginPage() {
+export default async function LoginPage({ searchParams }) {
+  const query = await searchParams;
   if (hasSupabaseConfig()) {
     const identity = await getVerifiedIdentity(await createClient());
     if (identity) redirect("/worlds");
   }
-  return <AuthFormShell title="Welcome Back" description="Continue your treasure-hunting journey."><LoginForm /></AuthFormShell>;
+  return <AuthFormShell title="Welcome Back" description="Continue your treasure-hunting journey."><LoginForm registrationSucceeded={query?.registered === "1"} /></AuthFormShell>;
 }

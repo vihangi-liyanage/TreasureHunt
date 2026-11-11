@@ -128,7 +128,10 @@ describe("identity-backed panels", () => {
     expect(register).not.toContain("verification code");
     expect(register).toContain("Already have an account?");
     expect(register).toContain("Log In");
-    expect(register).toContain('username: "", email: "", password: ""');
+    expect(register).toContain('username: "", email: "", password: "", confirmPassword: ""');
+    expect(register).toContain("Confirm Password");
+    expect(login).toContain("Account created successfully!");
+    expect(login).toContain("Please log in to start your adventure.");
     expect(password).toContain("aria-pressed={visible}");
     expect(shell).toContain('aria-labelledby="auth-title"');
   });

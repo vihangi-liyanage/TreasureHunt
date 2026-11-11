@@ -183,6 +183,9 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .password-visibility:disabled { cursor: wait; opacity: .45; }
 .auth-notice { display: flex; gap: .6rem; align-items: flex-start; border: 1px solid rgba(255,171,145,.3); border-radius: .75rem; background: rgba(126,36,24,.2); padding: .65rem .75rem; color: #ffe5dc; font-size: .72rem; line-height: 1.4; }
 .auth-notice svg { flex: 0 0 auto; margin-top: .08rem; color: #ffc37a; }
+.auth-success { display: flex; gap: .65rem; align-items: flex-start; border: 1px solid rgba(163,241,200,.35); border-radius: .75rem; background: rgba(40,139,96,.18); padding: .7rem .75rem; color: #e8fff2; font-size: .74rem; line-height: 1.45; }
+.auth-success svg { flex: 0 0 auto; margin-top: .08rem; color: #a3f1c8; }
+.auth-success strong { color: #c8f8dd; }
 .auth-switch-link { margin: 0; padding-top: .1rem; color: rgba(255,247,220,.62); font-size: .76rem; text-align: center; }
 .auth-switch-link a { color: var(--gold-light); font-weight: 850; text-underline-offset: 4px; }
 .auth-switch-link a:hover { text-decoration: underline; }

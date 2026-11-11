@@ -8,7 +8,7 @@ describe("authentication security boundaries", () => {
   beforeEach(() => resetRateLimitsForTests());
 
   it("returns safe public messages rather than upstream details", () => {
-    expect(getPublicAuthError({ code: "invalid_credentials" })).toMatch(/incorrect/i);
+    expect(getPublicAuthError({ code: "invalid_credentials" })).toBe("Invalid email or password.");
     expect(getPublicAuthError({ code: "database_error", message: "private detail" })).not.toContain("private detail");
   });
 
