@@ -288,7 +288,6 @@ button, a { -webkit-tap-highlight-color: transparent; }
   .leaderboard-list { gap: .3rem; }
   .leaderboard-list li { min-height: 2.65rem; padding: .35rem .55rem; font-size: .76rem; }
   .profile-panel { gap: .55rem; }
-  .profile-identity { padding: .55rem; }
   .auth-stage { padding: 3.45rem .65rem .35rem; }
   .auth-panel { width: min(100%,26rem); padding: .7rem .9rem; }
   .auth-heading { margin-bottom: .55rem; }
