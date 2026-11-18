@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { requestAudioCatalog } from "@/components/audio/audio-controller";
+import { requestAudioCatalog } from "@/lib/audio/audio-player";
 
 afterEach(() => vi.unstubAllGlobals());
 

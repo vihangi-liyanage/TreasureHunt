@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { createGameplayPreloader, getGameplayAssetUrls } from "@/game/preload-gameplay";
 import { getLevelConfig } from "@/game/config/levels";
+import { loadGameAssets } from "@/game/render/load-assets";
 
 describe("selected-world gameplay preload", () => {
   it("contains only the shared hunter and selected world's required textures", () => {
@@ -19,10 +20,11 @@ describe("selected-world gameplay preload", () => {
     const loadImage = vi.fn(async (url) => url);
     const preloader = createGameplayPreloader({ loadRuntime, loadImage });
 
-    await Promise.all([
+    const [first] = await Promise.all([
       preloader.preloadWorld("emerald-jungle"),
       preloader.preloadWorld("emerald-jungle"),
     ]);
+    expect(first.assetUrls["/art/gameplay/emerald-jungle-panorama.png"]).toBe("/art/gameplay/emerald-jungle-panorama.png");
     expect(preloader.isWorldPreloaded("emerald-jungle")).toBe(true);
     expect(preloader.isWorldPreloaded("sunset-ruins")).toBe(false);
     await preloader.preloadWorld("sunset-ruins");
@@ -53,5 +55,20 @@ describe("selected-world gameplay preload", () => {
   it("rejects unknown worlds rather than faking readiness", async () => {
     const preloader = createGameplayPreloader({ loadRuntime: vi.fn(), loadImage: vi.fn() });
     await expect(preloader.preloadWorld("unknown-world")).rejects.toThrow("No playable level");
+  });
+
+  it("passes prepared resource URLs into Phaser's normal texture loader", () => {
+    const image = vi.fn();
+    const spritesheet = vi.fn();
+    const art = getLevelConfig("emerald-jungle").art;
+    const prepared = {
+      "/art/gameplay/emerald-jungle-panorama.png": "blob:prepared-panorama",
+      "/art/gameplay/hunter-atlas.png": "blob:prepared-hunter",
+      "/art/gameplay/jungle-objects-atlas.png": "blob:prepared-objects",
+      "/art/gameplay/jungle-terrain-atlas.png": "blob:prepared-terrain",
+    };
+    loadGameAssets({ load: { image, spritesheet } }, art, prepared);
+    expect(image).toHaveBeenCalledWith("world-panorama", "blob:prepared-panorama");
+    expect(spritesheet.mock.calls.map(([, url]) => url)).toEqual(["blob:prepared-hunter", "blob:prepared-objects", "blob:prepared-terrain"]);
   });
 });

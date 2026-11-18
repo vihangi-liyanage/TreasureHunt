@@ -15,10 +15,11 @@ import { ProjectileSystem } from "@/game/systems/projectile-system";
 export class WorldScene extends Phaser.Scene {
   constructor() { super("WorldScene"); }
 
-  init({ world, level, bridge }) {
+  init({ world, level, bridge, assetUrls = {} }) {
     this.worldConfig = world;
     this.level = level;
     this.bridge = bridge;
+    this.preparedAssetUrls = assetUrls;
     this.commandCleanups = [];
     this.effectObjects = new Set();
     this.isPaused = false;
@@ -32,7 +33,7 @@ export class WorldScene extends Phaser.Scene {
       this.assetLoadFailed = true;
       this.bridge.emit(GAME_EVENTS.LOAD_FAILED, { assetKey: file.key });
     });
-    loadGameAssets(this, this.level.art);
+    loadGameAssets(this, this.level.art, this.preparedAssetUrls);
   }
 
   create() {
@@ -269,7 +270,16 @@ export class WorldScene extends Phaser.Scene {
 
   touchEnemy(enemy) {
     if (!enemy.active || this.run.status !== "playing") return;
-    const stomped = isStompCollision({ playerVelocityY: this.player.body.velocity.y, playerBottom: this.player.body.bottom, enemyCenterY: enemy.body.center.y });
+    const stomped = isStompCollision({
+      playerVelocityY: this.player.body.velocity.y,
+      previousPlayerBottom: this.player.body.prev.y + this.player.body.height,
+      playerBottom: this.player.body.bottom,
+      playerLeft: this.player.body.left,
+      playerRight: this.player.body.right,
+      enemyTop: enemy.body.top,
+      enemyLeft: enemy.body.left,
+      enemyRight: enemy.body.right,
+    });
     if (stomped) {
       this.defeatEnemy(enemy, "stomp");
       this.player.setVelocityY(-390);

@@ -82,9 +82,10 @@ function expectEnemyPatrolsSupported(level) {
 }
 
 function expectHazardsSupported(level) {
-  const ground = groundSections(level);
   for (const hazard of level.hazards) {
-    const support = ground.find((platform) => hazard.x >= platform.x - platform.width / 2 && hazard.x <= platform.x + platform.width / 2);
+    const support = level.platforms.find((platform) => hazard.x >= platform.x - platform.width / 2
+      && hazard.x <= platform.x + platform.width / 2
+      && Math.abs(platform.top - (hazard.top + 52)) <= 2);
     expect(support, `hazard at x=${hazard.x}`).toBeTruthy();
   }
 }
@@ -160,7 +161,7 @@ describe("Sunset Ruins level contract", () => {
 
   it("adds a measured difficulty increase without changing fixed combat rules", () => {
     expect(SUNSET_RUINS_LEVEL.motion.gravity).toBeGreaterThan(0);
-    expect(SUNSET_RUINS_LEVEL.enemies).toHaveLength(7);
+    expect(SUNSET_RUINS_LEVEL.enemies).toHaveLength(11);
     expect(Math.max(...SUNSET_RUINS_LEVEL.enemies.map((enemy) => enemy.speed))).toBeGreaterThan(
       Math.max(...EMERALD_JUNGLE_LEVEL.enemies.map((enemy) => enemy.speed)),
     );
@@ -205,7 +206,7 @@ describe("Crystal Cavern final-level contract", () => {
   });
 
   it("increases enemy pressure without changing the eight-second power rule", () => {
-    expect(CRYSTAL_CAVERN_LEVEL.enemies).toHaveLength(9);
+    expect(CRYSTAL_CAVERN_LEVEL.enemies).toHaveLength(12);
     expect(Math.max(...CRYSTAL_CAVERN_LEVEL.enemies.map((enemy) => enemy.speed))).toBeGreaterThan(
       Math.max(...SUNSET_RUINS_LEVEL.enemies.map((enemy) => enemy.speed)),
     );
@@ -263,8 +264,8 @@ describe("three-world competitive balance", () => {
   });
 
   it("increases grounded enemy and hazard pressure across the journey", () => {
-    expect(levels.map((level) => level.enemies.length)).toEqual([6, 7, 9]);
-    expect(levels.map((level) => level.hazards.length)).toEqual([5, 5, 7]);
+    expect(levels.map((level) => level.enemies.length)).toEqual([8, 11, 12]);
+    expect(levels.map((level) => level.hazards.length)).toEqual([7, 8, 10]);
     for (const level of levels) {
       expectEnemyPatrolsSupported(level);
       expectHazardsSupported(level);
@@ -277,7 +278,14 @@ describe("three-world competitive balance", () => {
     const timers = [120, 105, 90];
     const maximumScores = levels.map((level, index) =>
       level.coins.length * COIN_SCORE + level.gems.length * GEM_SCORE + level.enemies.length * ENEMY_SCORE + timers[index] * 10);
-    expect(maximumScores).toEqual([7_300, 7_500, 8_250]);
+    expect(maximumScores).toEqual([7_800, 8_500, 9_000]);
+  });
+
+  it("adds reachable mandatory gaps without changing jump physics", () => {
+    expect(levels.map((level) => groundSections(level).length - 1)).toEqual([7, 10, 11]);
+    expect(levels.map((level) => level.motion.jumpVelocity)).toEqual([750, 750, 750]);
+    expect(levels.map((level) => level.motion.gravity)).toEqual([1500, 1500, 1500]);
+    for (const level of levels) expectDeliberateGroundGaps(level);
   });
 });
 
@@ -336,9 +344,11 @@ describe("fish power-up combat rules", () => {
 
 describe("enemy collision rules", () => {
   it("accepts a descending top hit and rejects side contact", () => {
-    expect(isStompCollision({ playerVelocityY: 260, playerBottom: 500, enemyCenterY: 510 })).toBe(true);
-    expect(isStompCollision({ playerVelocityY: 0, playerBottom: 500, enemyCenterY: 510 })).toBe(false);
-    expect(isStompCollision({ playerVelocityY: 260, playerBottom: 545, enemyCenterY: 510 })).toBe(false);
+    const topHit = { previousPlayerBottom: 488, playerBottom: 505, playerLeft: 100, playerRight: 150, enemyTop: 500, enemyLeft: 105, enemyRight: 165 };
+    expect(isStompCollision({ ...topHit, playerVelocityY: 260 })).toBe(true);
+    expect(isStompCollision({ ...topHit, playerVelocityY: 0 })).toBe(false);
+    expect(isStompCollision({ ...topHit, playerVelocityY: 260, previousPlayerBottom: 525 })).toBe(false);
+    expect(isStompCollision({ ...topHit, playerVelocityY: 260, playerLeft: 20, playerRight: 90 })).toBe(false);
   });
 });
 

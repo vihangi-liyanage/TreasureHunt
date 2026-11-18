@@ -35,6 +35,26 @@ beforeEach(() => {
 });
 
 describe("HTML audio music player", () => {
+  it("reuses a prepared Welcome media element instead of downloading it again", async () => {
+    const ready = player.prepareMusicCandidate(candidate(1));
+    expect(audios).toHaveLength(1);
+    audios[0].dispatchEvent(new Event("canplay"));
+    await expect(ready).resolves.toBe(true);
+    player.setTrack("welcome", [candidate(1)]);
+    expect(audios).toHaveLength(1);
+    expect(audios[0].play).toHaveBeenCalledOnce();
+  });
+
+  it("warms an effect preview without playing it", async () => {
+    const ready = player.warmEffectCandidate(candidate(9));
+    const audio = audios[0];
+    expect(audio.play).not.toHaveBeenCalled();
+    audio.dispatchEvent(new Event("canplay"));
+    await expect(ready).resolves.toBe(true);
+    expect(audio.pause).toHaveBeenCalled();
+    expect(audio.removeAttribute).toHaveBeenCalledWith("src");
+  });
+
   it("creates no duplicate playback for the same route and candidates", async () => {
     player.setTrack("welcome", [candidate(1)]);
     player.setTrack("welcome", [candidate(1)]);

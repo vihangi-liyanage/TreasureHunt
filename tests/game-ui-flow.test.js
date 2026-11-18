@@ -31,13 +31,15 @@ describe("gameplay UI flow", () => {
     expect(styles).toContain(".resume-canvas-countdown");
   });
 
-  it("redirects directly to Welcome without the former timed Splash screen", () => {
+  it("uses the functional startup Splash screen without a fixed-delay redirect", () => {
     const home = source("app/page.js");
     const styles = source("app/globals.css");
-    expect(home).toContain('redirect("/welcome")');
-    expect(home).not.toContain("SplashScreen");
-    expect(styles).not.toContain(".splash-screen");
-    expect(styles).not.toContain("splash-load");
+    const splash = source("components/screens/splash-screen.js");
+    expect(home).toContain("<SplashScreen />");
+    expect(splash).toContain("preloadStartup");
+    expect(splash).toContain('router.replace("/welcome")');
+    expect(splash).not.toContain("setTimeout");
+    expect(styles).toContain(".splash-screen");
   });
 
   it("offers a next world for checkpoints but never after the final treasure", () => {
@@ -55,6 +57,13 @@ describe("gameplay UI flow", () => {
     expect(screen).toContain('missionComplete ? "mission-actions"');
     expect(map).toContain("useState(initialOverlay)");
     expect(map).toContain('<GameOverlay title="Leaderboard"');
+  });
+
+  it("skips the World Map preparing state for a world completed by startup preload", () => {
+    const map = source("components/worlds/world-map.js");
+    const screen = source("components/game/game-screen.js");
+    expect(map).toContain("if (!gameplayPreloader.isWorldPreloaded(selectedWorld.id))");
+    expect(screen).toContain("createTreasureHuntGame(parentRef.current, { world, level, bridge, assetUrls })");
   });
 
   it("presents checkpoint semantics as Compass Shrines without changing the domain contract", () => {
@@ -90,7 +99,7 @@ describe("gameplay UI flow", () => {
   it("connects route music through the internal catalog without exposing Freesound credentials", () => {
     const controller = source("components/audio/audio-controller.js");
     const player = source("lib/audio/audio-player.js");
-    expect(controller).toContain("/api/audio/catalog?slot=");
+    expect(player).toContain("/api/audio/catalog?slot=");
     expect(controller).toContain("subscribeAudioPreferences");
     expect(controller).toContain("visibilitychange");
     expect(controller).not.toContain("FREESOUND_API_KEY");

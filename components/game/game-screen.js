@@ -140,8 +140,8 @@ export function GameScreen({ world, mode, showInstructions = false }) {
       if (!level) { router.replace(mapHref); return; }
       try {
         beginVerifiedRun();
-        const { createTreasureHuntGame } = await gameplayPreloader.preloadWorld(world.id);
-        if (active && parentRef.current) game = createTreasureHuntGame(parentRef.current, { world, level, bridge });
+        const { createTreasureHuntGame, assetUrls } = await gameplayPreloader.preloadWorld(world.id);
+        if (active && parentRef.current) game = createTreasureHuntGame(parentRef.current, { world, level, bridge, assetUrls });
       } catch {
         if (active) { setShowLoading(false); setLoadError("The game could not be prepared. Check your connection and try again."); }
       }

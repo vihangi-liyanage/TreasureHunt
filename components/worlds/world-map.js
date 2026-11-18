@@ -43,12 +43,14 @@ export function WorldMap({ worlds, mode = "guest", completedWorldIds = [], profi
 
   const playWorld = useCallback(async () => {
     if (launchState.status === "preparing") return;
-    setLaunchState({ worldId: selectedWorld.id, status: "preparing", message: "" });
-    try {
-      await gameplayPreloader.preloadWorld(selectedWorld.id);
-    } catch {
-      setLaunchState({ worldId: selectedWorld.id, status: "error", message: `${selectedWorld.name} could not be prepared. Please try again.` });
-      return;
+    if (!gameplayPreloader.isWorldPreloaded(selectedWorld.id)) {
+      setLaunchState({ worldId: selectedWorld.id, status: "preparing", message: "" });
+      try {
+        await gameplayPreloader.preloadWorld(selectedWorld.id);
+      } catch {
+        setLaunchState({ worldId: selectedWorld.id, status: "error", message: `${selectedWorld.name} could not be prepared. Please try again.` });
+        return;
+      }
     }
     const parameters = new URLSearchParams();
     if (mode === "guest") { parameters.set("mode", "guest"); parameters.set("attempt", String(beginGuestRun())); }

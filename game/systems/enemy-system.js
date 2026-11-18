@@ -19,8 +19,14 @@ export class EnemySystem {
     for (const enemy of this.group.getChildren()) {
       if (!enemy.active) continue;
       const data = enemy.data.values;
-      if (enemy.x <= data.left) data.direction = 1;
-      if (enemy.x >= data.right) data.direction = -1;
+      if (enemy.x <= data.left || enemy.body?.blocked?.left) {
+        enemy.x = Math.max(enemy.x, data.left);
+        data.direction = 1;
+      }
+      if (enemy.x >= data.right || enemy.body?.blocked?.right) {
+        enemy.x = Math.min(enemy.x, data.right);
+        data.direction = -1;
+      }
       enemy.setVelocityX(data.speed * data.direction).setFlipX(data.direction < 0);
     }
   }

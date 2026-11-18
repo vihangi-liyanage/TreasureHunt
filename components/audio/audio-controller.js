@@ -3,52 +3,7 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
 import { EFFECT_SLOTS, getAudioCatalogSlot, getMusicSlotForPath, selectConfiguredCandidates } from "@/lib/audio/audio-catalog";
-import { audioPlayer, getAudioPreferences, getServerAudioPreferences, subscribeAudioPreferences } from "@/lib/audio/audio-player";
-
-const CLIENT_CACHE_PREFIX = "treasurehunt.audio-catalog.v1.";
-const CLIENT_CACHE_TTL_MS = 15 * 60_000;
-const catalogCache = new Map();
-
-function isSafePreview(value) {
-  try {
-    const url = new URL(value);
-    return url.protocol === "https:" && (url.hostname === "freesound.org" || url.hostname.endsWith(".freesound.org"));
-  } catch { return false; }
-}
-
-function readSessionCatalog(slot, now = Date.now()) {
-  if (typeof window === "undefined") return null;
-  try {
-    const cached = JSON.parse(window.sessionStorage.getItem(`${CLIENT_CACHE_PREFIX}${slot}`));
-    if (!cached || cached.expiresAt <= now || !Array.isArray(cached.catalog?.candidates)) return null;
-    const safe = cached.catalog.candidates.every((candidate) => {
-      const previews = Object.values(candidate?.previews || {});
-      return Number.isInteger(candidate?.id) && previews.length > 0 && previews.every(isSafePreview);
-    });
-    return safe ? cached.catalog : null;
-  } catch { return null; }
-}
-
-function writeSessionCatalog(slot, catalog, now = Date.now()) {
-  if (typeof window === "undefined" || !catalog) return;
-  try { window.sessionStorage.setItem(`${CLIENT_CACHE_PREFIX}${slot}`, JSON.stringify({ expiresAt: now + CLIENT_CACHE_TTL_MS, catalog })); }
-  catch { /* Metadata caching is an optional optimization. */ }
-}
-
-export function requestAudioCatalog(slot) {
-  const sessionCatalog = readSessionCatalog(slot);
-  if (sessionCatalog) return Promise.resolve(sessionCatalog);
-  const existing = catalogCache.get(slot);
-  if (existing) return existing;
-  const request = fetch(`/api/audio/catalog?slot=${encodeURIComponent(slot)}`)
-    .then(async (response) => response.ok ? response.json() : null)
-    .then((body) => body?.catalog ?? null)
-    .then((catalog) => { if (catalog) writeSessionCatalog(slot, catalog); return catalog; })
-    .catch(() => null)
-    .finally(() => { if (catalogCache.get(slot) === request) catalogCache.delete(slot); });
-  catalogCache.set(slot, request);
-  return request;
-}
+import { audioPlayer, getAudioPreferences, getServerAudioPreferences, requestAudioCatalog, subscribeAudioPreferences } from "@/lib/audio/audio-player";
 
 export function AudioController() {
   const pathname = usePathname();

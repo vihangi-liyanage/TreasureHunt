@@ -27,7 +27,7 @@ export const EMERALD_JUNGLE_LEVEL = Object.freeze({
   motion: EMERALD_JUNGLE_MOTION,
   platforms: Object.freeze([
     platform("ground-1",400,640,700,"ground"), platform("ground-2",1_210,640,560,"ground"),
-    platform("ground-3",1_990,640,640,"ground"), platform("ground-4",2_790,640,600,"ground"),
+    platform("ground-3a",1_785,640,230,"ground"), platform("ground-3b",2_195,640,230,"ground"), platform("ground-4",2_790,640,600,"ground"),
     platform("ground-5",3_590,640,600,"ground"), platform("ground-6",4_420,640,650,"ground"),
     platform("ground-7",5_440,640,1_120,"ground"),
     platform("ledge-1",610,505,250), platform("ledge-2",905,390,220,"step"),
@@ -39,7 +39,7 @@ export const EMERALD_JUNGLE_LEVEL = Object.freeze({
     platform("ledge-13",4_820,420,230), platform("ledge-14",5_160,320,190,"step"),
     platform("ledge-15",5_510,430,240), platform("ledge-16",5_800,340,200,"step"),
   ]),
-  mandatoryRoute: Object.freeze(["ground-1","ground-2","ground-3","ground-4","ground-5","ground-6","ground-7"]),
+  mandatoryRoute: Object.freeze(["ground-1","ground-2","ground-3a","ground-3b","ground-4","ground-5","ground-6","ground-7"]),
   coins: Object.freeze([
     [300,575],[480,575],[560,440],[650,440],[860,325],[950,325],[1_130,575],[1_230,435],
     [1_610,380],[1_710,380],[1_970,305],[2_050,305],[2_320,435],[2_410,435],
@@ -61,15 +61,18 @@ export const EMERALD_JUNGLE_LEVEL = Object.freeze({
   ]),
   enemies: Object.freeze([
     Object.freeze({ id:"critter-1",x:700,y:570,left:650,right:720,speed:54 }),
-    Object.freeze({ id:"critter-2",x:2_620,y:570,left:2_500,right:3_020,speed:84 }),
-    Object.freeze({ id:"critter-3",x:3_710,y:570,left:3_390,right:3_880,speed:92 }),
-    Object.freeze({ id:"critter-4",x:4_450,y:570,left:4_250,right:4_660,speed:98 }),
-    Object.freeze({ id:"critter-5",x:5_160,y:570,left:5_000,right:5_350,speed:102 }),
-    Object.freeze({ id:"critter-6",x:5_620,y:570,left:5_480,right:5_750,speed:106 }),
+    Object.freeze({ id:"critter-2",x:1_100,y:570,left:1_020,right:1_260,speed:68 }),
+    Object.freeze({ id:"critter-3",x:2_620,y:570,left:2_500,right:3_020,speed:84 }),
+    Object.freeze({ id:"critter-4",x:3_710,y:570,left:3_390,right:3_880,speed:92 }),
+    Object.freeze({ id:"critter-5",x:4_450,y:570,left:4_250,right:4_660,speed:98 }),
+    Object.freeze({ id:"critter-6",x:5_160,y:570,left:5_000,right:5_350,speed:102 }),
+    Object.freeze({ id:"critter-7",x:5_620,y:570,left:5_480,right:5_750,speed:106 }),
+    Object.freeze({ id:"critter-8",x:2_180,y:570,left:2_130,right:2_270,speed:88 }),
   ]),
   hazards: Object.freeze([
     Object.freeze({ x:1_345,top:588,width:88 }), Object.freeze({ x:2_900,top:588,width:96 }),
     Object.freeze({ x:4_510,top:588,width:82 }), Object.freeze({ x:5_220,top:588,width:88 }),
-    Object.freeze({ x:5_680,top:588,width:92 }),
+    Object.freeze({ x:5_680,top:588,width:92 }), Object.freeze({ x:2_010,top:318,width:60 }),
+    Object.freeze({ x:4_570,top:453,width:60 }),
   ]),
 });

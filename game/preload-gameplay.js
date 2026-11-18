@@ -12,22 +12,28 @@ export function getGameplayAssetUrls(level) {
   ];
 }
 
-function loadBrowserImage(url) {
-  return new Promise((resolve, reject) => {
-    const image = new Image();
-    image.decoding = "async";
-    image.onload = async () => {
-      try { await image.decode?.(); } catch { /* A loaded image remains usable if eager decode is unavailable. */ }
-      resolve(url);
-    };
-    image.onerror = () => reject(new Error(`Gameplay asset could not be loaded: ${url}`));
-    image.src = url;
-  });
+async function loadBrowserAsset(url) {
+  const response = await fetch(url, { cache: "force-cache" });
+  if (!response.ok) throw new Error(`Gameplay asset could not be loaded: ${url}`);
+  const objectUrl = URL.createObjectURL(await response.blob());
+  try {
+    await new Promise((resolve, reject) => {
+      const image = new Image();
+      image.decoding = "async";
+      image.onload = resolve;
+      image.onerror = () => reject(new Error(`Gameplay asset could not be decoded: ${url}`));
+      image.src = objectUrl;
+    });
+    return objectUrl;
+  } catch (error) {
+    URL.revokeObjectURL(objectUrl);
+    throw error;
+  }
 }
 
 export function createGameplayPreloader({
   loadRuntime = () => import("@/game/create-game"),
-  loadImage = loadBrowserImage,
+  loadImage = loadBrowserAsset,
 } = {}) {
   let runtimeRequest = null;
   const assetRequests = new Map();
@@ -57,12 +63,13 @@ export function createGameplayPreloader({
   async function preloadWorld(worldId) {
     const level = getLevelConfig(worldId);
     if (!level) throw new Error(`No playable level is configured for ${worldId}.`);
-    const [gameModule] = await Promise.all([
+    const urls = getGameplayAssetUrls(level);
+    const [gameModule, ...preparedUrls] = await Promise.all([
       runtime(),
-      ...getGameplayAssetUrls(level).map(asset),
+      ...urls.map(asset),
     ]);
     preloadedWorlds.add(worldId);
-    return gameModule;
+    return Object.freeze({ ...gameModule, assetUrls: Object.freeze(Object.fromEntries(urls.map((url, index) => [url, preparedUrls[index]]))) });
   }
 
   return Object.freeze({
