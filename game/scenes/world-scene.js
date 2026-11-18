@@ -69,7 +69,7 @@ export class WorldScene extends Phaser.Scene {
     }
   }
 
-  resizeBackdrop(width, height) {
+  resizeBackdrop(width, height, centerX = width / 2, centerY = height / 2) {
     const source = this.textures.get("world-panorama").getSourceImage();
     const layout = getBackdropCoverLayout({
       sourceWidth: source.width,
@@ -77,9 +77,11 @@ export class WorldScene extends Phaser.Scene {
       viewportWidth: width,
       viewportHeight: height,
       overscan: this.level.art.backdropOverscan,
+      centerX,
+      centerY,
     });
     this.backdrop.setDisplaySize(layout.width, layout.height).setPosition(layout.x, layout.y);
-    this.backdropShade.setDisplaySize(width, height);
+    this.backdropShade.setDisplaySize(width, height).setPosition(centerX - width / 2, centerY - height / 2);
   }
 
   createLevelGeometry() {

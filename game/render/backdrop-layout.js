@@ -5,8 +5,11 @@ export function getBackdropCoverLayout({
   viewportHeight,
   overscan = 1,
   bleed = 2,
+  centerX = viewportWidth / 2,
+  centerY = viewportHeight / 2,
 }) {
-  if ([sourceWidth, sourceHeight, viewportWidth, viewportHeight].some((value) => !Number.isFinite(value) || value <= 0)) {
+  if ([sourceWidth, sourceHeight, viewportWidth, viewportHeight].some((value) => !Number.isFinite(value) || value <= 0)
+    || [centerX, centerY].some((value) => !Number.isFinite(value))) {
     throw new TypeError("Backdrop dimensions must be positive numbers.");
   }
 
@@ -22,7 +25,7 @@ export function getBackdropCoverLayout({
   return {
     width,
     height,
-    x: (viewportWidth - width) / 2,
-    y: (viewportHeight - height) / 2,
+    x: centerX - width / 2,
+    y: centerY - height / 2,
   };
 }

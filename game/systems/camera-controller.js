@@ -18,7 +18,7 @@ export class CameraController {
     const viewportWidth = width / zoom;
     const viewportHeight = height / zoom;
     this.camera.setDeadzone(Math.min(220, viewportWidth * 0.34), Math.min(110, viewportHeight * 0.18));
-    this.scene.resizeBackdrop(viewportWidth, viewportHeight);
+    this.scene.resizeBackdrop(viewportWidth, viewportHeight, width / 2, height / 2);
   }
 
   destroy() {
