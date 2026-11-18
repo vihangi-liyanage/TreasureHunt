@@ -43,8 +43,10 @@ export class PlayerController {
       this.player.setAccelerationX(this.facing * (grounded ? this.motion.groundAcceleration : this.motion.airAcceleration)).setDragX(0).setFlipX(this.facing < 0);
     }
     this.player.setMaxVelocity(this.motion.moveSpeed, 980);
+    let jumped = false;
     if (hasBufferedJump && canUseCoyote) {
       this.player.setVelocityY(-this.motion.jumpVelocity);
+      jumped = true;
       this.jumpQueuedAt = -Infinity;
       this.lastGroundedAt = -Infinity;
     }
@@ -53,7 +55,7 @@ export class PlayerController {
     this.updateAnimation(grounded, now);
     const landed = grounded && !this.wasGrounded;
     this.wasGrounded = grounded;
-    return { shoot, landed, facing: this.facing };
+    return { shoot, jumped, landed, facing: this.facing };
   }
 
   updateAnimation(grounded, now) {

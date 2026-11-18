@@ -5,17 +5,7 @@ afterEach(() => {
   vi.resetModules();
 });
 
-describe("audio preferences and soundtrack routing", () => {
-  it("selects distinct soundtracks only for the three game worlds", async () => {
-    const { AUDIO_TRACKS, getTrackForPath } = await import("@/lib/audio/audio-service");
-    expect(getTrackForPath("/welcome")).toBeNull();
-    expect(getTrackForPath("/game/emerald-jungle")).toBe("emerald-jungle");
-    expect(getTrackForPath("/game/sunset-ruins?mode=guest")).toBe("sunset-ruins");
-    expect(getTrackForPath("/game/crystal-cavern")).toBe("crystal-cavern");
-    expect(getTrackForPath("/worlds")).toBeNull();
-    expect(new Set(Object.values(AUDIO_TRACKS).map((track) => track.bpm)).size).toBe(3);
-  });
-
+describe("audio preferences", () => {
   it("persists music and effects independently", async () => {
     const stored = new Map();
     const browserWindow = new EventTarget();
@@ -25,7 +15,7 @@ describe("audio preferences and soundtrack routing", () => {
     };
     vi.stubGlobal("window", browserWindow);
     vi.stubGlobal("CustomEvent", class extends Event { constructor(type) { super(type); } });
-    const { getAudioPreferences, hydrateAudioPreferences, setAudioPreference } = await import("@/lib/audio/audio-service");
+    const { getAudioPreferences, hydrateAudioPreferences, setAudioPreference } = await import("@/lib/audio/audio-player");
 
     hydrateAudioPreferences();
     setAudioPreference("music", false);
@@ -34,47 +24,13 @@ describe("audio preferences and soundtrack routing", () => {
     expect(JSON.parse(stored.get("treasurehunt.audio.v1"))).toEqual({ music: false, effects: false, volume: 70 });
   });
 
-  it("synthesizes only the four requested effect cues", async () => {
-    const oscillators = [];
-    class FakeAudioContext {
-      constructor() { this.state = "running"; this.currentTime = 0; this.destination = {}; }
-      createGain() { return { gain: { value: 0, setValueAtTime() {}, exponentialRampToValueAtTime() {} }, connect() {} }; }
-      createDynamicsCompressor() { return { threshold: {}, knee: {}, ratio: {}, attack: {}, release: {}, connect() {} }; }
-      createOscillator() {
-        const oscillator = {
-          frequency: { setValueAtTime() {}, exponentialRampToValueAtTime() {} },
-          connect() {}, start() {}, stop() {}, addEventListener() {},
-        };
-        oscillators.push(oscillator);
-        return oscillator;
-      }
-      resume() { return Promise.resolve(); }
-      close() { return Promise.resolve(); }
-    }
-    const browserWindow = new EventTarget();
-    browserWindow.AudioContext = FakeAudioContext;
-    browserWindow.localStorage = { getItem: () => null, setItem() {} };
-    vi.stubGlobal("window", browserWindow);
-    vi.stubGlobal("CustomEvent", class extends Event { constructor(type) { super(type); } });
-    const { audioService, hydrateAudioPreferences } = await import("@/lib/audio/audio-service");
-
-    hydrateAudioPreferences();
-    await audioService.unlock();
-    ["coin", "gem", "fish", "gameover"].forEach((effect) => audioService.playEffect(effect));
-    expect(oscillators).toHaveLength(13);
-    audioService.playEffect("jump");
-    expect(oscillators).toHaveLength(13);
-    ["damage", "damage", "extra-life", "countdown", "countdown-go"].forEach((effect) => audioService.playEffect(effect));
-    expect(oscillators).toHaveLength(24);
-  });
-
   it("clamps and persists the shared volume percentage", async () => {
     const stored = new Map();
     const browserWindow = new EventTarget();
     browserWindow.localStorage = { getItem: (key) => stored.get(key) ?? null, setItem: (key, value) => stored.set(key, value) };
     vi.stubGlobal("window", browserWindow);
     vi.stubGlobal("CustomEvent", class extends Event { constructor(type) { super(type); } });
-    const { getAudioPreferences, setAudioVolume } = await import("@/lib/audio/audio-service");
+    const { getAudioPreferences, setAudioVolume } = await import("@/lib/audio/audio-player");
 
     setAudioVolume(115);
     expect(getAudioPreferences().volume).toBe(100);
@@ -84,44 +40,9 @@ describe("audio preferences and soundtrack routing", () => {
     expect(JSON.parse(stored.get("treasurehunt.audio.v1")).volume).toBe(64);
   });
 
-  it("stops world music when navigating to the silent welcome screen", async () => {
-    vi.useFakeTimers();
-    const starts = [];
-    const stops = [];
-    class FakeAudioContext {
-      constructor() { this.state = "running"; this.currentTime = 4; this.destination = {}; }
-      createGain() { return { gain: { value: 0, setValueAtTime() {}, exponentialRampToValueAtTime() {}, setTargetAtTime() {} }, connect() {} }; }
-      createDynamicsCompressor() { return { threshold: {}, knee: {}, ratio: {}, attack: {}, release: {}, connect() {} }; }
-      createOscillator() {
-        return {
-          frequency: { setValueAtTime() {}, exponentialRampToValueAtTime() {} },
-          connect() {}, start: (time) => starts.push(time), stop: () => stops.push(true), addEventListener() {},
-        };
-      }
-      resume() { return Promise.resolve(); }
-      close() { return Promise.resolve(); }
-    }
-    const browserWindow = new EventTarget();
-    browserWindow.AudioContext = FakeAudioContext;
-    browserWindow.localStorage = { getItem: () => null, setItem() {} };
-    browserWindow.setTimeout = setTimeout;
-    browserWindow.clearTimeout = clearTimeout;
-    vi.stubGlobal("window", browserWindow);
-    vi.stubGlobal("CustomEvent", class extends Event { constructor(type) { super(type); } });
-    const { audioService, hydrateAudioPreferences } = await import("@/lib/audio/audio-service");
-
-    hydrateAudioPreferences();
-    audioService.setMusic("emerald-jungle");
-    await audioService.unlock();
-    expect(starts).toHaveLength(40);
-    expect(starts[0]).toBe(4);
-    const scheduledStops = stops.length;
-
-    audioService.setMusic(null);
-    expect(stops).toHaveLength(scheduledStops + 40);
-    vi.advanceTimersByTime(10_000);
-    expect(starts).toHaveLength(40);
-    audioService.destroy();
-    vi.useRealTimers();
+  it("contains no browser audio playback implementation", async () => {
+    const audioPreferences = await import("@/lib/audio/audio-player");
+    expect(audioPreferences).not.toHaveProperty("audioService");
+    expect(audioPreferences).not.toHaveProperty("AUDIO_TRACKS");
   });
 });

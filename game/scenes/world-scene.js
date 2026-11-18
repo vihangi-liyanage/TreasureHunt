@@ -216,6 +216,7 @@ export class WorldScene extends Phaser.Scene {
       this.tickTimer();
     }
     const actions = this.playerController.update(this.runClockMs);
+    if (actions.jumped) this.bridge.emit(GAME_EVENTS.PLAYER_JUMPED, { worldId: this.worldConfig.id });
     if (actions.landed) this.createDust(this.player.x, this.player.body.bottom);
     if (actions.shoot && this.projectileSystem.fire(this.player, actions.facing, this.runClockMs)) this.playerController.showShoot(this.runClockMs);
     this.enemySystem.update();

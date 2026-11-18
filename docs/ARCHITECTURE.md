@@ -90,11 +90,11 @@ The workspace uses TypeScript 6.0.3 as the JavaScript language service. TS5101 r
 
 The observed Windows `.next` `EPERM` failure was caused by the managed filesystem sandbox rather than Next worker concurrency. The project keeps Next's default worker configuration; production verification runs outside that sandbox when required.
 
-## Phase 9 audio boundary
+## External audio boundary
 
-`AudioController` is the single application-lifetime owner for browser audio. It maps the current route to one original procedural soundtrack, installs the user-interaction unlock required by browser autoplay policy, and destroys its context/listeners on unmount. `audio-service.js` owns the Web Audio context, eight-beat layered loop scheduling, oscillator cleanup, independent music/effect switches, master volume, gentle output compression, and versioned local persistence. Route changes stop the previous loop before starting another, so screens never create competing players.
+`AudioController` is the application-lifetime React integration point. It loads validated catalog metadata through the internal Route Handler, prioritizes route music before effect metadata, keeps a validated 15-minute session cache, and owns autoplay/visibility listeners. It warms only likely next-route metadata; effect media is loaded on demand so it cannot compete with initial music. `audio-player.js` owns HTML audio lifecycle, one music voice, bounded effect voices, per-slot gain, pause reasons, fallbacks, master volume and preference persistence. `audio-catalog.js` contains only slot/search/approved-ID configuration. `freesound-server.js` is server-only and owns authenticated HTTPS requests, CC0 and URL validation, timeouts, caching and sanitized metadata.
 
-Phaser remains audio-independent. Existing serialisable collection, `player:damaged`, `run:revived` and run-ended bridge events let `GameScreen` request focused effects; enemy contact, thorns and falls converge on the same damage event and therefore the same cue. The React-owned resume state plays one guarded pulse for each 3→2→1→GO step during normal and revival countdowns. No physics or Fish module imports Web Audio. Pause state crosses through the existing snapshot and suspends soundtrack scheduling, while the normal resume command restarts it. Reduced-motion media queries and scene checks remain unchanged because motion accessibility is an operating-system concern, not an audio preference.
+Phaser remains provider-independent. It emits serialisable gameplay events; `GameScreen` maps those events to audio slots while retaining scoring and persistence callbacks. The only added event, `player:jumped`, represents a successful physics-approved jump. No player, enemy, projectile, Fish, authentication or persistence module imports Freesound or the browser player.
 
 ## Phase 6 UI orchestration
 

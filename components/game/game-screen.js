@@ -11,8 +11,8 @@ import { WORLD_CONFIGS } from "@/game/config/worlds";
 import { beginGuestRun, completeGuestWorld, deriveWorldStates, readGuestProgress, recordGuestCollectible } from "@/lib/progress/guest-progress";
 import { getAchievement } from "@/lib/game/achievements";
 import { postJson, postJsonWithRetry } from "@/lib/auth/client-api";
-import { audioService } from "@/lib/audio/audio-service";
 import { gameplayPreloader } from "@/game/preload-gameplay";
+import { audioPlayer } from "@/lib/audio/audio-player";
 import { MobileControls } from "./mobile-controls";
 import { getNextResumeStep, getNextWorld, RESUME_COUNTDOWN_STEPS, shouldShowWorldIntroduction } from "./game-flow";
 import { HowToPlay } from "./how-to-play";
@@ -28,7 +28,6 @@ export function GameScreen({ world, mode, showInstructions = false }) {
   const runStartPromiseRef = useRef(Promise.resolve(""));
   const eventQueueRef = useRef(Promise.resolve());
   const objectiveEvidenceRef = useRef(null);
-  const countdownSoundRef = useRef(null);
   const [bridge] = useState(createGameBridge);
   const [started, setStarted] = useState(!needsIntroduction);
   const [gameState, setGameState] = useState(() => initialState(world.timerSeconds, needsIntroduction ? "awaiting-start" : "loading"));
@@ -118,17 +117,19 @@ export function GameScreen({ world, mode, showInstructions = false }) {
     const cleanups = [
       bridge.on(GAME_EVENTS.READY, () => { if (!active) return; setShowLoading(false); setLoadError(""); setGameState((state) => ({ ...state, status: "playing" })); }),
       bridge.on(GAME_EVENTS.LOAD_FAILED, () => { if (!active) return; setShowLoading(false); setLoadError("The adventure artwork could not be loaded."); }),
-      bridge.on(GAME_EVENTS.STATE_CHANGED, (state) => { if (active) { audioService.setGamePaused(state.paused); setGameState(state); } }),
-      bridge.on(GAME_EVENTS.COIN_COLLECTED, ({ id }) => { audioService.playEffect("coin"); recordEvidence({ type: "coin", id }); }),
-      bridge.on(GAME_EVENTS.GEM_COLLECTED, ({ id }) => { audioService.playEffect("gem"); recordEvidence({ type: "gem", id }); }),
-      bridge.on(GAME_EVENTS.FISH_COLLECTED, ({ id }) => { audioService.playEffect("fish"); recordEvidence({ type: "fish", id }); }),
-      bridge.on(GAME_EVENTS.PLAYER_DAMAGED, () => audioService.playEffect("damage")),
-      bridge.on(GAME_EVENTS.ENEMY_STOMPED, ({ id }) => recordEvidence({ type: "enemy", id })),
-      bridge.on(GAME_EVENTS.ENEMY_DEFEATED, ({ id }) => recordEvidence({ type: "enemy", id })),
-      bridge.on(GAME_EVENTS.OBJECTIVE_COLLECTED, ({ id, objective }) => recordEvidence({ type: "objective", id, objective })),
-      bridge.on(GAME_EVENTS.RUN_ENDED, (result) => { if (active) { audioService.setGamePaused(true); audioService.playEffect("gameover"); setResumeStep(null); setFishChallengeOpen(false); setTerminal({ type: "game-over", result }); } }),
-      bridge.on(GAME_EVENTS.RUN_REVIVED, () => { if (active) { audioService.playEffect("extra-life"); countdownSoundRef.current = null; setFishChallengeOpen(false); setTerminal(null); setResumeStep(RESUME_COUNTDOWN_STEPS[0]); } }),
-      bridge.on(GAME_EVENTS.WORLD_COMPLETED, (result) => { if (active) { setResumeStep(null); setTerminal({ type: "completed", result }); persistCompletion(result); } }),
+      bridge.on(GAME_EVENTS.STATE_CHANGED, (state) => { if (active) { audioPlayer.setPaused("gameplay", state.paused); setGameState(state); } }),
+      bridge.on(GAME_EVENTS.PLAYER_JUMPED, () => audioPlayer.playEffect("jump")),
+      bridge.on(GAME_EVENTS.COIN_COLLECTED, ({ id }) => { audioPlayer.playEffect("coin"); recordEvidence({ type: "coin", id }); }),
+      bridge.on(GAME_EVENTS.GEM_COLLECTED, ({ id }) => { audioPlayer.playEffect("gem"); recordEvidence({ type: "gem", id }); }),
+      bridge.on(GAME_EVENTS.FISH_COLLECTED, ({ id }) => { audioPlayer.playEffect("fish-power-up"); recordEvidence({ type: "fish", id }); }),
+      bridge.on(GAME_EVENTS.PROJECTILE_FIRED, () => audioPlayer.playEffect("projectile")),
+      bridge.on(GAME_EVENTS.PLAYER_DAMAGED, () => audioPlayer.playEffect("damage")),
+      bridge.on(GAME_EVENTS.ENEMY_STOMPED, ({ id }) => { audioPlayer.playEffect("enemy-defeat"); recordEvidence({ type: "enemy", id }); }),
+      bridge.on(GAME_EVENTS.ENEMY_DEFEATED, ({ id }) => { audioPlayer.playEffect("enemy-defeat"); recordEvidence({ type: "enemy", id }); }),
+      bridge.on(GAME_EVENTS.OBJECTIVE_COLLECTED, ({ id, objective }) => { audioPlayer.playEffect(objective === "treasure" ? "treasure" : "shrine"); recordEvidence({ type: "objective", id, objective }); }),
+      bridge.on(GAME_EVENTS.RUN_ENDED, (result) => { if (active) { audioPlayer.setPaused("gameplay", true); audioPlayer.playEffect("game-over"); setResumeStep(null); setFishChallengeOpen(false); setTerminal({ type: "game-over", result }); } }),
+      bridge.on(GAME_EVENTS.RUN_REVIVED, () => { if (active) { audioPlayer.playEffect("revival"); setFishChallengeOpen(false); setTerminal(null); setResumeStep(RESUME_COUNTDOWN_STEPS[0]); } }),
+      bridge.on(GAME_EVENTS.WORLD_COMPLETED, (result) => { if (active) { audioPlayer.setPaused("gameplay", true); audioPlayer.playEffect("world-complete"); setResumeStep(null); setTerminal({ type: "completed", result }); persistCompletion(result); } }),
     ];
     async function boot() {
       if (mode === "guest") {
@@ -150,30 +151,27 @@ export function GameScreen({ world, mode, showInstructions = false }) {
     window.addEventListener("pointerup", release); window.addEventListener("blur", release);
     return () => {
       active = false; window.removeEventListener("pointerup", release); window.removeEventListener("blur", release);
-      cleanups.forEach((cleanup) => cleanup()); game?.destroy(true); bridge.destroy();
+      cleanups.forEach((cleanup) => cleanup()); audioPlayer.setPaused("gameplay", false); game?.destroy(true); bridge.destroy();
     };
   }, [beginVerifiedRun, bridge, mapHref, mode, persistCompletion, recordEvidence, router, started, world]);
 
   useEffect(() => {
     if (resumeStep === null) return undefined;
-    if (countdownSoundRef.current !== resumeStep) {
-      audioService.playEffect(resumeStep === "GO!" ? "countdown-go" : "countdown");
-      countdownSoundRef.current = resumeStep;
-    }
+    audioPlayer.playEffect(resumeStep === "GO!" ? "countdown-go" : "countdown");
     const timer = window.setTimeout(() => {
       const nextStep = getNextResumeStep(resumeStep);
-      if (nextStep === null) { countdownSoundRef.current = null; setResumeStep(null); audioService.setGamePaused(false); bridge.emit(GAME_COMMANDS.RESUME); }
+      if (nextStep === null) { setResumeStep(null); bridge.emit(GAME_COMMANDS.RESUME); }
       else setResumeStep(nextStep);
     }, resumeStep === "GO!" ? 450 : 700);
     return () => window.clearTimeout(timer);
   }, [bridge, resumeStep]);
 
-  function startAdventure() { audioService.setGamePaused(false); setGameState(initialState(world.timerSeconds)); setStarted(true); }
-  function beginResume() { if (resumeStep === null && gameState.paused && !terminal) { countdownSoundRef.current = null; setResumeStep(RESUME_COUNTDOWN_STEPS[0]); } }
-  function pauseGame() { audioService.setGamePaused(true); bridge.emit(GAME_COMMANDS.PAUSE); }
+  function startAdventure() { audioPlayer.setPaused("gameplay", false); setGameState(initialState(world.timerSeconds)); setStarted(true); }
+  function beginResume() { if (resumeStep === null && gameState.paused && !terminal) setResumeStep(RESUME_COUNTDOWN_STEPS[0]); }
+  function pauseGame() { bridge.emit(GAME_COMMANDS.PAUSE); }
   function restart() {
-    audioService.setGamePaused(false);
-    countdownSoundRef.current = null; setResumeStep(null); setTerminal(null); setFishChallengeOpen(false); setRunAttemptId(""); objectiveEvidenceRef.current = null; reviveCommandSentRef.current = false; setSaveState({ status: "idle", error: "" });
+    audioPlayer.setPaused("gameplay", false);
+    setResumeStep(null); setTerminal(null); setFishChallengeOpen(false); setRunAttemptId(""); objectiveEvidenceRef.current = null; reviveCommandSentRef.current = false; setSaveState({ status: "idle", error: "" });
     setShowLoading(false); setGameState(initialState(world.timerSeconds)); beginVerifiedRun(); bridge.emit(GAME_COMMANDS.RESTART);
   }
   function openFishChallenge() {

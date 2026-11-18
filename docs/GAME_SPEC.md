@@ -35,7 +35,7 @@ Phase 1 establishes the cinematic interface with original generated concept artw
 
 | Asset | Source and intended use |
 | --- | --- |
-| `public/art/treasurehunt-hero.png` | Generated for this project with OpenAI's built-in image-generation tool on 4 November 2026. Prompt: an original teal-hatted explorer overlooking a glowing jungle temple, composed with left-side UI space. The supplied images were mood references only; recognizable characters and franchise elements were explicitly excluded. Used for splash, welcome, forms, and menu backgrounds. |
+| `public/art/treasurehunt-hero.png` | Generated for this project with OpenAI's built-in image-generation tool on 4 November 2026. Prompt: an original teal-hatted explorer overlooking a glowing jungle temple, composed with left-side UI space. The supplied images were mood references only; recognizable characters and franchise elements were explicitly excluded. Used for welcome, forms, and menu backgrounds. |
 | `public/art/worlds-atlas.png` | Generated for this project with OpenAI's built-in image-generation tool on 4 November 2026. Prompt: an original three-zone panorama of Emerald Jungle, Sunset Ruins, and Crystal Cavern with no characters, text, logos, or copied locations. Used for the fullscreen journey map and circular destination crops. |
 
 ### Phase 3A temporary asset register

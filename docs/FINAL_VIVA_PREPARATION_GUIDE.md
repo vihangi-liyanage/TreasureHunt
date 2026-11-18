@@ -40,7 +40,7 @@ The game supports two identities:
 | Authentication | Supabase Auth, `@supabase/ssr` | Email/password accounts, JWT claims and SSR cookies | HTTPS to Supabase; cookies refreshed in `proxy.js` |
 | Persistence | Supabase PostgreSQL | Profiles, progress, achievements, verified runs, leaderboard and Fish challenges | Supabase client queries and server-only RPCs |
 | External service | University Fish Game Web API | Generates image puzzle plus fish/chest solution values | Server-side HTTP GET and JSON; base64 PNG sent to browser without solution |
-| Audio | Web Audio API in `lib/audio/audio-service.js` | Music/effect preference, volume and playback | Browser events/subscriptions and calls from React event handlers |
+| Audio | Freesound API metadata plus HTMLAudioElement in `lib/audio/audio-player.js` | Validated CC0 music/effects, preference, volume and playback | Internal catalog Route Handler and GameBridge subscribers |
 | Testing | Vitest 5, SQL pgTAP-style tests, ESLint 9 | Deterministic domain rules, adapters, security boundaries and UI contracts | Direct module tests and SQL policy tests |
 | Delivery | Vercel-compatible Next.js build, Git | Production bundling and version history | `npm run build`, repository commits |
 
@@ -167,7 +167,7 @@ The bridge is the important internal interface. Phaser never imports React or Su
 
 | File | Purpose, communications and principle evidence |
 |---|---|
-| `lib/audio/audio-service.js` | Cohesive Web Audio/persistence service for tracks, effects, preferences and volume; exposes a subscription interface. |
+| `lib/audio/audio-player.js` | Cohesive HTML audio/persistence service for music, bounded effects, preferences and volume. |
 | `lib/auth/client-api.js` | Browser JSON POST helper and bounded retry helper for important game mutations. |
 | `lib/auth/errors.js` | Maps Supabase error codes to safe public text. |
 | `lib/auth/request-guard.js` | Reusable route rate-limit check using request-derived keys. |
@@ -207,7 +207,7 @@ The bridge is the important internal interface. Phaser never imports React or Su
 
 | File | Purpose |
 |---|---|
-| `tests/audio-service.test.js` | Audio preferences and route-to-track behavior. |
+| `tests/audio-service.test.js` | Persisted audio preference behavior. |
 | `tests/auth-route.test.js` | Signup/login/logout Route Handler contracts and Supabase calls. |
 | `tests/auth-security.test.js` | Safe errors, identity-bound repository calls and leaderboard privacy. |
 | `tests/auth-validation.test.js` | Login/register field rules and password confirmation. |
@@ -260,7 +260,7 @@ The strongest examples are modules whose exports all concern one subject:
 - `lib/fish/fish-service.js` only communicates with and validates the external Fish service.
 - `lib/data/player-repository.js` only performs player-data queries.
 - `lib/validation/auth.js` only validates authentication input.
-- `lib/audio/audio-service.js` owns audio preferences and playback policy.
+- `lib/audio/audio-player.js` owns audio preferences and playback policy.
 
 **Best files to open:** `game/core/run-state.js`, `game/config/worlds.js`, `lib/fish/fish-service.js`, `lib/data/player-repository.js`, `lib/validation/auth.js`.
 

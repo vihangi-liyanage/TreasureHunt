@@ -4,6 +4,7 @@ export const GAME_EVENTS = Object.freeze({
   COIN_COLLECTED: "coin:collected",
   GEM_COLLECTED: "gem:collected",
   PLAYER_DAMAGED: "player:damaged",
+  PLAYER_JUMPED: "player:jumped",
   ENEMY_STOMPED: "enemy:stomped",
   ENEMY_DEFEATED: "enemy:defeated",
   FISH_COLLECTED: "fish:collected",

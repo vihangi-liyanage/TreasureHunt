@@ -26,8 +26,18 @@ describe("gameplay UI flow", () => {
     const styles = source("app/globals.css");
     expect(screen).toContain('className="resume-canvas-layer"');
     expect(screen).toContain("window.clearTimeout(timer)");
+    expect(screen).toContain('resumeStep === "GO!" ? "countdown-go" : "countdown"');
     expect(styles).not.toContain(".resume-countdown");
     expect(styles).toContain(".resume-canvas-countdown");
+  });
+
+  it("redirects directly to Welcome without the former timed Splash screen", () => {
+    const home = source("app/page.js");
+    const styles = source("app/globals.css");
+    expect(home).toContain('redirect("/welcome")');
+    expect(home).not.toContain("SplashScreen");
+    expect(styles).not.toContain(".splash-screen");
+    expect(styles).not.toContain("splash-load");
   });
 
   it("offers a next world for checkpoints but never after the final treasure", () => {
@@ -59,9 +69,10 @@ describe("gameplay UI flow", () => {
     expect(screen).toContain("postJsonWithRetry");
   });
 
-  it("keeps settings focused on persistent music and requested sound effects", () => {
+  it("keeps audio settings visible while gameplay sound effects remain disconnected", () => {
     const settings = source("components/settings/settings-panel.js");
     const screen = source("components/game/game-screen.js");
+    const events = source("game/core/events.js");
     expect(settings).toContain('label: "Music"');
     expect(settings).toContain('label: "Sound Effects"');
     expect(settings).not.toContain('id: "motion"');
@@ -69,13 +80,35 @@ describe("gameplay UI flow", () => {
     expect(settings).toContain("setAudioPreference");
     expect(settings).toContain('type="range"');
     expect(settings).toContain("setAudioVolume");
-    for (const effect of ["coin", "gem", "fish", "gameover"]) {
-      expect(screen).toContain(`audioService.playEffect("${effect}")`);
+    expect(screen).not.toContain("audioService");
+    expect(events).toContain('PLAYER_DAMAGED: "player:damaged"');
+    for (const event of ["COIN_COLLECTED", "STATE_CHANGED", "RUN_ENDED", "RUN_REVIVED", "WORLD_COMPLETED"]) {
+      expect(events).toContain(`${event}:`);
     }
-    expect(screen).toContain('GAME_EVENTS.PLAYER_DAMAGED');
-    expect(screen).toContain('audioService.playEffect("damage")');
-    expect(screen).toContain('audioService.playEffect("extra-life")');
-    expect(screen).toContain('resumeStep === "GO!" ? "countdown-go" : "countdown"');
+  });
+
+  it("connects route music through the internal catalog without exposing Freesound credentials", () => {
+    const controller = source("components/audio/audio-controller.js");
+    const player = source("lib/audio/audio-player.js");
+    expect(controller).toContain("/api/audio/catalog?slot=");
+    expect(controller).toContain("subscribeAudioPreferences");
+    expect(controller).toContain("visibilitychange");
+    expect(controller).not.toContain("FREESOUND_API_KEY");
+    expect(player).toContain("new Audio()");
+    expect(player).not.toContain("AudioContext");
+  });
+
+  it("maps existing gameplay events to sound effects exactly once per subscription", () => {
+    const screen = source("components/game/game-screen.js");
+    const mappings = {
+      PLAYER_JUMPED: "jump", COIN_COLLECTED: "coin", GEM_COLLECTED: "gem", FISH_COLLECTED: "fish-power-up",
+      PROJECTILE_FIRED: "projectile", PLAYER_DAMAGED: "damage", RUN_ENDED: "game-over", RUN_REVIVED: "revival",
+    };
+    for (const [event, effect] of Object.entries(mappings)) {
+      expect(screen).toContain(`GAME_EVENTS.${event}`);
+      expect(screen).toContain(`audioPlayer.playEffect("${effect}")`);
+    }
+    expect(screen.match(/bridge\.on\(GAME_EVENTS\.COIN_COLLECTED/g)).toHaveLength(1);
   });
 
   it("owns completion effects in the scene and explicitly cleans them up", () => {

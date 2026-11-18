@@ -2,7 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import { Music2, Volume2 } from "lucide-react";
-import { getAudioPreferences, getServerAudioPreferences, setAudioPreference, setAudioVolume, subscribeAudioPreferences } from "@/lib/audio/audio-service";
+import { getAudioPreferences, getServerAudioPreferences, setAudioPreference, setAudioVolume, subscribeAudioPreferences } from "@/lib/audio/audio-player";
 
 const rows = [
   { id: "music", label: "Music", description: "Adventure soundtrack", icon: Music2 },

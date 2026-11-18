@@ -30,17 +30,6 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .game-title { margin: 0; color: var(--parchment); font-family: Georgia,"Times New Roman",serif; font-size: clamp(3.6rem,8vw,8.25rem); font-weight: 900; letter-spacing: -.075em; line-height: .82; text-shadow: 0 8px 40px rgba(0,0,0,.62); }
 .game-title span { color: var(--gold-light); }
 
-/* Splash */
-.splash-screen { position: relative; display: grid; width: 100%; height: 100svh; place-items: center; overflow: hidden; background: linear-gradient(rgba(2,13,10,.46),rgba(2,13,10,.78)),url("/art/treasurehunt-hero.png") center / cover; opacity: 1; transition: opacity .42s ease,transform .42s ease; }
-.splash-screen.is-leaving { opacity: 0; transform: scale(1.018); }
-.splash-content { display: flex; width: min(84vw,36rem); flex-direction: column; align-items: center; animation: title-arrive .7s cubic-bezier(.2,.8,.2,1) both; }
-.splash-content .game-title { font-size: clamp(4rem,10vw,8.5rem); }
-.loading-track { width: min(70vw,22rem); height: .55rem; margin-top: 2.6rem; overflow: hidden; border: 1px solid rgba(255,237,181,.34); border-radius: 999px; background: rgba(0,0,0,.42); box-shadow: 0 0 24px rgba(0,0,0,.4); }
-.loading-fill { height: 100%; border-radius: inherit; background: linear-gradient(90deg,#2ab475,var(--gold),#fff0b4); animation: splash-load 1.7s cubic-bezier(.3,.7,.2,1) both; transform-origin: left; }
-.loading-caption { margin: .85rem 0 0; color: rgba(255,247,220,.76); font-size: .82rem; font-weight: 750; letter-spacing: .04em; text-shadow: 0 2px 12px rgba(0,0,0,.65); }
-@keyframes title-arrive { from { opacity: 0; transform: translateY(14px) scale(.97); } to { opacity: 1; transform: none; } }
-@keyframes splash-load { from { transform: scaleX(.03); } to { transform: scaleX(1); } }
-
 /* Welcome menu */
 .welcome-screen { height: 100svh; min-height: 34rem; overflow: hidden; }
 .welcome-menu { position: relative; z-index: 2; display: flex; width: min(38rem,48vw); height: 100svh; min-height: 34rem; flex-direction: column; align-items: center; justify-content: center; padding: clamp(1.25rem,4vw,4rem) clamp(1.25rem,3.5vw,3.5rem); text-align: center; }
