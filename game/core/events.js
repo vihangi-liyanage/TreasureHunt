@@ -1,5 +1,6 @@
 export const GAME_EVENTS = Object.freeze({
   READY: "game:ready",
+  FRAME_READY: "game:frame-ready",
   LOAD_FAILED: "game:load-failed",
   COIN_COLLECTED: "coin:collected",
   GEM_COLLECTED: "gem:collected",

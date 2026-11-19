@@ -6,6 +6,7 @@ export function getGameplayAssetUrls(level) {
   if (!level?.art) return [];
   return [
     `${GAMEPLAY_ASSET_ROOT}/hunter-atlas.png`,
+    `${GAMEPLAY_ASSET_ROOT}/blue-diamond.png`,
     `${GAMEPLAY_ASSET_ROOT}/${level.art.panorama}`,
     `${GAMEPLAY_ASSET_ROOT}/${level.art.objects}`,
     `${GAMEPLAY_ASSET_ROOT}/${level.art.terrain}`,

@@ -7,13 +7,31 @@ import { shouldAdvanceRun } from "@/game/core/run-state";
 const source = (path) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
 
 describe("gameplay UI flow", () => {
-  it("gates only a requested World 1 introduction before Phaser can start", () => {
+  it("prepares a paused first frame behind the requested World 1 introduction", () => {
     expect(shouldShowWorldIntroduction(WORLD_CONFIGS[0], true)).toBe(true);
     expect(shouldShowWorldIntroduction(WORLD_CONFIGS[1], true)).toBe(false);
     expect(shouldShowWorldIntroduction(WORLD_CONFIGS[0], false)).toBe(false);
     const screen = source("components/game/game-screen.js");
-    expect(screen).toContain("if (!started) return undefined");
+    expect(screen).not.toContain("if (!started) return undefined");
+    expect(screen).toContain("startPaused: needsIntroduction");
+    expect(screen).toContain("GAME_EVENTS.FRAME_READY");
+    expect(screen).toContain("if (startRequestedRef.current) revealAdventure()");
+    expect(screen).toContain("if (frameReadyRef.current) revealAdventure()");
+    expect(screen).toMatch(/const revealAdventure[\s\S]*?bridge\.emit\(GAME_COMMANDS\.RESUME\);[\s\S]*?setStarted\(true\)/);
     expect(screen).toContain("Start Adventure");
+  });
+
+  it("emits first-frame readiness after Phaser post-render without duplicating the game", () => {
+    const scene = source("game/scenes/world-scene.js");
+    const createGame = source("game/create-game.js");
+    const events = source("game/core/events.js");
+    expect(events).toContain('FRAME_READY: "game:frame-ready"');
+    expect(scene).toContain("Phaser.Core.Events.POST_RENDER");
+    expect(scene).toContain("this.physics.pause()");
+    expect(scene).toContain("if (!this.isPaused) this.cameras.main.fadeIn");
+    expect(scene).toContain("this.game.events.off(Phaser.Core.Events.POST_RENDER");
+    expect(createGame.match(/new Phaser\.Game/g)).toHaveLength(1);
+    expect(createGame).toContain("startPaused=false");
   });
 
   it("orders one guarded resume countdown and advances the run only after it ends", () => {
@@ -63,7 +81,8 @@ describe("gameplay UI flow", () => {
     const map = source("components/worlds/world-map.js");
     const screen = source("components/game/game-screen.js");
     expect(map).toContain("if (!gameplayPreloader.isWorldPreloaded(selectedWorld.id))");
-    expect(screen).toContain("createTreasureHuntGame(parentRef.current, { world, level, bridge, assetUrls })");
+    expect(screen).toContain("createTreasureHuntGame(parentRef.current, {");
+    expect(screen).toContain("world, level, bridge, assetUrls, startPaused: needsIntroduction");
   });
 
   it("presents checkpoint semantics as Compass Shrines without changing the domain contract", () => {
@@ -178,15 +197,20 @@ describe("identity-backed panels", () => {
     expect(shell).toContain('aria-labelledby="auth-title"');
   });
 
-  it("renders real profile progress, all achievement badges and Sign Out", () => {
+  it("renders real profile progress, inline identity editing, treasure rewards and Sign Out", () => {
     const profile = source("components/profile/profile-panel.js");
     expect(profile).toContain("completed_worlds");
     expect(profile).toContain("Object.keys(ACHIEVEMENTS)");
-    expect(profile).toContain("selectedEarned.earned_at");
+    expect(profile).toContain("earnedAchievement.earned_at");
     expect(profile).toContain('role="tablist"');
-    expect(profile).toContain('aria-expanded={active}');
+    expect(profile).toContain('aria-label="Edit explorer username"');
+    expect(profile).toContain("profile-inline-editor");
+    expect(profile).toContain("cancelEditing");
+    expect(profile).toContain("getAchievementProgress");
+    expect(profile).toContain("reward-chest");
     expect(profile).toContain("Sign Out");
     expect(profile).not.toContain(">Logout<");
+    expect(profile).not.toContain("profile-editor");
   });
 
   it("uses genuine leaderboard data and an accurate guest sign-in state", () => {

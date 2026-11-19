@@ -28,8 +28,14 @@ export function GameScreen({ world, mode, showInstructions = false }) {
   const runStartPromiseRef = useRef(Promise.resolve(""));
   const eventQueueRef = useRef(Promise.resolve());
   const objectiveEvidenceRef = useRef(null);
+  const initialRunStartedRef = useRef(false);
+  const startRequestedRef = useRef(false);
+  const frameReadyRef = useRef(false);
+  const adventureRevealedRef = useRef(!needsIntroduction);
   const [bridge] = useState(createGameBridge);
   const [started, setStarted] = useState(!needsIntroduction);
+  const [startRequested, setStartRequested] = useState(false);
+  const [frameReady, setFrameReady] = useState(false);
   const [gameState, setGameState] = useState(() => initialState(world.timerSeconds, needsIntroduction ? "awaiting-start" : "loading"));
   const [terminal, setTerminal] = useState(null);
   const [saveState, setSaveState] = useState({ status: "idle", error: "" });
@@ -59,6 +65,20 @@ export function GameScreen({ world, mode, showInstructions = false }) {
       .then((response) => response.ok ? response.run.id : "");
     return runStartPromiseRef.current;
   }, [mode, world.id]);
+
+  const beginInitialRun = useCallback(() => {
+    if (initialRunStartedRef.current) return runStartPromiseRef.current;
+    initialRunStartedRef.current = true;
+    return beginVerifiedRun();
+  }, [beginVerifiedRun]);
+
+  const revealAdventure = useCallback(() => {
+    if (adventureRevealedRef.current) return;
+    adventureRevealedRef.current = true;
+    audioPlayer.setPaused("gameplay", false);
+    bridge.emit(GAME_COMMANDS.RESUME);
+    setStarted(true);
+  }, [bridge]);
 
   const recordEvidence = useCallback((event) => {
     if (event.type === "objective") objectiveEvidenceRef.current = event;
@@ -112,10 +132,16 @@ export function GameScreen({ world, mode, showInstructions = false }) {
   }, [announceAchievements, mode, world]);
 
   useEffect(() => {
-    if (!started) return undefined;
     let active = true; let game;
     const cleanups = [
-      bridge.on(GAME_EVENTS.READY, () => { if (!active) return; setShowLoading(false); setLoadError(""); setGameState((state) => ({ ...state, status: "playing" })); }),
+      bridge.on(GAME_EVENTS.READY, () => { if (!active) return; setLoadError(""); setGameState((state) => ({ ...state, status: "playing" })); }),
+      bridge.on(GAME_EVENTS.FRAME_READY, () => {
+        if (!active) return;
+        frameReadyRef.current = true;
+        setFrameReady(true);
+        setShowLoading(false);
+        if (startRequestedRef.current) revealAdventure();
+      }),
       bridge.on(GAME_EVENTS.LOAD_FAILED, () => { if (!active) return; setShowLoading(false); setLoadError("The adventure artwork could not be loaded."); }),
       bridge.on(GAME_EVENTS.STATE_CHANGED, (state) => { if (active) { audioPlayer.setPaused("gameplay", state.paused); setGameState(state); } }),
       bridge.on(GAME_EVENTS.PLAYER_JUMPED, () => audioPlayer.playEffect("jump")),
@@ -139,9 +165,11 @@ export function GameScreen({ world, mode, showInstructions = false }) {
       const level = getLevelConfig(world.id);
       if (!level) { router.replace(mapHref); return; }
       try {
-        beginVerifiedRun();
+        if (!needsIntroduction) beginInitialRun();
         const { createTreasureHuntGame, assetUrls } = await gameplayPreloader.preloadWorld(world.id);
-        if (active && parentRef.current) game = createTreasureHuntGame(parentRef.current, { world, level, bridge, assetUrls });
+        if (active && parentRef.current) game = createTreasureHuntGame(parentRef.current, {
+          world, level, bridge, assetUrls, startPaused: needsIntroduction,
+        });
       } catch {
         if (active) { setShowLoading(false); setLoadError("The game could not be prepared. Check your connection and try again."); }
       }
@@ -153,7 +181,7 @@ export function GameScreen({ world, mode, showInstructions = false }) {
       active = false; window.removeEventListener("pointerup", release); window.removeEventListener("blur", release);
       cleanups.forEach((cleanup) => cleanup()); audioPlayer.setPaused("gameplay", false); game?.destroy(true); bridge.destroy();
     };
-  }, [beginVerifiedRun, bridge, mapHref, mode, persistCompletion, recordEvidence, router, started, world]);
+  }, [beginInitialRun, bridge, mapHref, mode, needsIntroduction, persistCompletion, recordEvidence, revealAdventure, router, world]);
 
   useEffect(() => {
     if (resumeStep === null) return undefined;
@@ -166,7 +194,13 @@ export function GameScreen({ world, mode, showInstructions = false }) {
     return () => window.clearTimeout(timer);
   }, [bridge, resumeStep]);
 
-  function startAdventure() { audioPlayer.setPaused("gameplay", false); setGameState(initialState(world.timerSeconds)); setStarted(true); }
+  function startAdventure() {
+    if (startRequested || loadError) return;
+    startRequestedRef.current = true;
+    setStartRequested(true);
+    beginInitialRun();
+    if (frameReadyRef.current) revealAdventure();
+  }
   function beginResume() { if (resumeStep === null && gameState.paused && !terminal) setResumeStep(RESUME_COUNTDOWN_STEPS[0]); }
   function pauseGame() { bridge.emit(GAME_COMMANDS.PAUSE); }
   function restart() {
@@ -195,14 +229,15 @@ export function GameScreen({ world, mode, showInstructions = false }) {
   const canRevive = gameOver && terminal.result.reason === "lives" && terminal.result.revivesUsed < 1;
   const elapsedSeconds = gameOver ? Math.max(0, world.timerSeconds - terminal.result.timeLeft) : 0;
 
-  return <main className={`gameplay-screen ${!started ? "is-awaiting-start" : ""}`} data-game-status={gameState.status} data-powered={gameState.powered ? "true" : "false"}>
+  return <main className={`gameplay-screen ${!started ? "is-awaiting-start" : ""}`} data-game-status={gameState.status} data-frame-ready={frameReady ? "true" : "false"} data-powered={gameState.powered ? "true" : "false"}>
     <div ref={parentRef} className="phaser-stage" aria-label={`${world.name} playable game canvas`} />
     {!started ? <section className="adventure-intro" role="dialog" aria-modal="true" aria-labelledby="adventure-intro-title">
       <div className="adventure-intro-panel">
         <span className="state-kicker">Explorer briefing</span><h1 id="adventure-intro-title">Ready for the Jungle?</h1>
         <p className="intro-lead">The 120-second clock begins only when you start.</p>
         <HowToPlay compact />
-        <div className="intro-actions"><Link className="game-button game-button-ghost" href={mapHref}><Map size={18} />World Map</Link><button autoFocus className="game-button game-button-primary" type="button" onClick={startAdventure}><Play size={18} />Start Adventure</button></div>
+        {loadError ? <p className="intro-load-error" role="alert">{loadError}</p> : null}
+        <div className="intro-actions"><Link className="game-button game-button-ghost" href={mapHref}><Map size={18} />World Map</Link><button autoFocus className="game-button game-button-primary" type="button" onClick={startAdventure} disabled={startRequested || Boolean(loadError)} aria-busy={startRequested}><Play size={18} />{startRequested ? "Starting Adventure..." : "Start Adventure"}</button></div>
       </div>
     </section> : null}
     {started ? <header className="game-hud" aria-label="Game status"><div className="hud-world"><span>World {world.number}</span><strong>{world.name}</strong></div><div className="hud-cluster"><div className="hud-stats"><span><Trophy size={18} />{gameState.score.toLocaleString()}</span><span><Coins size={18} />{gameState.coins}</span><span><Gem size={18} />{gameState.gems}</span><span className={gameState.lives <= 1 ? "is-danger" : ""}><Heart size={18} />{gameState.lives}</span><span className={gameState.timeLeft <= 20 ? "is-danger" : ""}><Timer size={18} />{gameState.timeLeft}</span></div>{gameState.powered ? <div className="power-meter" role="status"><Fish size={18} /><div><strong>Magic Shot</strong><span style={{ "--power-progress": `${Math.min(100, (gameState.powerRemainingMs / 8000) * 100)}%` }} /></div><b>{(gameState.powerRemainingMs / 1000).toFixed(1)}s</b></div> : null}</div><button className="hud-pause" type="button" onClick={pauseGame} aria-label="Pause game"><Pause size={20} /></button></header> : null}

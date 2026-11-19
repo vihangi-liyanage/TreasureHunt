@@ -15,14 +15,14 @@ import { ProjectileSystem } from "@/game/systems/projectile-system";
 export class WorldScene extends Phaser.Scene {
   constructor() { super("WorldScene"); }
 
-  init({ world, level, bridge, assetUrls = {} }) {
+  init({ world, level, bridge, assetUrls = {}, startPaused = false }) {
     this.worldConfig = world;
     this.level = level;
     this.bridge = bridge;
     this.preparedAssetUrls = assetUrls;
     this.commandCleanups = [];
     this.effectObjects = new Set();
-    this.isPaused = false;
+    this.isPaused = Boolean(startPaused);
     this.reducedMotion = Boolean(globalThis.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches);
     this.safePosition = { ...level.playerStart };
   }
@@ -52,8 +52,11 @@ export class WorldScene extends Phaser.Scene {
     this.createGoal();
     this.registerCollisions();
     this.registerCommands();
+    if (this.isPaused) this.physics.pause();
     this.cameraController = new CameraController(this, this.player, this.level.width, this.level.height);
-    this.cameras.main.fadeIn(450, 8, 35, 28);
+    if (!this.isPaused) this.cameras.main.fadeIn(450, 8, 35, 28);
+    this.firstFrameHandler = () => this.bridge.emit(GAME_EVENTS.FRAME_READY, { worldId: this.worldConfig.id });
+    this.game.events.once(Phaser.Core.Events.POST_RENDER, this.firstFrameHandler);
     this.bridge.emit(GAME_EVENTS.READY, { worldId: this.worldConfig.id });
     this.publishState();
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.cleanup, this);
@@ -476,6 +479,7 @@ export class WorldScene extends Phaser.Scene {
   }
 
   cleanup() {
+    this.game.events.off(Phaser.Core.Events.POST_RENDER, this.firstFrameHandler);
     this.playerController?.destroy();
     this.projectileSystem?.destroy();
     this.enemySystem?.destroy();

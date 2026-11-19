@@ -8,6 +8,7 @@ describe("selected-world gameplay preload", () => {
     const emerald = getGameplayAssetUrls(getLevelConfig("emerald-jungle"));
     expect(emerald).toEqual([
       "/art/gameplay/hunter-atlas.png",
+      "/art/gameplay/blue-diamond.png",
       "/art/gameplay/emerald-jungle-panorama.png",
       "/art/gameplay/jungle-objects-atlas.png",
       "/art/gameplay/jungle-terrain-atlas.png",
@@ -30,7 +31,7 @@ describe("selected-world gameplay preload", () => {
     await preloader.preloadWorld("sunset-ruins");
 
     expect(loadRuntime).toHaveBeenCalledTimes(1);
-    expect(loadImage).toHaveBeenCalledTimes(7);
+    expect(loadImage).toHaveBeenCalledTimes(8);
     expect(loadImage.mock.calls.filter(([url]) => url.endsWith("hunter-atlas.png"))).toHaveLength(1);
   });
 
@@ -64,11 +65,13 @@ describe("selected-world gameplay preload", () => {
     const prepared = {
       "/art/gameplay/emerald-jungle-panorama.png": "blob:prepared-panorama",
       "/art/gameplay/hunter-atlas.png": "blob:prepared-hunter",
+      "/art/gameplay/blue-diamond.png": "blob:prepared-diamond",
       "/art/gameplay/jungle-objects-atlas.png": "blob:prepared-objects",
       "/art/gameplay/jungle-terrain-atlas.png": "blob:prepared-terrain",
     };
     loadGameAssets({ load: { image, spritesheet } }, art, prepared);
     expect(image).toHaveBeenCalledWith("world-panorama", "blob:prepared-panorama");
+    expect(image).toHaveBeenCalledWith("achievement-gem", "blob:prepared-diamond");
     expect(spritesheet.mock.calls.map(([, url]) => url)).toEqual(["blob:prepared-hunter", "blob:prepared-objects", "blob:prepared-terrain"]);
   });
 });

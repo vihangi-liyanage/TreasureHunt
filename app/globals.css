@@ -370,6 +370,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .adventure-intro { position: absolute; inset: 0; z-index: 60; display: grid; place-items: center; overflow: hidden; padding: clamp(.6rem,2vw,1.5rem); background: linear-gradient(90deg,rgba(2,18,14,.95),rgba(4,38,29,.78)),url("/art/gameplay/emerald-jungle-panorama.png") center / cover; }
 .adventure-intro-panel { width: min(100%,48rem); max-height: calc(100svh - 1.2rem); overflow: auto; overscroll-behavior: contain; border: 1px solid rgba(255,224,130,.42); border-radius: 1.35rem; background: linear-gradient(145deg,rgba(8,47,34,.97),rgba(2,24,18,.98)); padding: clamp(.9rem,2.2vw,1.45rem); box-shadow: 0 28px 90px rgba(0,0,0,.62); scrollbar-width: thin; }
 .adventure-intro-panel h1 { margin: .2rem 0; font-family: Georgia,"Times New Roman",serif; font-size: clamp(1.85rem,4vw,2.7rem); }
+.intro-load-error { margin:.55rem 0 0;color:#ffc7b8;font-size:.76rem;font-weight:750; }
 .intro-lead { margin: 0 0 .75rem; color: rgba(255,247,220,.7); font-size: .78rem; }
 .intro-actions { display: flex; justify-content: flex-end; gap: .65rem; margin-top: .75rem; }
 .terminal-overlay.is-victory-overlay { background: radial-gradient(circle at 50% 44%,rgba(255,218,105,.14),rgba(1,13,10,.46) 58%); backdrop-filter: blur(2px); }
@@ -584,6 +585,81 @@ button, a { -webkit-tap-highlight-color: transparent; }
   .achievement-emblem > svg { width: 19px; }
   .achievement-detail { min-height: 2.4rem; margin-top: .35rem; padding: .32rem .45rem; }
   .profile-signout { min-height: 2.15rem; padding: .35rem .6rem; }
+}
+
+/* Phase 3C explorer identity and treasure gallery */
+.sr-only { position: absolute !important; width: 1px !important; height: 1px !important; overflow: hidden !important; clip: rect(0,0,0,0) !important; white-space: nowrap !important; clip-path: inset(50%) !important; }
+.profile-panel { gap: .7rem; }
+.explorer-card { min-height: 6.2rem; border-color: rgba(225,184,83,.42); background: radial-gradient(circle at 88% 12%,rgba(238,191,73,.16),transparent 34%),linear-gradient(125deg,rgba(11,68,47,.96),rgba(3,31,23,.98)); box-shadow: inset 0 1px rgba(255,255,255,.08),0 14px 35px rgba(0,0,0,.2); }
+.explorer-card::before { position: absolute; inset: .35rem; border: 1px solid rgba(255,230,160,.08); border-radius: .85rem; content: ""; pointer-events: none; }
+.explorer-copy > small { display: inline-flex; align-items: center; gap: .28rem; }
+.explorer-name { display: flex; min-width: 0; align-items: center; gap: .45rem; margin: .08rem 0 .2rem; }
+.explorer-name strong { overflow: hidden; font-family: Georgia,"Times New Roman",serif; color: #fff2cc; font-size: 1.4rem; text-overflow: ellipsis; white-space: nowrap; }
+.explorer-name button,.profile-inline-editor button { display: grid; width: 2rem; height: 2rem; flex: 0 0 auto; place-items: center; border: 1px solid rgba(255,222,130,.28); border-radius: .58rem; background: rgba(244,187,69,.1); color: #ffe092; }
+.explorer-name button:hover,.profile-inline-editor button:hover { border-color: rgba(255,225,137,.65); background: rgba(244,187,69,.18); }
+.profile-inline-editor { display: grid; max-width: 24rem; grid-template-columns: minmax(0,1fr) auto auto; gap: .35rem; margin: .28rem 0; }
+.profile-inline-editor .form-field { min-height: 2.3rem; border-radius: .65rem; padding: .35rem .6rem; }
+.explorer-rank { min-width: 5.1rem; }
+.explorer-rank span { color: rgba(255,247,220,.42); font-size: .5rem; }
+.explorer-rank strong { color: #ffe392; font-size: 1.35rem; }
+.explorer-card .profile-notice { margin: .28rem 0 0; color: #ffe091; font-size: .61rem; }
+.profile-progress-grid { grid-template-columns: repeat(3,minmax(0,1fr)); gap: .5rem; }
+.profile-progress-grid > .profile-stat { position: relative; display: grid; min-height: 4rem; grid-template-columns: auto 1fr; align-items: center; justify-items: start; gap: .6rem; overflow: hidden; border-color: rgba(255,227,150,.12); background: linear-gradient(135deg,rgba(12,68,48,.55),rgba(1,26,19,.56)); padding: .62rem .7rem; text-align: left; }
+.profile-stat::after { position: absolute; right: -.8rem; bottom: -1.2rem; width: 3.4rem; height: 3.4rem; border: 1px solid currentColor; border-radius: 50%; opacity: .08; content: ""; }
+.profile-stat > svg { color: #e9c15c; filter: drop-shadow(0 3px 6px rgba(0,0,0,.25)); }
+.profile-stat > span { display: grid; gap: .08rem; }
+.profile-stat strong { color: #fff1c9; font-size: 1.05rem; line-height: 1; }
+.profile-stat small { font-size: .54rem; line-height: 1.15; }
+.profile-stat.is-gems > svg { color: #65e9d0; }.profile-stat.is-fish > svg { color: #77dfff; }.profile-stat.is-coins > svg,.profile-stat.is-best > svg { color: #ffd65d; }.profile-stat.is-worlds > svg { color: #9ee7af; }
+.profile-best-run { border-color: rgba(243,197,82,.26); background: linear-gradient(100deg,rgba(126,84,15,.22),rgba(15,69,48,.18)); }
+.profile-best-run > svg { color: #ffd866; }
+.profile-achievements { min-width: 0; }
+.achievement-grid { grid-template-columns: repeat(3,minmax(0,1fr)); gap: .55rem; }
+.treasure-achievement { position: relative; display: grid; min-width: 0; min-height: 12.4rem; grid-template-rows: auto auto 1fr; gap: .42rem; overflow: hidden; border: 1px solid rgba(255,225,141,.16); border-radius: 1rem; background: linear-gradient(155deg,rgba(8,54,39,.9),rgba(2,25,19,.96)); padding: .7rem; transition: transform .18s ease,border-color .18s ease,box-shadow .18s ease; }
+.treasure-achievement:hover { transform: translateY(-2px); }
+.treasure-achievement.is-earned { border-color: rgba(255,212,91,.46); background: radial-gradient(circle at 50% 10%,rgba(255,209,75,.15),transparent 37%),linear-gradient(155deg,rgba(13,78,51,.96),rgba(4,35,25,.98)); box-shadow: inset 0 1px rgba(255,255,255,.08),0 8px 24px rgba(0,0,0,.16); }
+.treasure-achievement.is-locked { filter: saturate(.45); }
+.treasure-artwork { position: relative; display: grid; height: 4.4rem; place-items: center; border-bottom: 1px solid rgba(255,255,255,.07); }
+.treasure-state { position: absolute; top: .05rem; right: .05rem; display: grid; width: 1.4rem; height: 1.4rem; place-items: center; border: 1px solid rgba(255,229,143,.38); border-radius: 50%; background: #163c2d; color: rgba(255,245,216,.65); }
+.is-earned .treasure-state { background: #ddb240; color: #153526; }
+.reward-art { display: grid; width: 3.65rem; height: 3.65rem; place-items: center; border: 1px solid rgba(255,225,134,.36); border-radius: 45% 55% 48% 52%; background: radial-gradient(circle at 35% 25%,rgba(255,255,255,.22),transparent 19%),linear-gradient(145deg,#d7a93a,#76511b); color: #fff1ae; box-shadow: inset 0 0 0 4px rgba(0,0,0,.1),0 7px 18px rgba(0,0,0,.25); transform: rotate(-4deg); }
+.reward-art > svg { transform: rotate(4deg); }.reward-art.is-emerald { background: linear-gradient(145deg,#5ff0c0,#087b60); color: #e9fff8; }.reward-art.is-sapphire { background: linear-gradient(145deg,#7bcfff,#2655b4); }.reward-art.is-crystal { background: linear-gradient(145deg,#9c8cff,#3d2d97); }.reward-art.is-fish { background: linear-gradient(145deg,#72e4eb,#21819c); }.reward-art.is-compass { border-radius: 50%; background: radial-gradient(circle,#fff1a8 0 10%,#c89028 12% 45%,#684215 47%); color: #173a2b; }.reward-art.is-legendary-chest { background: linear-gradient(145deg,#ffe079,#9f5d12); color: #3b2812; }
+.profile-diamond,.stat-diamond,.chest-diamond { object-fit:contain; filter:drop-shadow(0 2px 5px rgba(22,164,255,.5)); }
+.profile-diamond { width:46px;height:46px;transform:rotate(4deg); }
+.stat-diamond { width:26px;height:26px;flex:0 0 auto; }
+.chest-diamond { width:28px;height:28px; }
+.reward-chest { position: relative; display: block; width: 4.3rem; height: 3.15rem; margin-top: .55rem; border: 2px solid #6e451b; border-radius: .35rem .35rem .65rem .65rem; background: linear-gradient(90deg,#8a521d,#e0a83c 48%,#87501b); box-shadow: inset 0 -8px rgba(70,38,12,.2),0 8px 18px rgba(0,0,0,.28); }
+.reward-chest::before { position: absolute; right: -.12rem; bottom: 1.22rem; left: -.12rem; height: .28rem; background: #f1ca62; content: ""; }
+.chest-lid { position: absolute; right: -.12rem; bottom: 2.28rem; left: -.12rem; display: grid; height: 1.4rem; place-items: center; border: 2px solid #6e451b; border-radius: 1.8rem 1.8rem .25rem .25rem; background: linear-gradient(#e8b84b,#925719); color: #fff0a0; transform: rotate(-5deg); transform-origin: left bottom; }
+.chest-lock { position: absolute; top: 1.08rem; left: 50%; width: .72rem; height: .88rem; border: 2px solid #744613; border-radius: .2rem; background: #ffe080; transform: translateX(-50%); }
+.chest-light { position: absolute; z-index: -1; inset: -.8rem; border-radius: 50%; background: radial-gradient(circle,rgba(255,221,104,.32),transparent 68%); }
+.reward-chest.is-gem-chest .chest-lid { color: #83ffec; }.reward-chest.is-gold-chest .chest-lid { color: #fff09e; }
+.treasure-copy strong { display: block; color: #fff0c5; font-family: Georgia,"Times New Roman",serif; font-size: .78rem; line-height: 1.1; }
+.treasure-copy p { margin: .22rem 0 0; color: rgba(255,247,220,.55); font-size: .55rem; line-height: 1.35; }
+.treasure-condition { align-self: end; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: .25rem .45rem; border-top: 1px solid rgba(255,255,255,.07); padding-top: .42rem; }
+.treasure-condition small { color: rgba(255,239,194,.66); font-size: .5rem; }.treasure-condition b { color: #9ee8bd; font-size: .5rem; text-transform: uppercase; }.is-locked .treasure-condition b { color: rgba(255,247,220,.42); }
+.achievement-progress { grid-column: 1; display: block; height: .25rem; overflow: hidden; border-radius: 999px; background: rgba(255,255,255,.09); }.achievement-progress i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg,#38c796,#efd165); }
+
+@media (max-width: 620px) {
+  .explorer-card { grid-template-columns: auto minmax(0,1fr); align-items: start; }
+  .explorer-rank { position: absolute; top: .65rem; right: .75rem; min-width: 3.5rem; border-left: 0; padding-left: 0; }
+  .explorer-copy { padding-right: 3.7rem; }
+  .profile-progress-grid,.achievement-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .profile-inline-editor { grid-template-columns: minmax(0,1fr) auto auto; }
+}
+@media (max-width: 380px) {
+  .is-achievements-view .explorer-card { display: grid; }
+  .explorer-card { gap: .55rem; padding: .7rem; }
+  .explorer-avatar { width: 3rem; height: 3rem; }
+  .explorer-copy { padding-right: 3rem; }
+  .explorer-name strong { font-size: 1.05rem; }
+  .profile-inline-editor { grid-column: 1 / -1; }
+  .profile-progress-grid { gap: .35rem; }
+  .profile-progress-grid > .profile-stat { min-height: 3.5rem; gap: .38rem; padding: .48rem; }
+  .achievement-grid { grid-template-columns: 1fr; }
+  .treasure-achievement { min-height: 10.8rem; grid-template-columns: 4.6rem minmax(0,1fr); grid-template-rows: auto 1fr; }
+  .treasure-artwork { grid-row: 1 / span 2; height: 100%; border-right: 1px solid rgba(255,255,255,.07); border-bottom: 0; }
+  .treasure-condition { grid-column: 2; }
 }
 
 /* Startup loader: progress is driven by settled asset and metadata work. */

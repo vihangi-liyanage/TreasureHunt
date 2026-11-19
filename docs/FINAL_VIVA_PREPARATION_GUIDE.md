@@ -193,12 +193,13 @@ The bridge is the important internal interface. Phaser never imports React or Su
 
 | File | Purpose, communications and principle evidence |
 |---|---|
-| `supabase/migrations/202611050001_phase_2b_auth_and_progress.sql` | Base profiles/progress/achievements/runs/leaderboard schema, signup trigger, RLS, grants and early trusted functions. |
-| `supabase/migrations/202611100001_phase_7_fish_revival.sql` | Fish challenge table and atomic owner-bound verification function. |
-| `supabase/migrations/202611100002_phase_8_achievements_and_ranked_runs.sql` | Verified run events, achievements, atomic completion and ranked leaderboard RPC. |
-| `supabase/migrations/202611100003_phase_8_run_expiry_hardening.sql` | Enforces a bounded run submission window. |
-| `supabase/migrations/202611100004_phase_8_current_leaderboard_names.sql` | Current leaderboard projection and current-player marker. |
-| `supabase/migrations/202611100005_phase_8_completion_persistence_fix.sql` | Current atomic completion implementation fixing repeat completion persistence. |
+| `supabase/migrations/202611050001_create_auth_profiles_progress_and_runs.sql` | Base profiles/progress/achievements/runs/leaderboard schema, signup trigger, RLS, grants and early trusted functions. |
+| `supabase/migrations/202611100001_add_fish_revival_challenges.sql` | Fish challenge table and atomic owner-bound verification function. |
+| `supabase/migrations/202611100002_add_verified_run_events_achievements_and_rankings.sql` | Verified run events, achievements, atomic completion and ranked leaderboard RPC. |
+| `supabase/migrations/202611100003_enforce_run_submission_expiry.sql` | Enforces a bounded run submission window. |
+| `supabase/migrations/202611100004_use_current_profile_names_in_leaderboard.sql` | Current leaderboard projection and current-player marker. |
+| `supabase/migrations/202611100005_make_run_completion_idempotent.sql` | Current atomic completion implementation fixing repeat completion persistence. |
+| `supabase/migrations/202611180001_add_treasure_achievement_milestones.sql` | Adds trusted gem/coin treasure milestones and idempotent backfill. |
 | `supabase/tests/phase_2b_rls.test.sql` | Verifies RLS and role grants. |
 | `supabase/tests/phase_2b_ownership.test.sql` | Verifies players cannot write another identity's data. |
 | `supabase/tests/phase_2b_run_integrity.test.sql` | Verifies run ownership and leaderboard integrity constraints. |
@@ -493,7 +494,7 @@ Virtual identity distinguishes clients and helps prevent impersonation. Because 
 
 ### Registered identity
 
-**Best files to open:** `app/api/auth/register/route.js`, `app/api/auth/login/route.js`, `lib/auth/session.js`, `lib/supabase/proxy.js`, `supabase/migrations/202611050001_phase_2b_auth_and_progress.sql`.
+**Best files to open:** `app/api/auth/register/route.js`, `app/api/auth/login/route.js`, `lib/auth/session.js`, `lib/supabase/proxy.js`, `supabase/migrations/202611050001_create_auth_profiles_progress_and_runs.sql`.
 
 Registration delegates password storage to Supabase Auth:
 
@@ -535,14 +536,14 @@ Logout calls `supabase.auth.signOut({ scope: "local" })` (`app/api/auth/logout/r
 Profiles use the Auth UUID as `id`; progress, achievements and runs use it as `user_id`. Route handlers ignore any client claim about user identity and pass `identity.id` from verified claims. RLS adds database enforcement:
 
 ```sql
--- supabase/migrations/202611050001_phase_2b_auth_and_progress.sql:104-110
+-- supabase/migrations/202611050001_create_auth_profiles_progress_and_runs.sql:104-110
 create policy "players read own progress" on public.player_progress
   for select using (auth.uid() is not null and auth.uid() = user_id);
 create policy "players read own achievements" on public.player_achievements
   for select using (auth.uid() is not null and auth.uid() = user_id);
 ```
 
-Verified completion uses a narrowly granted service-role RPC. The route first authenticates the caller, fetches a run belonging to `identity.id`, validates stored evidence, and then calls `complete_verified_game_run_admin`; the RPC is revoked from public/anon/authenticated and granted only to `service_role` (`202611100002_phase_8_achievements_and_ranked_runs.sql:300-304`).
+Verified completion uses a narrowly granted service-role RPC. The route first authenticates the caller, fetches a run belonging to `identity.id`, validates stored evidence, and then calls `complete_verified_game_run_admin`; the RPC is revoked from public/anon/authenticated and granted only to `service_role` (`202611100002_add_verified_run_events_achievements_and_rankings.sql`).
 
 ### Guest identity
 
